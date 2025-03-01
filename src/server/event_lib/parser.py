@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 class EventParser:
     """A class to parse event IDs from JavaScript EventManager initialization code and fetch from API."""
     
-    def __init__(self, base_url: str = "http://192.168.1.185:8080/api"):
+    def __init__(self, base_url: str = "http://192.168.1.185:8080"):
         """
         Initialize the EventParser with the API base URL.
         
@@ -23,7 +23,9 @@ class EventParser:
             str: The API response text
         """
         try:
-            response = requests.get("http://192.168.1.185:8080/api")
+            endpoint = f"/api"
+            url = urljoin(self.base_url, endpoint)
+            response = requests.get(url)
             response.raise_for_status()
             return response.text
         except Exception as e:
@@ -54,7 +56,7 @@ class EventParser:
     # http://192.168.1.185:8080/events/b69a294c-a074-4f4e-b949-4ae7de90c3e3/Rounds.json
     def get_round_data(self, event_id: str, round_id: str) -> Dict[str, Any]:
         endpoint = f"/events/{event_id}/Rounds.json"
-        url = urljoin("http://192.168.1.185:8080", endpoint)
+        url = urljoin(self.base_url, endpoint)
         response = requests.get(url)
         response.raise_for_status()
 
@@ -82,7 +84,7 @@ class EventParser:
 
         # /api/events/b69a294c-a074-4f4e-b949-4ae7de90c3e3/a853dde7-e1e6-46e9-b6e1-ef33e65baf96/Race.json
         endpoint = f"/events/{event_id}/{race_id}/Race.json"
-        url = urljoin("http://192.168.1.185:8080", endpoint)
+        url = urljoin(self.base_url, endpoint)
         
 
         # http://192.168.1.185:8080/events/b69a294c-a074-4f4e-b949-4ae7de90c3e3/d0dbab88-586d-476f-b5e8-429d06b7c909/Race.json

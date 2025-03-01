@@ -128,7 +128,7 @@ class TracksideConnector():
         trackside_race_id = arg.get('race_id')
 
         # Get base URL from config or use default
-        base_url = self._rhapi.config.get('GENERAL', 'HTTP_API_URL') or "http://192.168.1.200:3000"
+        base_url = self._rhapi.config.get('GENERAL', 'HTTP_API_URL') or "http://192.168.1.185:8080"
         event_parser = EventParser(base_url=base_url)
 
         event_id = event_parser.find_event_id()
