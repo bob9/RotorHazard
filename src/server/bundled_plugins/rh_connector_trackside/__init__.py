@@ -144,9 +144,6 @@ class TracksideConnector():
                     roundNumber = round_data['RoundNumber']
                     self._rhapi.db.heat_alter(self._rhapi.race.heat, name="TS Heat: {} Round: {} RaceNumber: {}".format(self._rhapi.race.heat, roundNumber, raceNumber))
 
-                    self._rhapi.db.race_alter(self._rhapi.race.id, attributes = {
-                        'trackside_race_ID': trackside_race_id
-                    })
         #stage here maybe it creates race.
         self._rhapi.race.stage(start_race_args)
 
