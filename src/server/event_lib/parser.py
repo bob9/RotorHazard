@@ -81,9 +81,12 @@ class EventParser:
         """
 
         # /api/events/b69a294c-a074-4f4e-b949-4ae7de90c3e3/a853dde7-e1e6-46e9-b6e1-ef33e65baf96/Race.json
-        endpoint = f"/api/events/{event_id}/{race_id}/Race.json"
-        url = urljoin("http://192.168.1.200:3000", endpoint)
+        endpoint = f"/events/{event_id}/{race_id}/Race.json"
+        url = urljoin("http://192.168.1.185:8080", endpoint)
         
+
+        # http://192.168.1.185:8080/events/b69a294c-a074-4f4e-b949-4ae7de90c3e3/d0dbab88-586d-476f-b5e8-429d06b7c909/Race.json
+
         response = requests.get(url)
         response.raise_for_status()
         
