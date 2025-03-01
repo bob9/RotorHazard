@@ -60,7 +60,7 @@ class EventParser:
 
         #find the round id in the response
         for round in response.json():
-            if round['RoundID'] == round_id:
+            if round['ID'] == round_id:
                 return round
         return None
 
