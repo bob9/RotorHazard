@@ -49,6 +49,22 @@ class EventParser:
             return match.group(1)  # Return just the UUID part
         return None
 
+
+    #//get round data
+    # http://192.168.1.185:8080/events/b69a294c-a074-4f4e-b949-4ae7de90c3e3/Rounds.json
+    def get_round_data(self, event_id: str, round_id: str) -> Dict[str, Any]:
+        endpoint = f"/events/{event_id}/Rounds.json"
+        url = urljoin("http://192.168.1.185:8080", endpoint)
+        response = requests.get(url)
+        response.raise_for_status()
+
+        #find the round id in the response
+        for round in response.json():
+            if round['RoundID'] == round_id:
+                return round
+        return None
+
+
     def get_race_data(self, event_id: str, race_id: str) -> Dict[str, Any]:
         """
         Fetch event data from the API for a given event ID and race ID.

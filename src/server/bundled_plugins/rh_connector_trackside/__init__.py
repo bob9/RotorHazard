@@ -136,8 +136,17 @@ class TracksideConnector():
             race_data = event_parser.get_race_data(event_id, trackside_race_id)
             if race_data:
                 raceNumber = race_data[0].get('RaceNumber')
-                self._rhapi.db.heat_alter(self._rhapi.race.heat, name="TrackSide Heat: {} RaceNumber: {}".format(self._rhapi.race.heat, raceNumber))
         
+                round_id = race_data[0].get('Round')
+                round_data = event_parser.get_round_data(event_id, round_id)
+
+                if round_data:
+                    roundNumber = round_data['RoundNumber']
+                    self._rhapi.db.heat_alter(self._rhapi.race.heat, name="TS Heat: {} Round: {} RaceNumber: {}".format(self._rhapi.race.heat, roundNumber, raceNumber))
+
+                    self._rhapi.db.race_alter(self._rhapi.race.id, attributes = {
+                        'trackside_race_ID': trackside_race_id
+                    })
         #stage here maybe it creates race.
         self._rhapi.race.stage(start_race_args)
 
