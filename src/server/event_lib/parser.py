@@ -3,7 +3,6 @@ import requests
 from typing import Optional, Dict, Any
 from urllib.parse import urljoin
 
-
 class EventParser:
     """A class to parse event IDs from JavaScript EventManager initialization code and fetch from API."""
     
@@ -24,7 +23,7 @@ class EventParser:
             str: The API response text
         """
         try:
-            response = requests.get(self.base_url)
+            response = requests.get("http://192.168.1.185:8080/api")
             response.raise_for_status()
             return response.text
         except Exception as e:
@@ -50,42 +49,29 @@ class EventParser:
             return match.group(1)  # Return just the UUID part
         return None
 
-    @staticmethod
-    def extract_event_id(js_code: str) -> Optional[str]:
+    def get_race_data(self, event_id: str, race_id: str) -> Dict[str, Any]:
         """
-        Extract the event ID from JavaScript EventManager initialization code.
+        Fetch event data from the API for a given event ID and race ID.
         
         Args:
-            js_code (str): The JavaScript code containing the EventManager initialization
+            event_id (str): The UUID of the event to fetch
+            race_id (str): The ID of the race to fetch
             
         Returns:
-            Optional[str]: The extracted UUID if found, None otherwise
+            Dict[str, Any]: The race data from the API
+            
+        Raises:
+            requests.RequestException: If the API request fails
         """
-        # Pattern to match: "events/UUID"
-        pattern = r'events/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})'
-        match = re.search(pattern, js_code)
-        
-        if match:
-            return match.group(1)  # Return just the UUID part
-        return None
 
-    @staticmethod
-    def extract_event_path(js_code: str) -> Optional[str]:
-        """
-        Extract the complete event path from JavaScript EventManager initialization code.
+        # /api/events/b69a294c-a074-4f4e-b949-4ae7de90c3e3/a853dde7-e1e6-46e9-b6e1-ef33e65baf96/Race.json
+        endpoint = f"/api/events/{event_id}/{race_id}/Race.json"
+        url = urljoin("http://192.168.1.200:3000", endpoint)
         
-        Args:
-            js_code (str): The JavaScript code containing the EventManager initialization
-            
-        Returns:
-            Optional[str]: The complete event path if found, None otherwise
-        """
-        pattern = r'(events/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})'
-        match = re.search(pattern, js_code)
+        response = requests.get(url)
+        response.raise_for_status()
         
-        if match:
-            return match.group(1)  # Return the full events/UUID path
-        return None
+        return response.json()
 
     def get_event_data(self, event_id: str) -> Dict[str, Any]:
         """
@@ -107,21 +93,3 @@ class EventParser:
         response.raise_for_status()
         
         return response.json()
-
-    def get_all_events(self) -> Dict[str, Any]:
-        """
-        Fetch all events from the API.
-        
-        Returns:
-            Dict[str, Any]: All events data from the API
-            
-        Raises:
-            requests.RequestException: If the API request fails
-        """
-        endpoint = "/events"
-        url = urljoin(self.base_url, endpoint)
-        
-        response = requests.get(url)
-        response.raise_for_status()
-        
-        return response.json() 

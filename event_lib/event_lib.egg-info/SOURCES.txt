@@ -1,9 +1,0 @@
-README.md
-setup.py
-event_lib/__init__.py
-event_lib/parser.py
-event_lib.egg-info/PKG-INFO
-event_lib.egg-info/SOURCES.txt
-event_lib.egg-info/dependency_links.txt
-event_lib.egg-info/requires.txt
-event_lib.egg-info/top_level.txt

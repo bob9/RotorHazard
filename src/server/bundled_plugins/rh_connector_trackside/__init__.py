@@ -127,15 +127,22 @@ class TracksideConnector():
 
         self._trackside_race_id = arg.get('race_id')
 
-        event_parser = EventParser()
+        # trackside_race_id = arg.get('race_id')
+
+        # Get base URL from config or use default
+        base_url = self._rhapi.config.get('GENERAL', 'HTTP_API_URL') or "http://192.168.1.200:3000"
+        event_parser = EventParser(base_url=base_url)
 
         event_id = event_parser.find_event_id()
         if event_id:
-            race_data = event_parser.get_race_data(event_id, self._trackside_race_id)
-            raceNumber = race_data.get('RaceNumber')
-            self._rhapi.db.heat_alter(self._rhapi.race.heat, name="TrackSide Heat: {} RaceNumber: {}".format(self._rhapi.race.heat, raceNumber))
-
+            race_data = event_parser.get_race_data(event_id, trackside_race_id)
+            if race_data:
+                raceNumber = race_data[0].get('RaceNumber')
+                self._rhapi.db.heat_alter(self._rhapi.race.heat, name="TrackSide Heat: {} RaceNumber: {}".format(self._rhapi.race.heat, raceNumber))
+        
+        #stage here maybe it creates race.
         self._rhapi.race.stage(start_race_args)
+
 
     def race_lap_recorded(self, args):
         if self.enabled:
