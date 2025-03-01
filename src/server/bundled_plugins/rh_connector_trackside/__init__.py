@@ -6,6 +6,7 @@ from time import monotonic
 from RHRace import RaceStatus
 from eventmanager import Evt
 from RHUI import UIField, UIFieldType, UIFieldSelectOption
+from event_lib import EventParser
 
 logger = logging.getLogger(__name__)
 
