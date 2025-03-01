@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 class EventParser:
     """A class to parse event IDs from JavaScript EventManager initialization code and fetch from API."""
     
-    def __init__(self, base_url: str = "http://192.168.1.185:8080/api"):
+    def __init__(self, base_url: str):
         """
         Initialize the EventParser with the API base URL.
         
