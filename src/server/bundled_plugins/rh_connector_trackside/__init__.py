@@ -126,8 +126,7 @@ class TracksideConnector():
             start_race_args['start_time_s'] = arg['start_time_s']
 
         self._trackside_race_id = arg.get('race_id')
-
-        # trackside_race_id = arg.get('race_id')
+        trackside_race_id = arg.get('race_id')
 
         # Get base URL from config or use default
         base_url = self._rhapi.config.get('GENERAL', 'HTTP_API_URL') or "http://192.168.1.200:3000"
