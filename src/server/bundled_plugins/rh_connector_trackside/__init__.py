@@ -6,7 +6,7 @@ from time import monotonic
 from RHRace import RaceStatus
 from eventmanager import Evt
 from RHUI import UIField, UIFieldType, UIFieldSelectOption
-from fpv_trackside_api import EventParser
+from .fpv_trackside_api import EventParser
 
 logger = logging.getLogger(__name__)
 
