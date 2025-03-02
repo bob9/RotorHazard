@@ -137,20 +137,19 @@ class TracksideConnector():
             base_url = self._rhapi.config.get('GENERAL', 'FPV_TRACKSIDE_API_URL') or None
             if base_url:
                 event_parser = EventParser(base_url=base_url)
+                event_id = event_parser.find_event_id()
+                if event_id:
+                    race_data = event_parser.get_race_data(event_id, trackside_race_id)
+                    if race_data:
+                        raceNumber = race_data[0].get('RaceNumber')
+                        round_id = race_data[0].get('Round')
+                        round_data = event_parser.get_round_data(event_id, round_id)
 
-            event_id = event_parser.find_event_id()
-            if event_id:
-                race_data = event_parser.get_race_data(event_id, trackside_race_id)
-                if race_data:
-                    raceNumber = race_data[0].get('RaceNumber')
-                    round_id = race_data[0].get('Round')
-                    round_data = event_parser.get_round_data(event_id, round_id)
-
-                    if round_data:
-                        roundNumber = round_data['RoundNumber']
-                        self._rhapi.db.heat_alter(heat.id, name="Heat {} · Round {}· Race {}".format(self._rhapi.race.heat, roundNumber, raceNumber))
-                        self._rhapi.ui.broadcast_heats()
-                        self._rhapi.ui.broadcast_current_heat()
+                        if round_data:
+                            roundNumber = round_data['RoundNumber']
+                            self._rhapi.db.heat_alter(heat.id, name="Heat {} · Round {}· Race {}".format(self._rhapi.race.heat, roundNumber, raceNumber))
+                            self._rhapi.ui.broadcast_heats()
+                            self._rhapi.ui.broadcast_current_heat()
 
     def race_lap_recorded(self, args):
         if self.enabled:
