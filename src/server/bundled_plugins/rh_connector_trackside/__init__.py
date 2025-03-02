@@ -147,7 +147,7 @@ class TracksideConnector():
 
                         if round_data:
                             roundNumber = round_data['RoundNumber']
-                            self._rhapi.db.heat_alter(heat.id, name="Heat {} · Round {}· Race {}".format(self._rhapi.race.heat, roundNumber, raceNumber))
+                            self._rhapi.db.heat_alter(heat.id, name="Heat {} · Round {} · Race {}".format(self._rhapi.race.heat, roundNumber, raceNumber))
                             self._rhapi.ui.broadcast_heats()
                             self._rhapi.ui.broadcast_current_heat()
 
