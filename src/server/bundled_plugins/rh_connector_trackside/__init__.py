@@ -6,7 +6,7 @@ from time import monotonic
 from RHRace import RaceStatus
 from eventmanager import Evt
 from RHUI import UIField, UIFieldType, UIFieldSelectOption
-from event_lib import EventParser
+from fpv_trackside_api import EventParser
 
 logger = logging.getLogger(__name__)
 
@@ -126,8 +126,12 @@ class TracksideConnector():
 
         self._trackside_race_id = arg.get('race_id')
         trackside_race_id = arg.get('race_id')
+        self.fpvtrackside_heat_naming(heat, trackside_race_id)
 
+        #stage here maybe it creates race.
+        self._rhapi.race.stage(start_race_args)
 
+    def fpvtrackside_heat_naming(self, heat, trackside_race_id):
         isFpvTracksideEnabled = self._rhapi.config.get('GENERAL', 'IS_FPVTRACKSIDE_API_ENABLED') 
         if isFpvTracksideEnabled:
             base_url = self._rhapi.config.get('GENERAL', 'FPV_TRACKSIDE_API_URL')
@@ -138,18 +142,14 @@ class TracksideConnector():
                 race_data = event_parser.get_race_data(event_id, trackside_race_id)
                 if race_data:
                     raceNumber = race_data[0].get('RaceNumber')
-            
                     round_id = race_data[0].get('Round')
                     round_data = event_parser.get_round_data(event_id, round_id)
 
                     if round_data:
                         roundNumber = round_data['RoundNumber']
-                        self._rhapi.db.heat_alter(heat.id, name="Heat {} Round {}   Race {}".format(self._rhapi.race.heat, roundNumber, raceNumber))
+                        self._rhapi.db.heat_alter(heat.id, name="Heat {} · Round {}· Race {}".format(self._rhapi.race.heat, roundNumber, raceNumber))
                         self._rhapi.ui.broadcast_heats()
                         self._rhapi.ui.broadcast_current_heat()
-
-        #stage here maybe it creates race.
-        self._rhapi.race.stage(start_race_args)
 
     def race_lap_recorded(self, args):
         if self.enabled:

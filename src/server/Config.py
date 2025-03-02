@@ -72,7 +72,10 @@ class Config:
         # hardware default configurations
         self.config['HARDWARE']['I2C_BUS'] = 1
 
+
         # other default configurations
+        self.config['GENERAL']['IS_FPVTRACKSIDE_API_ENABLED'] = False # set to true if fpvtrackside api is enabled and web server running and FPV_TRACKSIDE_API_URL is set
+        self.config['GENERAL']['FPV_TRACKSIDE_API_URL'] = '' #http://192.168.1.185:8080 fpvtrackside api url needs web server running
         self.config['GENERAL']['HTTP_PORT'] = 5000
         self.config['GENERAL']['SECONDARIES'] = []
         self.config['GENERAL']['SECONDARY_TIMEOUT'] = 300  # seconds
