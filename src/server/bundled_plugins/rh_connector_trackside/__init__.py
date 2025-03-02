@@ -132,10 +132,11 @@ class TracksideConnector():
         self._rhapi.race.stage(start_race_args)
 
     def fpvtrackside_heat_naming(self, heat, trackside_race_id):
-        isFpvTracksideEnabled = self._rhapi.config.get('GENERAL', 'IS_FPVTRACKSIDE_API_ENABLED') 
+        isFpvTracksideEnabled = self._rhapi.config.get('GENERAL', 'IS_FPVTRACKSIDE_API_ENABLED') or False
         if isFpvTracksideEnabled:
-            base_url = self._rhapi.config.get('GENERAL', 'FPV_TRACKSIDE_API_URL')
-            event_parser = EventParser(base_url=base_url)
+            base_url = self._rhapi.config.get('GENERAL', 'FPV_TRACKSIDE_API_URL') or None
+            if base_url:
+                event_parser = EventParser(base_url=base_url)
 
             event_id = event_parser.find_event_id()
             if event_id:
