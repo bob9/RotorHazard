@@ -210,6 +210,8 @@ class TracksideConnector():
                 'ts_pilot_id': ts_pilot_id,
                 'laps': laps
             }
+            payload_json = json.dumps(payload)
+            logger.info(f"payload: {payload_json}")
             self._rhapi.ui.socket_broadcast('ts_race_marshal', payload)
 
     def color_setup(self, arg):
