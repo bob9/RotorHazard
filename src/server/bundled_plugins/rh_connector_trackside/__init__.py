@@ -71,6 +71,7 @@ class TracksideConnector():
         if self._rhapi.race.status != RaceStatus.READY:
             self._rhapi.race.stop(doSave=True) # Stop and save in one operation, which triggers Save and Clear
 
+        heat = None
         if arg.get('p'):
             heat = self._rhapi.db.heat_add()
             self._rhapi.db.heat_alter(heat.id, name="TrackSide Heat {}".format(heat.id))
@@ -126,7 +127,11 @@ class TracksideConnector():
 
         self._trackside_race_id = arg.get('race_id')
         trackside_race_id = arg.get('race_id')
-        self.fpvtrackside_heat_naming(heat, trackside_race_id)
+        logger.info(f"trackside_race_id: {trackside_race_id}")
+        logger.info(f"heat: {heat}")
+        if heat:  # Only call fpvtrackside_heat_naming if we have a valid heat
+            logger.info(f"Calling fpvtrackside_heat_naming for heat {heat.id} and trackside_race_id {trackside_race_id}")
+            self.fpvtrackside_heat_naming(heat, trackside_race_id)
 
         #stage here maybe it creates race.
         self._rhapi.race.stage(start_race_args)
