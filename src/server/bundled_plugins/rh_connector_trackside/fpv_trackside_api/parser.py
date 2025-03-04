@@ -23,7 +23,7 @@ class EventParser:
             str: The API response text
         """
         try:
-            endpoint = f"/api"
+            endpoint = f"/events"
             url = urljoin(self.base_url, endpoint)
             response = requests.get(url)
             response.raise_for_status()
@@ -67,7 +67,7 @@ class EventParser:
         return None
 
 
-    def get_race_data(self, event_id: str, race_id: str) -> Dict[str, Any]:
+    def get_race_data(self,race_id: str) -> Dict[str, Any]:
         """
         Fetch event data from the API for a given event ID and race ID.
         
@@ -83,7 +83,7 @@ class EventParser:
         """
 
         # /api/events/b69a294c-a074-4f4e-b949-4ae7de90c3e3/a853dde7-e1e6-46e9-b6e1-ef33e65baf96/Race.json
-        endpoint = f"/events/{event_id}/{race_id}/Race.json"
+        endpoint = f"/races/{race_id}"
         url = urljoin(self.base_url, endpoint)
         
 

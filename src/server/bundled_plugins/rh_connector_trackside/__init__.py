@@ -144,7 +144,8 @@ class TracksideConnector():
                 event_parser = EventParser(base_url=base_url)
                 event_id = event_parser.find_event_id()
                 if event_id:
-                    race_data = event_parser.get_race_data(event_id, trackside_race_id)
+                    logger.info(f"event_id: {event_id}")
+                    race_data = event_parser.get_race_data(trackside_race_id)
                     if race_data:
                         raceNumber = race_data[0].get('RaceNumber')
                         round_id = race_data[0].get('Round')
@@ -183,20 +184,22 @@ class TracksideConnector():
         if args and args.get('race_id'):
             race_id = args.get('race_id')
             for run in self._rhapi.db.pilotruns_by_race(race_id):
+                
                 if run.pilot_id == args.get('pilot_id'):
                     laps_raw = self._rhapi.db.laps_by_pilotrun(run.id)
                     laps = []
                     for lap in laps_raw:
-                        laps.append({
-                            'deleted': lap.deleted,
-                            'lap_time': lap.lap_time,
-                            'lap_time_formatted': lap.lap_time_formatted,
-                            'lap_time_stamp': lap.lap_time_stamp,
-                        })
-                    laps = json.dumps(laps)
+                        if not lap.deleted: 
+                            laps.append({
+                                'deleted': lap.deleted,
+                                'lap_time': lap.lap_time,
+                                'lap_time_formatted': lap.lap_time_formatted,
+                                'lap_time_stamp': lap.lap_time_stamp,
+                            })
                     break
             else:
                 return False
+
 
             ts_race_id = self._rhapi.db.race_attribute_value(race_id, 'trackside_race_ID')
 
@@ -213,6 +216,7 @@ class TracksideConnector():
             payload_json = json.dumps(payload)
             logger.info(f"payload: {payload_json}")
             self._rhapi.ui.socket_broadcast('ts_race_marshal', payload)
+
 
     def color_setup(self, arg):
         if arg.get('channel_color'):
