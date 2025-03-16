@@ -27,12 +27,17 @@ APP.app_context().push()
 class UIFieldType(Enum):
     TEXT = "text"
     BASIC_INT = "basic_int"
+    NUMBER = "number"
+    RANGE = "range"
     SELECT = "select"
     CHECKBOX = "checkbox"
     PASSWORD = "password"
     DATE = "date"
     TIME = "time"
     DATETIME = "datetime"
+    EMAIL = "email"
+    TEL = "tel"
+    URL = "url"
 
 @dataclass
 class UIFieldSelectOption():
@@ -50,6 +55,7 @@ class UIField():
     options: List[UIFieldSelectOption] = None
     order: int = 0 # not implemented
     private: bool = False
+    html_attributes: dict = None
 
     def frontend_repr(self):
         return {
@@ -61,6 +67,7 @@ class UIField():
             'placeholder': self.placeholder,
             'options': [asdict(option) for option in self.options] if self.options else None,
             'order': self.order,
+            'html_attributes': self.html_attributes
         }
 
 @dataclass
@@ -381,6 +388,7 @@ class RHUI():
 
     def emit_plugin_list(self, **params):
         plugins = self._racecontext.serverstate.plugins
+        manager_local_data = self._racecontext.plugin_manager.get_display_data()
 
         plugin_data = []
         for plugin in plugins:
@@ -390,6 +398,7 @@ class RHUI():
                     'author': None,
                     'author_uri': None,
                     'description': None,
+                    'documentation_uri': None,
                     'info_uri': None,
                     'license': None,
                     'license_uri': None,
@@ -397,6 +406,7 @@ class RHUI():
                     'required_rhapi_version': None,
                     'update_uri': None,
                     'text_domain': None,
+                    'update_status': None,
                 }
                 if plugin.meta:
                     for key, value in plugin.meta.items():
@@ -410,6 +420,9 @@ class RHUI():
                 plugin_info['loaded'] = plugin.loaded
                 plugin_info['load_issue'] = plugin.load_issue
 
+                if manager_local_data and plugin.name in manager_local_data:
+                    plugin_info['update_status'] = manager_local_data[plugin.name]['update_status']
+
                 plugin_data.append(plugin_info)
 
         emit_payload = {
@@ -422,6 +435,20 @@ class RHUI():
             emit('plugin_list', emit_payload)
         else:
             self._socket.emit('plugin_list', emit_payload)
+
+    def emit_plugin_repo(self, **params):
+        plugin_data = self._racecontext.plugin_manager.get_display_data()
+        category_data = self._racecontext.plugin_manager.get_remote_categories()
+
+        emit_payload = {
+            'remote_categories': category_data,
+            'remote_data': plugin_data
+        }
+
+        if ('nobroadcast' in params):
+            emit('plugin_repo', emit_payload)
+        else:
+            self._socket.emit('plugin_repo', emit_payload)
 
     def emit_option_update(self, options, **params):
         option_vals = {}
@@ -1867,3 +1894,7 @@ class RHUI():
             pass
         # if node freq does not match then just return frequency
         return "{}".format(freq_val)
+
+    def emit_restart_required(self, **params):
+        ''' Emits restart required message to all clients '''
+        self._socket.emit('restart_required')

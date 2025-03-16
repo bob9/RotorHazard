@@ -467,14 +467,21 @@ An `RHUI.UIField` object defines a frontend user interface for collecting data. 
 - `field_type` (UIFieldType), one of:
     - `UIFieldType.TEXT`
     - `UIFieldType.BASIC_INT`
+    - `UIFieldType.NUMBER`
+    - `UIFieldType.RANGE`
     - `UIFieldType.SELECT`
     - `UIFieldType.CHECKBOX`
+    - `UIFieldType.PASSWORD`
     - `UIFieldType.DATE`
     - `UIFieldType.TIME`
     - `UIFieldType.DATETIME`
+    - `UIFieldType.EMAIL`
+    - `UIFieldType.TEL`
+    - `UIFieldType.URL`
 - `value` _optional_ (any): Default value for field
 - `desc` _optional_ (string): additional user-facing text that appears in the RotorHazard frontend interface describing notes or special instructions for use
 - `private` _optional_ (boolean): Prevent automatically generated UI
+- `html_attributes` _optional_ (dict): attribute values passed to HTML to control browser-based validation, such as `min`, `max`, `step`, `minlength`, `maxlength`, `pattern`; only valid values for each field type will be added
 
 If `field_type` is `TEXT`
 
@@ -502,16 +509,23 @@ from RHUI import UIField, UIFieldType, UIFieldSelectOption
 ```
 
 ### Metadata
-Plugin authors are strongly encouraged to declare metadata. In your plugin folder, create the JSON-formatted file `manifest.json` with the following keys. Keys may be omitted or `null`.
+Plugin authors are strongly encouraged to declare metadata. In your plugin folder, create the JSON-formatted file `manifest.json` using any of the following keys. Currently, keys may be omitted or `null` if not applicable, but some may become required in future versions.
 
-- `name`: The name of your plugin
-- `author`: The plugin author's name
+Basic metadata keys include:
+- `name`: the name of your plugin
+- `author`: the plugin author's name
 - `author_uri`: valid HTTP link to the author's website
-- `description`: short description of the plugin's function 
+- `dependencies`: list of [python package requirement specifiers](https://pip.pypa.io/en/stable/reference/requirement-specifiers/)
+- `description`: short description of the plugin's function
+- `documentation_uri`: valid HTTP link to the plugin's documentation
 - `info_uri`: valid HTTP link to a website about the plugin
 - `license`: name of the plugin's license
 - `license_uri`: valid HTTP link to the plugin's license information
-- `version`: a version identifier for the plugin's own code
-- `required_rhapi_version`: the minimum RHAPI version required to run the plugin, such as "1.1" 
+- `required_rhapi_version`: the minimum RHAPI version required to run the plugin, such as "1.1"
+- `version`: a version identifier for the plugin's own code ([semver-formatted](https://semver.org/), ideally)
+- `zip_filename`: filename of zip package, if separately required for distribution (`null` for GitHub releases)
 - `update_uri`: (not yet implemented)
 - `text_domain`: (not yet implemented)
+
+#### Community Plugins
+Community Plugins can be found, installed, and can be updated entirely through the RotorHazard UI. For a plugin to be included in this section, a manifest is required. Some keys or format of keys are restricted, and additional keys such as `domain` and `category` are also defined. See [Community Plugins documentation](https://rotorhazard.github.io/community-plugins/) for more information. 
