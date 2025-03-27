@@ -1722,9 +1722,19 @@ jQuery(document).ready(function($){
 
 	// load needed data from server when required
 	socket.on('load_all', function (msg) {
+		if (rotorhazard.server_instance_token && rotorhazard.server_instance_token != msg.server_instance_token) {
+			location.reload(true);
+		} else {
+			rotorhazard.server_instance_token = msg.server_instance_token;
+		}
+
 		if (typeof(data_dependencies) != "undefined") {
 			socket.emit('load_data', {'load_types': data_dependencies});
 		}
+	});
+
+	socket.on('refresh_page', function (msg) {
+		location.reload(true);
 	});
 
 	// store language strings
