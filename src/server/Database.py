@@ -460,8 +460,8 @@ def initialize(db_uri=None):
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.execute("PRAGMA journal_mode=WAL")
-        cursor.execute("PRAGMA cache_size=-10000")
-        cursor.execute("PRAGMA synchronous=FULL")
+        cursor.execute("PRAGMA cache_size=-100000")
+        cursor.execute("PRAGMA synchronous=NORMAL")
         cursor.execute("PRAGMA busy_timeout=5000")
         cursor.close()
     
