@@ -202,6 +202,7 @@ class RHData():
             RHUtils.checkSetFileOwnerPi(bkp_name)
         except Exception:
             logger.exception('Error backing up database file')
+            return None
         return bkp_name
 
     def delete_old_db_autoBkp_files(self, num_keep_val, prefix_str, DB_AUTOBKP_NUM_KEEP_STR):
@@ -3008,6 +3009,8 @@ class RHData():
 
     def reassign_savedRaceMeta_heat(self, savedRaceMeta_or_id, new_heat_id):
         race_meta = self.resolve_savedRaceMeta_from_savedRaceMeta_or_id(savedRaceMeta_or_id)
+        if race_meta.heat_id == new_heat_id:
+            return False, False
 
         old_heat_id = race_meta.heat_id
         old_heat = self.get_heat(old_heat_id)
@@ -3019,7 +3022,10 @@ class RHData():
 
         new_heat = self.get_heat(new_heat_id)
         new_class = self.get_raceClass(new_heat.class_id)
-        new_format_id = new_class.format_id
+        if new_class:
+            new_format_id = new_class.format_id
+        else:
+            new_format_id = old_format_id
 
         # clear round ids
         heat_races = Database.SavedRaceMeta.query.filter_by(heat_id=new_heat_id).order_by(Database.SavedRaceMeta.round_id).all()
@@ -3088,7 +3094,8 @@ class RHData():
             self.clear_results_savedRaceMeta(race_meta)
 
         if old_heat.class_id != new_heat.class_id:
-            self.clear_results_raceClass(new_class)
+            if new_class:
+                self.clear_results_raceClass(new_class)
             if old_class:
                 self.clear_results_raceClass(old_class)
 
