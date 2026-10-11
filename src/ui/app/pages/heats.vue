@@ -176,7 +176,7 @@ const navItems = computed(() => [
           />
 
           <template v-if="cls">
-            <header class="space-y-4">
+            <header class="space-y-0.5">
               <div class="flex items-start gap-3">
                 <UInput
                   :model-value="cls.name || ''"
@@ -184,7 +184,7 @@ const navItems = computed(() => [
                   variant="ghost"
                   size="xl"
                   class="min-w-0 flex-1"
-                  :ui="{ base: 'font-display text-3xl font-semibold px-1 -ml-1 text-highlighted placeholder:text-highlighted disabled:opacity-100 disabled:cursor-default' }"
+                  :ui="{ base: 'font-display text-3xl font-semibold px-1 py-0 -ml-1 text-highlighted placeholder:text-highlighted disabled:opacity-100 disabled:cursor-default' }"
                   :disabled="!admin"
                   :aria-label="t('Class name')"
                   @change="(e: any) => alterClass({ class_name: e.target.value })"

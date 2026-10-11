@@ -2634,7 +2634,10 @@ def on_resave_laps(data):
         logger.warning('resave_laps: unable to resave pilotrace_id={0} (not found)'.format(pilotrace_id))
         return
 
-    message = __('Race times adjusted for: Heat {0} Round {1} / {2}').format(heat_id, round_id, callsign)
+    # name the heat as the interfaces show it ("Open Class 2"), not by its database id
+    heat = RaceContext.rhdata.get_heat(heat_id)
+    heat_name = heat.display_name if heat else str(heat_id)
+    message = __('Race times adjusted for: {0} · Round {1} / {2}').format(heat_name, round_id, callsign)
     RaceContext.rhui.emit_priority_message(message, False)
     logger.info(message)
 

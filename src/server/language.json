@@ -995,7 +995,9 @@
 			"Review the results, or generate heats for the next stage.": "Sieh dir die Ergebnisse an oder erstelle Heats für die nächste Stufe.",
 			"Callsign, name, team and color": "Rufname, Name, Team und Farbe",
 			"Fill this seat with a pilot, or from a heat or class result": "Diesen Platz mit einem Piloten oder aus einem Heat- bzw. Klassenergebnis besetzen",
-			"Plugin": "Plugin"
+			"Plugin": "Plugin",
+			"Race times adjusted for: {0} · Round {1} / {2}": "Rennzeiten angepasst für: {0} · Runde {1} / {2}",
+			"Open-source plugins from the community, free to use at any event.": "Open-Source-Plugins aus der Community, kostenlos für jedes Event."
 		}
 	},
 	"es": {
@@ -2114,7 +2116,9 @@
 			"Review the results, or generate heats for the next stage.": "Revisa los resultados o genera mangas para la siguiente fase.",
 			"Callsign, name, team and color": "Indicativo, nombre, equipo y color",
 			"Fill this seat with a pilot, or from a heat or class result": "Asigna este puesto a un piloto o desde el resultado de una manga o clase",
-			"Plugin": "Plugin"
+			"Plugin": "Plugin",
+			"Race times adjusted for: {0} · Round {1} / {2}": "Tiempos de carrera ajustados para: {0} · Ronda {1} / {2}",
+			"Open-source plugins from the community, free to use at any event.": "Plugins de código abierto de la comunidad, gratis para cualquier evento."
 		}
 	},
 	"fr-be": {
@@ -3027,7 +3031,9 @@
 			"Review the results, or generate heats for the next stage.": "Consultez les résultats ou générez les séries de l’étape suivante.",
 			"Callsign, name, team and color": "Indicatif, nom, équipe et couleur",
 			"Fill this seat with a pilot, or from a heat or class result": "Attribuer cette place à un pilote, ou d’après le résultat d’une série ou d’une classe",
-			"Plugin": "Plugin"
+			"Plugin": "Plugin",
+			"Race times adjusted for: {0} · Round {1} / {2}": "Temps de course ajustés pour : {0} · Tour {1} / {2}",
+			"Open-source plugins from the community, free to use at any event.": "Des plugins open source de la communauté, gratuits pour tout événement."
 		}
 	},
 	"it": {
@@ -4414,7 +4420,9 @@
 			 "Review the results, or generate heats for the next stage.": "Controlla i risultati o genera le batterie per la fase successiva.",
 			 "Callsign, name, team and color": "Nominativo, nome, squadra e colore",
 			 "Fill this seat with a pilot, or from a heat or class result": "Assegna questo posto a un pilota o dal risultato di una batteria o classe",
-			 "Plugin": "Plugin"
+			 "Plugin": "Plugin",
+			 "Race times adjusted for: {0} · Round {1} / {2}": "Tempi di gara aggiustati per: {0} · Round {1} / {2}",
+			 "Open-source plugins from the community, free to use at any event.": "Plugin open source della community, gratuiti per qualsiasi evento."
 		}
 	},
 	"nl-be": {
@@ -5317,7 +5325,9 @@
 			"Review the results, or generate heats for the next stage.": "Bekijk de resultaten of genereer heats voor de volgende fase.",
 			"Callsign, name, team and color": "Roepnaam, naam, team en kleur",
 			"Fill this seat with a pilot, or from a heat or class result": "Vul deze plek met een piloot, of vanuit een heat- of klasseresultaat",
-			"Plugin": "Plugin"
+			"Plugin": "Plugin",
+			"Race times adjusted for: {0} · Round {1} / {2}": "Racetijden aangepast voor: {0} · Ronde {1} / {2}",
+			"Open-source plugins from the community, free to use at any event.": "Open-source plugins uit de community, gratis voor elk evenement."
 		}
 	},
 	"pl": {
@@ -6257,7 +6267,9 @@
 			"Review the results, or generate heats for the next stage.": "Sprawdź wyniki lub wygeneruj wyścigi na następny etap.",
 			"Callsign, name, team and color": "Znak wywoławczy, imię, drużyna i kolor",
 			"Fill this seat with a pilot, or from a heat or class result": "Obsadź to miejsce pilotem lub według wyniku wyścigu albo klasy",
-			"Plugin": "Wtyczka"
+			"Plugin": "Wtyczka",
+			"Race times adjusted for: {0} · Round {1} / {2}": "Czasy wyścigu dostosowane dla: {0} · Runda {1} / {2}",
+			"Open-source plugins from the community, free to use at any event.": "Wtyczki open source od społeczności, bezpłatne na każde wydarzenie."
 		}
 	},
 	"ja-JP": {
@@ -7494,7 +7506,9 @@
 			"Review the results, or generate heats for the next stage.": "結果を確認するか、次のステージのヒートを生成してください。",
 			"Callsign, name, team and color": "コールサイン、名前、チーム、色",
 			"Fill this seat with a pilot, or from a heat or class result": "この枠をパイロット、またはヒート／クラスの結果から割り当てます",
-			"Plugin": "プラグイン"
+			"Plugin": "プラグイン",
+			"Race times adjusted for: {0} · Round {1} / {2}": "レースタイム調整: {0} · ラウンド {1} / {2}",
+			"Open-source plugins from the community, free to use at any event.": "コミュニティによるオープンソースのプラグイン。どのイベントでも無料で使えます。"
 		}
 	},
 	"zh-CN": {
@@ -9023,7 +9037,9 @@
 			"Review the results, or generate heats for the next stage.": "查看结果，或为下一阶段生成分组。",
 			"Callsign, name, team and color": "呼号、姓名、队伍和颜色",
 			"Fill this seat with a pilot, or from a heat or class result": "为此位置指定飞手，或按分组/组别结果填充",
-			"Plugin": "插件"
+			"Plugin": "插件",
+			"Race times adjusted for: {0} · Round {1} / {2}": "比赛时间调整: {0} · 回合 {1} / {2}",
+			"Open-source plugins from the community, free to use at any event.": "来自社区的开源插件，任何赛事均可免费使用。"
 		}
 	},
 	"ru": {
@@ -10328,7 +10344,9 @@
             "Review the results, or generate heats for the next stage.": "Посмотрите результаты или создайте заезды для следующего этапа.",
             "Callsign, name, team and color": "Позывной, имя, команда и цвет",
             "Fill this seat with a pilot, or from a heat or class result": "Назначьте на это место пилота или по результату заезда либо класса",
-            "Plugin": "Плагин"
+            "Plugin": "Плагин",
+            "Race times adjusted for: {0} · Round {1} / {2}": "Данные вылета поправлены для: {0} · Раунд {1} / {2}",
+            "Open-source plugins from the community, free to use at any event.": "Плагины с открытым исходным кодом от сообщества, бесплатно для любого мероприятия."
         }
 	}
 }

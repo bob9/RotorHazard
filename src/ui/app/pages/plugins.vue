@@ -343,19 +343,14 @@ function initials(name: string) {
 
     <template #body>
       <div class="mx-auto w-full max-w-5xl space-y-8">
-        <header class="space-y-3">
-          <p class="text-sm font-semibold text-primary">
-            {{ t('Plugins') }}
-          </p>
-          <h1 class="font-display text-4xl font-semibold tracking-tight text-highlighted sm:text-5xl">
-            {{ tab === 'discover' ? t('Community Plugins') : t('Your Plugins') }}
-          </h1>
-          <p class="max-w-3xl text-base text-muted sm:text-lg">
-            {{ t('Extend the functionality of your timer by installing plugins built, maintained, and provided by the community. All plugins listed here are open-source and free to use at any event.') }}
-          </p>
-        </header>
 
-        <UTabs v-model="tab" :items="tabs" :content="false" color="neutral" class="w-full sm:w-fit" :ui="{ list: 'w-full sm:w-fit' }" />
+        <!-- a tool page like Pilots or Heats: the navbar names it, the tabs lead -->
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <UTabs v-model="tab" :items="tabs" :content="false" color="neutral" class="w-full sm:w-fit" :ui="{ list: 'w-full sm:w-fit' }" />
+          <p v-if="tab === 'discover'" class="text-sm text-muted">
+            {{ t('Open-source plugins from the community, free to use at any event.') }}
+          </p>
+        </div>
 
         <!-- ================================================= INSTALLED -->
         <div v-if="tab === 'installed'" class="space-y-8">
