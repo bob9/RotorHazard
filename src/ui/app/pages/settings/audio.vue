@@ -105,7 +105,7 @@ function previewBeep() {
 // ---- announcements
 const usage = computed(() => [
   { label: t('Never'), value: 0 },
-  { label: t('Only on Non-Team/Non-Co-op Races'), value: 2 },
+  { label: t('Individual races only'), value: 2 },
   { label: t('Always'), value: 1 }
 ])
 const neverAlways = computed(() => [

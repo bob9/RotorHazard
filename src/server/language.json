@@ -976,7 +976,15 @@
 			"has no empty seat on an enabled node.": "hat keinen freien Platz auf einem aktiven Node.",
 			"more not shown": "weitere nicht angezeigt",
 			"unused slot": "unbenutzter Platz",
-			"unused slots": "unbenutzte Plätze"
+			"unused slots": "unbenutzte Plätze",
+			"After the clock ends, keep counting laps until you stop the race.": "Nach Ablauf der Zeit weiter Runden zählen, bis du das Rennen stoppst.",
+			"Find a format…": "Format suchen…",
+			"Individual races only": "Nur Einzelrennen",
+			"Not raced": "Noch nicht gefahren",
+			"Seconds after the clock ends that a final lap still counts.": "Sekunden nach Ablauf der Zeit, in denen eine letzte Runde noch zählt.",
+			"Wait for a manual stop": "Auf manuellen Stopp warten",
+			"round raced": "Runde gefahren",
+			"rounds raced": "Runden gefahren"
 		}
 	},
 	"es": {
@@ -2076,7 +2084,15 @@
 			"has no empty seat on an enabled node.": "no tiene asiento libre en un nodo activo.",
 			"more not shown": "más sin mostrar",
 			"unused slot": "plaza sin usar",
-			"unused slots": "plazas sin usar"
+			"unused slots": "plazas sin usar",
+			"After the clock ends, keep counting laps until you stop the race.": "Al terminar el tiempo, seguir contando vueltas hasta que detenga la carrera.",
+			"Find a format…": "Buscar formato…",
+			"Individual races only": "Solo carreras individuales",
+			"Not raced": "Sin correr",
+			"Seconds after the clock ends that a final lap still counts.": "Segundos tras el fin del tiempo en los que aún cuenta una última vuelta.",
+			"Wait for a manual stop": "Esperar a una parada manual",
+			"round raced": "ronda corrida",
+			"rounds raced": "rondas corridas"
 		}
 	},
 	"fr-be": {
@@ -2970,7 +2986,15 @@
 			"has no empty seat on an enabled node.": "n'a aucune place libre sur une node active.",
 			"more not shown": "autres non affichés",
 			"unused slot": "place inutilisée",
-			"unused slots": "places inutilisées"
+			"unused slots": "places inutilisées",
+			"After the clock ends, keep counting laps until you stop the race.": "Après la fin du chrono, continuer à compter les tours jusqu'à l'arrêt de la course.",
+			"Find a format…": "Rechercher un format…",
+			"Individual races only": "Courses individuelles uniquement",
+			"Not raced": "Pas encore courue",
+			"Seconds after the clock ends that a final lap still counts.": "Secondes après la fin du chrono pendant lesquelles un dernier tour compte encore.",
+			"Wait for a manual stop": "Attendre un arrêt manuel",
+			"round raced": "série courue",
+			"rounds raced": "séries courues"
 		}
 	},
 	"it": {
@@ -4338,7 +4362,15 @@
 			 "has no empty seat on an enabled node.": "non ha posti liberi su un nodo attivo.",
 			 "more not shown": "altri non mostrati",
 			 "unused slot": "posto inutilizzato",
-			 "unused slots": "posti inutilizzati"
+			 "unused slots": "posti inutilizzati",
+			 "After the clock ends, keep counting laps until you stop the race.": "Alla fine del tempo, continua a contare i giri finché non fermi la gara.",
+			 "Find a format…": "Cerca formato…",
+			 "Individual races only": "Solo gare individuali",
+			 "Not raced": "Non ancora corsa",
+			 "Seconds after the clock ends that a final lap still counts.": "Secondi dopo la fine del tempo in cui un ultimo giro conta ancora.",
+			 "Wait for a manual stop": "Attendi lo stop manuale",
+			 "round raced": "round corso",
+			 "rounds raced": "round corsi"
 		}
 	},
 	"nl-be": {
@@ -5222,7 +5254,15 @@
 			"has no empty seat on an enabled node.": "heeft geen vrije plaats op een ingeschakelde ontvanger.",
 			"more not shown": "meer niet getoond",
 			"unused slot": "ongebruikte plaats",
-			"unused slots": "ongebruikte plaatsen"
+			"unused slots": "ongebruikte plaatsen",
+			"After the clock ends, keep counting laps until you stop the race.": "Blijf na afloop van de tijd laps tellen tot je de race stopt.",
+			"Find a format…": "Opmaak zoeken…",
+			"Individual races only": "Alleen individuele races",
+			"Not raced": "Nog niet gevlogen",
+			"Seconds after the clock ends that a final lap still counts.": "Seconden na afloop van de tijd waarin een laatste lap nog telt.",
+			"Wait for a manual stop": "Wachten op handmatige stop",
+			"round raced": "ronde gevlogen",
+			"rounds raced": "rondes gevlogen"
 		}
 	},
 	"pl": {
@@ -6143,7 +6183,15 @@
 			"has no empty seat on an enabled node.": "nie ma wolnego miejsca na włączonej odnodze.",
 			"more not shown": "więcej niewyświetlonych",
 			"unused slot": "nieużywane miejsce",
-			"unused slots": "nieużywane miejsca"
+			"unused slots": "nieużywane miejsca",
+			"After the clock ends, keep counting laps until you stop the race.": "Po upływie czasu liczyć okrążenia aż do zatrzymania wyścigu.",
+			"Find a format…": "Znajdź format…",
+			"Individual races only": "Tylko wyścigi indywidualne",
+			"Not raced": "Jeszcze nie rozegrano",
+			"Seconds after the clock ends that a final lap still counts.": "Sekundy po upływie czasu, w których ostatnie okrążenie jeszcze się liczy.",
+			"Wait for a manual stop": "Czekaj na ręczne zatrzymanie",
+			"round raced": "rozegrana runda",
+			"rounds raced": "rozegrane rundy"
 		}
 	},
 	"ja-JP": {
@@ -7361,7 +7409,15 @@
 			"has no empty seat on an enabled node.": "には有効なノードの空きシートがありません。",
 			"more not shown": "件は非表示",
 			"unused slot": "未使用のスロット",
-			"unused slots": "未使用のスロット"
+			"unused slots": "未使用のスロット",
+			"After the clock ends, keep counting laps until you stop the race.": "時間終了後も、レースを停止するまで周回をカウントします。",
+			"Find a format…": "レース形式を検索…",
+			"Individual races only": "個人レースのみ",
+			"Not raced": "未レース",
+			"Seconds after the clock ends that a final lap still counts.": "時間終了後、最後の周回がカウントされる秒数。",
+			"Wait for a manual stop": "手動停止を待つ",
+			"round raced": "ラウンド完了",
+			"rounds raced": "ラウンド完了"
 		}
 	},
 	"zh-CN": {
@@ -8871,7 +8927,15 @@
 			"has no empty seat on an enabled node.": "在已启用的节点上没有空座位。",
 			"more not shown": "项未显示",
 			"unused slot": "个未使用的位置",
-			"unused slots": "个未使用的位置"
+			"unused slots": "个未使用的位置",
+			"After the clock ends, keep counting laps until you stop the race.": "计时结束后继续计圈，直到你停止比赛。",
+			"Find a format…": "查找比赛规则…",
+			"Individual races only": "仅个人赛",
+			"Not raced": "尚未比赛",
+			"Seconds after the clock ends that a final lap still counts.": "计时结束后最后一圈仍计入的秒数。",
+			"Wait for a manual stop": "等待手动停止",
+			"round raced": "个回合已完成",
+			"rounds raced": "个回合已完成"
 		}
 	},
 	"ru": {
@@ -10157,7 +10221,15 @@
             "has no empty seat on an enabled node.": "нет свободного места на включённом приёмнике.",
             "more not shown": "ещё не показано",
             "unused slot": "неиспользуемое место",
-            "unused slots": "неиспользуемых мест"
+            "unused slots": "неиспользуемых мест",
+            "After the clock ends, keep counting laps until you stop the race.": "После окончания времени продолжать считать круги, пока вы не остановите вылет.",
+            "Find a format…": "Найти формат…",
+            "Individual races only": "Только индивидуальные вылеты",
+            "Not raced": "Ещё не проводилась",
+            "Seconds after the clock ends that a final lap still counts.": "Секунды после окончания времени, в течение которых последний круг ещё засчитывается.",
+            "Wait for a manual stop": "Ждать ручной остановки",
+            "round raced": "раунд проведён",
+            "rounds raced": "раундов проведено"
         }
 	}
 }

@@ -141,8 +141,14 @@ function reconnect() {
   connect()
 }
 
-function emit(event: string, data: any = {}) {
-  connect().emit(event, data)
+/**
+ * Sends an event. Without data it is sent with no payload at all: several
+ * server handlers (stage_race, stop_race, save_laps, discard_laps) take their
+ * positional arguments from the payload and fail or misbehave if one is sent.
+ */
+function emit(event: string, data?: any) {
+  if (data === undefined) connect().emit(event)
+  else connect().emit(event, data)
 }
 
 /** Emits and waits for the server's acknowledgement callback (if the handler returns one). */

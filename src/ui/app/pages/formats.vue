@@ -174,8 +174,15 @@ const suggestions = computed(() => {
                       <span class="text-sm text-muted">{{ t('sec') }}</span>
                     </div>
                   </RhRow>
-                  <RhRow :label="t('Grace Period')" :description="t('Seconds after the clock ends that a final lap still counts. -1 waits for a manual stop.')">
-                    <UInputNumber :model-value="fmt.lap_grace_sec" :min="-1" class="w-36" :disabled="!editable" @update:model-value="(v: any) => alter({ lap_grace_sec: v })" />
+                  <!-- the server's lap_grace_sec uses -1 for "wait for a manual stop" -->
+                  <RhRow :label="t('Wait for a manual stop')" :description="t('After the clock ends, keep counting laps until you stop the race.')" inline>
+                    <USwitch :model-value="fmt.lap_grace_sec < 0" :disabled="!editable" :aria-label="t('Wait for a manual stop')" @update:model-value="(v: boolean) => alter({ lap_grace_sec: v ? -1 : 60 })" />
+                  </RhRow>
+                  <RhRow v-if="fmt.lap_grace_sec >= 0" :label="t('Grace Period')" :description="t('Seconds after the clock ends that a final lap still counts.')">
+                    <div class="flex items-center gap-2">
+                      <UInputNumber :model-value="fmt.lap_grace_sec" :min="0" class="w-36" :disabled="!editable" @update:model-value="(v: any) => alter({ lap_grace_sec: v })" />
+                      <span class="text-sm text-muted">{{ t('sec') }}</span>
+                    </div>
                   </RhRow>
                 </template>
               </RhGroup>

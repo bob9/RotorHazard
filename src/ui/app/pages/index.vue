@@ -70,11 +70,16 @@ const heatItems = computed(() => {
     const cls = classes.value.find(c => c.id === cid)
     groups.push([
       { type: 'label', label: cls ? cls.displayname : t('Unclassified') },
-      ...hs.map(h => ({ label: h.displayname, value: h.id, description: heatPilots(h) }))
+      ...hs.map(h => ({ label: h.displayname, value: h.id, description: [heatStatus(h), heatPilots(h)].filter(Boolean).join(' · ') }))
     ])
   }
   return groups
 })
+function heatStatus(h: any) {
+  // in heat data, next_round holds the highest saved round (rounds raced so far)
+  const raced = Math.max(0, Number(h.next_round) || 0)
+  return raced ? `${raced} ${raced === 1 ? t('round raced') : t('rounds raced')}` : t('Not raced')
+}
 function heatPilots(h: any) {
   const pilots = S.pilot_data?.pilots || []
   return (h.slots || []).map((s: any) => pilots.find((p: any) => p.pilot_id === s.pilot_id)?.callsign).filter(Boolean).join(', ')
@@ -83,7 +88,20 @@ const selectedHeat = computed({
   get: () => currentHeatId.value ?? 0,
   set: (v: number) => rh.emit('set_current_heat', { heat: v || null })
 })
-const formatItems = computed(() => formats.value.map(f => ({ label: f.name, value: f.id })))
+// formats grouped by racing mode, like the heat picker groups heats by class
+const formatItems = computed<any[]>(() => {
+  const modes = [
+    { mode: 0, label: t('Individual') },
+    { mode: 1, label: t('Team') },
+    { mode: 2, label: t('Co-op') }
+  ]
+  return modes
+    .map(m => {
+      const fs = formats.value.filter(f => (f.team_racing_mode || 0) === m.mode)
+      return fs.length ? [{ type: 'label' as const, label: m.label }, ...fs.map(f => ({ label: t(f.name), value: f.id }))] : []
+    })
+    .filter(g => g.length)
+})
 const selectedFormat = computed({
   get: () => S.race_status?.race_format_id ?? undefined,
   set: (v: number) => rh.emit('set_race_format', { race_format: v })
@@ -121,8 +139,12 @@ function stop() {
 }
 function save() {
   rh.emit('save_laps')
-  if (currentHeatId.value) toast.add({ title: t('Race saved'), description: heatName.value, icon: 'i-lucide-check-circle', color: 'success' })
 }
+// confirm from the server's own notice rather than on click
+rh.on('race_saved', (d: any) => {
+  const heat = heats.value.find(h => h.id === d?.heat_id)
+  toast.add({ title: t('Race saved'), description: heat?.displayname, icon: 'i-lucide-check-circle', color: 'success' })
+})
 function discard() {
   rh.emit('discard_laps')
   discardOpen.value = false
@@ -234,15 +256,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
                 <UBadge v-if="currentClass" :label="currentClass.displayname" color="neutral" variant="subtle" />
                 <UBadge v-if="currentHeatId && round" :label="`${t('Round')} ${round}`" color="neutral" variant="subtle" />
                 <UBadge v-if="!currentHeatId" :label="t('Practice: races are not saved')" color="warning" variant="subtle" icon="i-lucide-info" />
-                <USelect
+                <USelectMenu
                   v-model="selectedFormat"
                   :items="formatItems"
+                  value-key="value"
                   :disabled="!isReady || formatLocked"
-                  size="xs"
+                  size="sm"
                   variant="soft"
                   icon="i-lucide-timer"
-                  class="max-w-56"
+                  :search-input="{ placeholder: t('Find a format…') }"
                   :placeholder="t('External format')"
+                  :ui="{ content: 'min-w-72' }"
                 />
               </div>
             </div>
