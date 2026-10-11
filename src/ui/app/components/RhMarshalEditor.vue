@@ -255,6 +255,14 @@ function onSeek(time: number) {
 const autoAdjusting = ref(false)
 const canAutoAdjust = computed(() => !!props.data && marshalType.value !== MARSHAL_TYPE.PASS_PEAK_ONLY && hasHistory.value
   && (props.pilotraceId != null || (props.seat !== null && props.seat !== undefined)))
+// why Auto Adjust can't run, shown on the (disabled) button
+const autoAdjustHint = computed(() => canAutoAdjust.value
+  ? t('Suggest EnterAt and ExitAt from this race\'s RSSI history')
+  : !props.data
+      ? t('Select a race to adjust its EnterAt and ExitAt')
+      : !hasHistory.value
+          ? t('No RSSI history was recorded for this race')
+          : t('Select a pilot to adjust their EnterAt and ExitAt'))
 function autoAdjust() {
   if (!canAutoAdjust.value) return
   autoAdjusting.value = true
@@ -418,32 +426,39 @@ defineExpose({ dirty, recalc, reset: load, setEnter, setExit })
             <UFormField :label="t('ExitAt')" size="sm" class="sm:w-28">
               <UInputNumber :model-value="exitAt" :min="0" :max="255" size="sm" :disabled="!data" @update:model-value="setExit" />
             </UFormField>
-            <UTooltip v-if="marshalType !== MARSHAL_TYPE.PASS_PEAK_ONLY" :text="!data || hasHistory ? t('Suggest EnterAt and ExitAt from this race\'s RSSI history') : t('No RSSI history was recorded for this race')">
-              <UButton
-                color="neutral"
-                variant="outline"
-                size="sm"
-                icon="i-lucide-wand-sparkles"
-                :label="t('Auto Adjust')"
-                :aria-label="t('Auto Adjust')"
-                :ui="{ label: 'hidden sm:inline' }"
-                :loading="autoAdjusting"
-                :disabled="!canAutoAdjust"
-                @click="autoAdjust"
-              />
+            <!-- the tooltip sits on a wrapper: a disabled button gets no pointer events, but still says why -->
+            <UTooltip v-if="marshalType !== MARSHAL_TYPE.PASS_PEAK_ONLY" :text="autoAdjustHint">
+              <span class="inline-flex" :class="canAutoAdjust ? '' : 'cursor-not-allowed'" :tabindex="canAutoAdjust ? undefined : 0" :aria-label="canAutoAdjust ? undefined : autoAdjustHint">
+                <UButton
+                  color="neutral"
+                  variant="outline"
+                  size="sm"
+                  icon="i-lucide-wand-sparkles"
+                  :label="t('Auto Adjust')"
+                  :aria-label="t('Auto Adjust')"
+                  :ui="{ base: 'disabled:opacity-100 disabled:bg-elevated/60 disabled:text-dimmed disabled:ring-transparent', label: 'hidden sm:inline' }"
+                  :class="canAutoAdjust ? '' : 'pointer-events-none'"
+                  :loading="autoAdjusting"
+                  :disabled="!canAutoAdjust"
+                  @click="autoAdjust"
+                />
+              </span>
             </UTooltip>
             <UTooltip :text="canRecalc ? t('Recalculate laps from the RSSI history') : t('No RSSI history was recorded for this race')">
-              <UButton
-                color="neutral"
-                variant="outline"
-                size="sm"
-                icon="i-lucide-refresh-cw"
-                :label="t('Recalculate')"
-                :aria-label="t('Recalculate')"
-                :ui="{ label: 'hidden sm:inline' }"
-                :disabled="!data || !canRecalc"
-                @click="recalc"
-              />
+              <span class="inline-flex" :class="data && canRecalc ? '' : 'cursor-not-allowed'" :tabindex="data && canRecalc ? undefined : 0">
+                <UButton
+                  color="neutral"
+                  variant="outline"
+                  size="sm"
+                  icon="i-lucide-refresh-cw"
+                  :label="t('Recalculate')"
+                  :aria-label="t('Recalculate')"
+                  :ui="{ base: 'disabled:opacity-100 disabled:bg-elevated/60 disabled:text-dimmed disabled:ring-transparent', label: 'hidden sm:inline' }"
+                  :class="data && canRecalc ? '' : 'pointer-events-none'"
+                  :disabled="!data || !canRecalc"
+                  @click="recalc"
+                />
+              </span>
             </UTooltip>
           </div>
         </div>

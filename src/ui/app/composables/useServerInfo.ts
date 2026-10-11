@@ -14,6 +14,8 @@ export interface ServerInfo {
   cluster_has_secondaries: boolean
   node_fw_updatable: boolean
   is_raspberry_pi: boolean
+  /** plugin loader scripts run on every page (a bar at the top, for example); newer servers only */
+  site_scripts?: string[]
   plugin_pages: { name: string, label: string | null, url: string, admin_only: boolean, order: number, source: string }[]
   event: { name: string, description: string }
   timer_name: string

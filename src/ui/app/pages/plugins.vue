@@ -75,6 +75,19 @@ const isDeactivated = (p: InstalledPlugin) => !p.loaded && /leading underscore|d
 const installed = computed<InstalledPlugin[]>(() => [...(rh.state.plugin_list?.plugins || [])]
   .sort((a: InstalledPlugin, b: InstalledPlugin) => Number(isDeactivated(a)) - Number(isDeactivated(b))
     || (a.name || a.id).localeCompare(b.name || b.id, undefined, { sensitivity: 'base' })))
+// the installed list can be long (dozens of plugins): filter by name, description or author
+const installedQuery = ref('')
+const shownInstalled = computed(() => {
+  const q = installedQuery.value.trim().toLowerCase()
+  if (!q) return installed.value
+  return installed.value.filter(p => [p.name, p.id, p.description, p.author].some(v => (v || '').toLowerCase().includes(q)))
+})
+// "/" jumps to the search box of the open tab
+const installedSearch = useTemplateRef<any>('installedSearch')
+const discoverSearch = useTemplateRef<any>('discoverSearch')
+defineShortcuts({
+  '/': () => (tab.value === 'installed' ? installedSearch.value : discoverSearch.value)?.inputRef?.focus()
+})
 const removedIds = computed(() => new Set(installed.value.filter(p => p.removed).map(p => p.id)))
 const installedIds = computed(() => new Set(installed.value.filter(p => !p.removed).map(p => p.id)))
 const updatesAvailable = computed(() => installed.value.filter(p => hasUpdate(p.update_status)).length)
@@ -360,88 +373,114 @@ function initials(name: string) {
             <USkeleton class="h-48 w-full rounded-2xl" />
           </div>
 
-          <RhGroup v-else-if="installed.length" :title="t('Installed')">
-            <div
-              v-for="p in installed"
-              :key="p.id"
-              class="flex items-start gap-3 px-4 py-4"
-              :class="changed[p.id] === 'deleted' ? 'opacity-60' : ''"
+          <div v-else-if="installed.length" class="space-y-4">
+            <UInput
+              ref="installedSearch"
+              v-model="installedQuery"
+              icon="i-lucide-search"
+              :placeholder="t('Filter installed plugins')"
+              :aria-label="t('Filter installed plugins')"
+              class="w-full sm:max-w-sm"
+              :ui="{ base: 'rounded-full' }"
             >
-              <div class="flex min-w-0 flex-1 gap-4">
-                <div
-                  class="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-linear-to-br text-lg font-semibold text-white shadow-sm"
-                  :class="tileClass(p.id)"
-                  aria-hidden="true"
-                >
-                  {{ initials(p.name || p.id) }}
+              <template v-if="installedQuery" #trailing>
+                <UButton color="neutral" variant="link" size="sm" icon="i-lucide-circle-x" :aria-label="t('Clear')" @click="installedQuery = ''" />
+              </template>
+              <template v-else #trailing>
+                <UKbd value="/" class="hidden sm:inline-flex" />
+              </template>
+            </UInput>
+            <UEmpty
+              v-if="!shownInstalled.length"
+              icon="i-lucide-search-x"
+              :title="t('No plugins found')"
+              :description="t('Try a different search.')"
+              :actions="[{ label: t('Clear'), color: 'neutral', variant: 'subtle', onClick: () => { installedQuery = '' } }]"
+              variant="naked"
+            />
+            <RhGroup v-else :title="installedQuery ? `${t('Installed')} · ${shownInstalled.length} / ${installed.length}` : t('Installed')">
+              <div
+                v-for="p in shownInstalled"
+                :key="p.id"
+                class="flex items-start gap-3 px-4 py-4"
+                :class="changed[p.id] === 'deleted' ? 'opacity-60' : ''"
+              >
+                <div class="flex min-w-0 flex-1 gap-4">
+                  <div
+                    class="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-linear-to-br text-lg font-semibold text-white shadow-sm"
+                    :class="tileClass(p.id)"
+                    aria-hidden="true"
+                  >
+                    {{ initials(p.name || p.id) }}
+                  </div>
+                  <div class="min-w-0 flex-1 space-y-1.5">
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span class="text-[15px] font-semibold text-highlighted">{{ p.name || p.id }}</span>
+                      <span v-if="p.version" class="tabular text-[13px] text-muted">{{ p.version }}</span>
+                      <UBadge v-if="changed[p.id] === 'deleted' || (p.removed && changed[p.id] !== 'installed')" color="warning" variant="subtle" size="sm" :label="t('Removed · restart to finish')" />
+                      <UBadge v-else-if="changed[p.id] === 'installed'" color="success" variant="subtle" size="sm" :label="t('Updated · restart to finish')" />
+                      <UBadge v-else-if="isDeactivated(p)" color="neutral" variant="subtle" size="sm" :label="t('Disabled')" />
+                      <UBadge v-else-if="!p.loaded" color="error" variant="subtle" size="sm" icon="i-lucide-circle-alert" :label="t('Not loaded')" />
+                      <UBadge v-else-if="!p.enabled" color="neutral" variant="subtle" size="sm" :label="t('Disabled')" />
+                      <UBadge v-if="hasUpdate(p.update_status) && !changed[p.id]" color="primary" variant="subtle" size="sm" :label="p.update_status === PRE_RELEASE_UPDATE ? t('Pre-release available') : t('Update available')" />
+                    </div>
+                    <div v-if="p.author" class="text-[13px] text-muted">
+                      <ULink v-if="p.author_uri" :to="p.author_uri" target="_blank" class="text-muted hover:text-highlighted">
+                        {{ p.author }}
+                      </ULink>
+                      <span v-else>{{ p.author }}</span>
+                    </div>
+                    <template v-if="p.description">
+                      <RhMarkdown :source="p.description" class="text-[13px] text-toned" :class="expanded[p.id] ? '' : 'line-clamp-2'" />
+                      <button v-if="p.description.length > 140" type="button" class="text-[13px] font-medium text-primary" @click="expanded[p.id] = !expanded[p.id]">
+                        {{ expanded[p.id] ? t('Less') : t('More') }}
+                      </button>
+                    </template>
+                    <p v-else class="text-[13px] italic text-dimmed">
+                      ({{ t('not provided') }})
+                    </p>
+                    <p v-if="isDeactivated(p)" class="mt-1 text-[13px] text-muted">
+                      {{ t('Deactivated: its folder name starts with "_". Remove the "_" and restart to turn it on.') }}
+                    </p>
+                    <UAlert
+                      v-else-if="!p.loaded && p.load_issue"
+                      color="error"
+                      variant="soft"
+                      icon="i-lucide-triangle-alert"
+                      :title="t('Not loaded')"
+                      :description="t(p.load_issue)"
+                      class="mt-2"
+                      :ui="{ root: 'rounded-xl py-2.5', title: 'text-[13px]', description: 'text-[13px]' }"
+                    />
+                    <div v-if="!changed[p.id] && rowAction(p)" class="pt-1.5 sm:hidden">
+                      <UButton v-bind="rowAction(p)!" size="sm" class="rounded-full px-4" />
+                    </div>
+                    <div v-if="p.documentation_uri || p.info_uri || p.license_uri || p.license" class="flex flex-wrap gap-x-4 gap-y-1 pt-0.5 text-[13px]">
+                      <ULink v-if="p.documentation_uri" :to="p.documentation_uri" target="_blank" class="inline-flex items-center gap-1 text-primary">
+                        <UIcon name="i-lucide-book-open" class="size-3.5" />{{ t('documentation') }}
+                      </ULink>
+                      <ULink v-if="p.info_uri" :to="p.info_uri" target="_blank" class="inline-flex items-center gap-1 text-primary">
+                        <UIcon name="i-lucide-globe" class="size-3.5" />{{ t('website') }}
+                      </ULink>
+                      <ULink v-if="p.license_uri" :to="p.license_uri" target="_blank" class="inline-flex items-center gap-1 text-primary">
+                        <UIcon name="i-lucide-scale" class="size-3.5" />{{ p.license || t('license') }}
+                      </ULink>
+                      <span v-else-if="p.license" class="inline-flex items-center gap-1 text-muted">
+                        <UIcon name="i-lucide-scale" class="size-3.5" />{{ p.license }}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div class="min-w-0 flex-1 space-y-1.5">
-                  <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span class="text-[15px] font-semibold text-highlighted">{{ p.name || p.id }}</span>
-                    <span v-if="p.version" class="tabular text-[13px] text-muted">{{ p.version }}</span>
-                    <UBadge v-if="changed[p.id] === 'deleted' || (p.removed && changed[p.id] !== 'installed')" color="warning" variant="subtle" size="sm" :label="t('Removed · restart to finish')" />
-                    <UBadge v-else-if="changed[p.id] === 'installed'" color="success" variant="subtle" size="sm" :label="t('Updated · restart to finish')" />
-                    <UBadge v-else-if="isDeactivated(p)" color="neutral" variant="subtle" size="sm" :label="t('Disabled')" />
-                    <UBadge v-else-if="!p.loaded" color="error" variant="subtle" size="sm" icon="i-lucide-circle-alert" :label="t('Not loaded')" />
-                    <UBadge v-else-if="!p.enabled" color="neutral" variant="subtle" size="sm" :label="t('Disabled')" />
-                    <UBadge v-if="hasUpdate(p.update_status) && !changed[p.id]" color="primary" variant="subtle" size="sm" :label="p.update_status === PRE_RELEASE_UPDATE ? t('Pre-release available') : t('Update available')" />
-                  </div>
-                  <div v-if="p.author" class="text-[13px] text-muted">
-                    <ULink v-if="p.author_uri" :to="p.author_uri" target="_blank" class="text-muted hover:text-highlighted">
-                      {{ p.author }}
-                    </ULink>
-                    <span v-else>{{ p.author }}</span>
-                  </div>
-                  <template v-if="p.description">
-                    <RhMarkdown :source="p.description" class="text-[13px] text-toned" :class="expanded[p.id] ? '' : 'line-clamp-2'" />
-                    <button v-if="p.description.length > 140" type="button" class="text-[13px] font-medium text-primary" @click="expanded[p.id] = !expanded[p.id]">
-                      {{ expanded[p.id] ? t('Less') : t('More') }}
-                    </button>
-                  </template>
-                  <p v-else class="text-[13px] italic text-dimmed">
-                    ({{ t('not provided') }})
-                  </p>
-                  <p v-if="isDeactivated(p)" class="mt-1 text-[13px] text-muted">
-                    {{ t('Deactivated: its folder name starts with "_". Remove the "_" and restart to turn it on.') }}
-                  </p>
-                  <UAlert
-                    v-else-if="!p.loaded && p.load_issue"
-                    color="error"
-                    variant="soft"
-                    icon="i-lucide-triangle-alert"
-                    :title="t('Not loaded')"
-                    :description="t(p.load_issue)"
-                    class="mt-2"
-                    :ui="{ root: 'rounded-xl py-2.5', title: 'text-[13px]', description: 'text-[13px]' }"
-                  />
-                  <div v-if="!changed[p.id] && rowAction(p)" class="pt-1.5 sm:hidden">
-                    <UButton v-bind="rowAction(p)!" size="sm" class="rounded-full px-4" />
-                  </div>
-                  <div v-if="p.documentation_uri || p.info_uri || p.license_uri || p.license" class="flex flex-wrap gap-x-4 gap-y-1 pt-0.5 text-[13px]">
-                    <ULink v-if="p.documentation_uri" :to="p.documentation_uri" target="_blank" class="inline-flex items-center gap-1 text-primary">
-                      <UIcon name="i-lucide-book-open" class="size-3.5" />{{ t('documentation') }}
-                    </ULink>
-                    <ULink v-if="p.info_uri" :to="p.info_uri" target="_blank" class="inline-flex items-center gap-1 text-primary">
-                      <UIcon name="i-lucide-globe" class="size-3.5" />{{ t('website') }}
-                    </ULink>
-                    <ULink v-if="p.license_uri" :to="p.license_uri" target="_blank" class="inline-flex items-center gap-1 text-primary">
-                      <UIcon name="i-lucide-scale" class="size-3.5" />{{ p.license || t('license') }}
-                    </ULink>
-                    <span v-else-if="p.license" class="inline-flex items-center gap-1 text-muted">
-                      <UIcon name="i-lucide-scale" class="size-3.5" />{{ p.license }}
-                    </span>
-                  </div>
-                </div>
-              </div>
 
-              <div v-if="!changed[p.id]" class="flex shrink-0 items-center gap-2">
-                <UButton v-if="rowAction(p)" v-bind="rowAction(p)!" size="sm" class="rounded-full px-4 max-sm:hidden" />
-                <UDropdownMenu :items="installedMenu(p)" :content="{ align: 'end' }">
-                  <UButton color="neutral" variant="ghost" size="sm" icon="i-lucide-ellipsis" :aria-label="t('More')" />
-                </UDropdownMenu>
+                <div v-if="!changed[p.id]" class="flex shrink-0 items-center gap-2">
+                  <UButton v-if="rowAction(p)" v-bind="rowAction(p)!" size="sm" class="rounded-full px-4 max-sm:hidden" />
+                  <UDropdownMenu :items="installedMenu(p)" :content="{ align: 'end' }">
+                    <UButton color="neutral" variant="ghost" size="sm" icon="i-lucide-ellipsis" :aria-label="t('More')" />
+                  </UDropdownMenu>
+                </div>
               </div>
-            </div>
-          </RhGroup>
+            </RhGroup>
+          </div>
 
           <div v-else class="rounded-2xl bg-default ring-1 ring-default">
             <UEmpty
@@ -510,6 +549,7 @@ function initials(name: string) {
         <div v-else class="space-y-6">
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
             <UInput
+              ref="discoverSearch"
               v-model="search"
               icon="i-lucide-search"
               :placeholder="t('Search plugins')"

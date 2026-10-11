@@ -45,6 +45,8 @@ const cell = computed(() => ['whitespace-nowrap', props.dense ? 'px-2 py-2' : 'p
 const inset = computed(() => props.dense ? 'px-2 sm:px-4' : 'px-1 sm:px-3')
 // on phones a combined board drops the less important columns (Avg. is already hidden)
 const consecClass = computed(() => combined.value ? 'hidden sm:table-cell' : '')
+// ...and the total time, so pilot names stay readable (laps and fastest lap remain)
+const totalClass = consecClass
 </script>
 
 <template>
@@ -55,7 +57,7 @@ const consecClass = computed(() => combined.value ? 'hidden sm:table-cell' : '')
           <th :class="cell" class="w-10">
             #
           </th>
-          <th :class="cell" class="w-full">
+          <th :class="cell" class="w-full min-w-28">
             {{ t('Pilot') }}
           </th>
           <th v-if="team" :class="cell">
@@ -68,7 +70,7 @@ const consecClass = computed(() => combined.value ? 'hidden sm:table-cell' : '')
             <th :class="cell" class="text-right">
               {{ t('Laps') }}
             </th>
-            <th :class="cell" class="text-right">
+            <th :class="[cell, totalClass]" class="text-right">
               {{ staggered ? t('Laps Total') : t('Total') }}
             </th>
             <th :class="cell" class="text-right hidden sm:table-cell">
@@ -108,7 +110,7 @@ const consecClass = computed(() => combined.value ? 'hidden sm:table-cell' : '')
             >{{ r.position }}</span>
             <span v-else class="text-dimmed">–</span>
           </td>
-          <td :class="cell" class="max-w-0 font-medium text-highlighted">
+          <td :class="cell" class="min-w-28 max-w-0 font-medium text-highlighted">
             <div class="flex min-w-0 items-center gap-2">
               <span v-if="seatColors && r.node !== undefined && seatColors[r.node]" class="size-2.5 shrink-0 rounded-full" :style="{ background: seatColors[r.node] }" />
               <!-- practice rows have no pilot: the server names them by channel, so show the seat -->
@@ -124,9 +126,13 @@ const consecClass = computed(() => combined.value ? 'hidden sm:table-cell' : '')
           </td>
           <template v-if="showRaceTime">
             <td :class="cell" class="text-right font-semibold text-highlighted">
-              {{ r.laps }}<span v-if="r.behind && kind === 'current'" class="ml-1 text-xs font-normal text-dimmed">−{{ r.behind }}</span>
+              {{ r.laps }}<span
+                v-if="r.behind && kind === 'current'"
+                class="ml-1 cursor-help text-xs font-normal text-dimmed"
+                :title="`${t('Laps behind the leader')}: ${r.behind}`"
+              ><span aria-hidden="true">−{{ r.behind }}</span><span class="sr-only">({{ t('Laps behind the leader') }}: {{ r.behind }})</span></span>
             </td>
-            <td :class="cell" class="text-right">
+            <td :class="[cell, totalClass]" class="text-right">
               {{ timeOrDash(staggered ? r.total_time_laps : r.total_time) }}
             </td>
             <td :class="cell" class="text-right text-muted hidden sm:table-cell">

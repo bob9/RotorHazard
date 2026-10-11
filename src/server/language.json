@@ -1066,7 +1066,21 @@
 			"Suggest EnterAt and ExitAt from this race's RSSI history": "EnterAt und ExitAt aus dem RSSI-Verlauf dieses Rennens vorschlagen",
 			"Live view": "Live-Ansicht",
 			"Adds a random extra delay of up to this length.": "Fügt eine zufällige zusätzliche Verzögerung bis zu dieser Länge hinzu.",
-			"Messages": "Nachrichten"
+			"Messages": "Nachrichten",
+			"Caution": "Vorsicht",
+			"Exit full screen": "Vollbild beenden",
+			"Exit presentation mode": "Präsentationsmodus beenden",
+			"Filter installed plugins": "Installierte Plugins filtern",
+			"Full screen": "Vollbild",
+			"Important": "Wichtig",
+			"Laps behind the leader": "Runden hinter dem Führenden",
+			"Present": "Präsentieren",
+			"Presentation mode": "Präsentationsmodus",
+			"Presentation mode: full screen, for a projector or TV": "Präsentationsmodus: Vollbild, für Beamer oder Fernseher",
+			"Select a pilot to adjust their EnterAt and ExitAt": "Wähle einen Piloten, um seine EnterAt- und ExitAt-Werte anzupassen",
+			"Select a race to adjust its EnterAt and ExitAt": "Wähle ein Rennen, um dessen EnterAt- und ExitAt-Werte anzupassen",
+			"Tip": "Tipp",
+			"Warning": "Warnung"
 		}
 	},
 	"es": {
@@ -2256,7 +2270,21 @@
 			"Suggest EnterAt and ExitAt from this race's RSSI history": "Sugerir EnterAt y ExitAt a partir del historial RSSI de esta carrera",
 			"Live view": "Vista en vivo",
 			"Adds a random extra delay of up to this length.": "Añade un retraso adicional aleatorio de hasta esta duración.",
-			"Messages": "Mensajes"
+			"Messages": "Mensajes",
+			"Caution": "Precaución",
+			"Exit full screen": "Salir de pantalla completa",
+			"Exit presentation mode": "Salir del modo presentación",
+			"Filter installed plugins": "Filtrar plugins instalados",
+			"Full screen": "Pantalla completa",
+			"Important": "Importante",
+			"Laps behind the leader": "Vueltas por detrás del líder",
+			"Present": "Presentar",
+			"Presentation mode": "Modo presentación",
+			"Presentation mode: full screen, for a projector or TV": "Modo presentación: pantalla completa, para un proyector o TV",
+			"Select a pilot to adjust their EnterAt and ExitAt": "Selecciona un piloto para ajustar su EnterAt y ExitAt",
+			"Select a race to adjust its EnterAt and ExitAt": "Selecciona una carrera para ajustar su EnterAt y ExitAt",
+			"Tip": "Consejo",
+			"Warning": "Advertencia"
 		}
 	},
 	"fr-be": {
@@ -3240,7 +3268,21 @@
 			"Suggest EnterAt and ExitAt from this race's RSSI history": "Suggérer EnterAt et ExitAt d’après l’historique RSSI de cette course",
 			"Live view": "Vue en direct",
 			"Adds a random extra delay of up to this length.": "Ajoute un délai supplémentaire aléatoire allant jusqu'à cette durée.",
-			"Messages": "Messages"
+			"Messages": "Messages",
+			"Caution": "Attention",
+			"Exit full screen": "Quitter le plein écran",
+			"Exit presentation mode": "Quitter le mode présentation",
+			"Filter installed plugins": "Filtrer les plugins installés",
+			"Full screen": "Plein écran",
+			"Important": "Important",
+			"Laps behind the leader": "Tours de retard sur le leader",
+			"Present": "Présenter",
+			"Presentation mode": "Mode présentation",
+			"Presentation mode: full screen, for a projector or TV": "Mode présentation : plein écran, pour un projecteur ou une TV",
+			"Select a pilot to adjust their EnterAt and ExitAt": "Sélectionnez un pilote pour ajuster ses EnterAt et ExitAt",
+			"Select a race to adjust its EnterAt and ExitAt": "Sélectionnez une course pour ajuster ses EnterAt et ExitAt",
+			"Tip": "Astuce",
+			"Warning": "Avertissement"
 		}
 	},
 	"it": {
@@ -4697,7 +4739,20 @@
 			 "EnterAt and ExitAt adjusted": "EnterAt ed ExitAt regolati",
 			 "Suggest EnterAt and ExitAt from this race's RSSI history": "Suggerisci EnterAt ed ExitAt dalla cronologia RSSI di questa gara",
 			 "Live view": "Vista dal vivo",
-			 "Adds a random extra delay of up to this length.": "Aggiunge un ritardo extra casuale fino a questa durata."
+			 "Adds a random extra delay of up to this length.": "Aggiunge un ritardo extra casuale fino a questa durata.",
+			 "Caution": "Cautela",
+			 "Exit full screen": "Esci da schermo intero",
+			 "Exit presentation mode": "Esci dalla modalità presentazione",
+			 "Filter installed plugins": "Filtra plugin installati",
+			 "Full screen": "Schermo intero",
+			 "Important": "Importante",
+			 "Laps behind the leader": "Giri di distacco dal leader",
+			 "Present": "Presenta",
+			 "Presentation mode": "Modalità presentazione",
+			 "Presentation mode: full screen, for a projector or TV": "Modalità presentazione: schermo intero, per proiettore o TV",
+			 "Select a pilot to adjust their EnterAt and ExitAt": "Seleziona un pilota per regolarne EnterAt ed ExitAt",
+			 "Select a race to adjust its EnterAt and ExitAt": "Seleziona una gara per regolarne EnterAt ed ExitAt",
+			 "Tip": "Suggerimento"
 		}
 	},
 	"nl-be": {
@@ -5671,7 +5726,21 @@
 			"Suggest EnterAt and ExitAt from this race's RSSI history": "EnterAt en ExitAt voorstellen op basis van de RSSI-geschiedenis van deze race",
 			"Live view": "Liveweergave",
 			"Adds a random extra delay of up to this length.": "Voegt een willekeurige extra vertraging toe van maximaal deze duur.",
-			"Messages": "Berichten"
+			"Messages": "Berichten",
+			"Caution": "Opgelet",
+			"Exit full screen": "Volledig scherm afsluiten",
+			"Exit presentation mode": "Presentatiemodus afsluiten",
+			"Filter installed plugins": "Geïnstalleerde plugins filteren",
+			"Full screen": "Volledig scherm",
+			"Important": "Belangrijk",
+			"Laps behind the leader": "Ronden achter de leider",
+			"Present": "Presenteren",
+			"Presentation mode": "Presentatiemodus",
+			"Presentation mode: full screen, for a projector or TV": "Presentatiemodus: volledig scherm, voor een projector of tv",
+			"Select a pilot to adjust their EnterAt and ExitAt": "Kies een piloot om zijn EnterAt en ExitAt aan te passen",
+			"Select a race to adjust its EnterAt and ExitAt": "Kies een race om de EnterAt en ExitAt aan te passen",
+			"Tip": "Tip",
+			"Warning": "Waarschuwing"
 		}
 	},
 	"pl": {
@@ -6682,7 +6751,21 @@
 			"Suggest EnterAt and ExitAt from this race's RSSI history": "Zaproponuj EnterAt i ExitAt na podstawie historii RSSI tego wyścigu",
 			"Live view": "Widok na żywo",
 			"Adds a random extra delay of up to this length.": "Dodaje losowe dodatkowe opóźnienie o długości do tej wartości.",
-			"Messages": "Wiadomości"
+			"Messages": "Wiadomości",
+			"Caution": "Ostrożnie",
+			"Exit full screen": "Zamknij pełny ekran",
+			"Exit presentation mode": "Zamknij tryb prezentacji",
+			"Filter installed plugins": "Filtruj zainstalowane wtyczki",
+			"Full screen": "Pełny ekran",
+			"Important": "Ważne",
+			"Laps behind the leader": "Okrążenia straty do lidera",
+			"Present": "Prezentuj",
+			"Presentation mode": "Tryb prezentacji",
+			"Presentation mode: full screen, for a projector or TV": "Tryb prezentacji: pełny ekran, dla projektora lub telewizora",
+			"Select a pilot to adjust their EnterAt and ExitAt": "Wybierz pilota, aby dostosować jego EnterAt i ExitAt",
+			"Select a race to adjust its EnterAt and ExitAt": "Wybierz wyścig, aby dostosować jego EnterAt i ExitAt",
+			"Tip": "Wskazówka",
+			"Warning": "Ostrzeżenie"
 		}
 	},
 	"ja-JP": {
@@ -7989,7 +8072,21 @@
 			"EnterAt and ExitAt adjusted": "EnterAtとExitAtを調整しました",
 			"Suggest EnterAt and ExitAt from this race's RSSI history": "このレースのRSSI履歴からEnterAtとExitAtを提案します",
 			"Live view": "ライブビュー",
-			"Adds a random extra delay of up to this length.": "この長さまでのランダムな追加遅延を加えます。"
+			"Adds a random extra delay of up to this length.": "この長さまでのランダムな追加遅延を加えます。",
+			"Caution": "注意",
+			"Exit full screen": "全画面表示を終了",
+			"Exit presentation mode": "プレゼンテーションモードを終了",
+			"Filter installed plugins": "インストール済みプラグインを絞り込む",
+			"Full screen": "全画面表示",
+			"Important": "重要",
+			"Laps behind the leader": "トップとの周回差",
+			"Present": "表示",
+			"Presentation mode": "プレゼンテーションモード",
+			"Presentation mode: full screen, for a projector or TV": "プレゼンテーションモード：プロジェクターやテレビ向けの全画面表示",
+			"Select a pilot to adjust their EnterAt and ExitAt": "パイロットを選択して EnterAt と ExitAt を調整",
+			"Select a race to adjust its EnterAt and ExitAt": "レースを選択して EnterAt と ExitAt を調整",
+			"Tip": "ヒント",
+			"Warning": "警告"
 		}
 	},
 	"zh-CN": {
@@ -9588,7 +9685,20 @@
 			"EnterAt and ExitAt adjusted": "已调整 EnterAt 和 ExitAt",
 			"Suggest EnterAt and ExitAt from this race's RSSI history": "根据本场比赛的 RSSI 历史建议 EnterAt 和 ExitAt",
 			"Live view": "实时视图",
-			"Adds a random extra delay of up to this length.": "添加一段随机的额外延迟，最长为此时长。"
+			"Adds a random extra delay of up to this length.": "添加一段随机的额外延迟，最长为此时长。",
+			"Caution": "小心",
+			"Exit full screen": "退出全屏",
+			"Exit presentation mode": "退出演示模式",
+			"Filter installed plugins": "筛选已安装的插件",
+			"Full screen": "全屏",
+			"Important": "重要",
+			"Laps behind the leader": "落后领先者的圈数",
+			"Present": "演示",
+			"Presentation mode": "演示模式",
+			"Presentation mode: full screen, for a projector or TV": "演示模式：全屏显示，适用于投影仪或电视",
+			"Select a pilot to adjust their EnterAt and ExitAt": "选择一名飞手以调整其 EnterAt 和 ExitAt",
+			"Select a race to adjust its EnterAt and ExitAt": "选择一场比赛以调整其 EnterAt 和 ExitAt",
+			"Tip": "提示"
 		}
 	},
 	"ru": {
@@ -10963,7 +11073,20 @@
             "EnterAt and ExitAt adjusted": "EnterAt и ExitAt подстроены",
             "Suggest EnterAt and ExitAt from this race's RSSI history": "Предложить EnterAt и ExitAt по истории RSSI этой гонки",
             "Live view": "Прямой эфир",
-            "Adds a random extra delay of up to this length.": "Добавляет случайную дополнительную задержку не больше этой длительности."
+            "Adds a random extra delay of up to this length.": "Добавляет случайную дополнительную задержку не больше этой длительности.",
+            "Caution": "Осторожно",
+            "Exit full screen": "Выйти из полноэкранного режима",
+            "Exit presentation mode": "Выйти из режима презентации",
+            "Filter installed plugins": "Фильтр установленных плагинов",
+            "Full screen": "Полный экран",
+            "Important": "Важно",
+            "Laps behind the leader": "Отставание от лидера в кругах",
+            "Present": "Показать",
+            "Presentation mode": "Режим презентации",
+            "Presentation mode: full screen, for a projector or TV": "Режим презентации: полный экран для проектора или ТВ",
+            "Select a pilot to adjust their EnterAt and ExitAt": "Выберите пилота, чтобы настроить его EnterAt и ExitAt",
+            "Select a race to adjust its EnterAt and ExitAt": "Выберите гонку, чтобы настроить её EnterAt и ExitAt",
+            "Tip": "Совет"
         }
 	}
 }

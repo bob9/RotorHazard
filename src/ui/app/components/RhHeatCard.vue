@@ -113,14 +113,15 @@ const menu = computed(() => [
     :class="[current ? 'ring-2 ring-primary shadow-md' : 'ring-default shadow-xs', heat.active === false ? 'opacity-55' : '']"
   >
     <div class="flex items-center gap-2 border-b border-default px-3 py-2">
-      <span v-if="!editable" class="min-w-0 flex-1 truncate px-1.5 py-1 text-[15px] font-semibold text-highlighted">{{ heat.displayname }}</span>
+      <!-- read-only and editable cards share the same metrics (32px name, 36px seat rows) -->
+      <span v-if="!editable" class="block h-8 min-w-0 flex-1 truncate px-1.5 text-[15px] font-semibold leading-8 text-highlighted">{{ heat.displayname }}</span>
       <UInput
         v-else
         :model-value="heat.name || ''"
         :placeholder="heat.auto_name || heat.displayname"
         variant="ghost"
         class="min-w-0 flex-1"
-        :ui="{ base: 'font-semibold text-highlighted text-[15px] px-1.5 placeholder:text-highlighted' }"
+        :ui="{ base: 'h-8 py-0 font-semibold text-highlighted text-[15px] md:text-[15px] px-1.5 placeholder:text-highlighted' }"
         :disabled="!editable"
         :aria-label="t('Heat name')"
         @change="(e: any) => alter({ name: e.target.value })"
@@ -143,7 +144,7 @@ const menu = computed(() => [
     </div>
 
     <ul class="flex-1 divide-y divide-default/70">
-      <li v-for="slot in visibleSlots" :key="slot.id" class="flex items-center gap-2 px-3 py-1.5">
+      <li v-for="slot in visibleSlots" :key="slot.id" class="flex min-h-9 items-center gap-2 px-3 py-1">
         <div class="flex w-16 shrink-0 items-center gap-1.5">
           <span class="size-2.5 shrink-0 rounded-full" :style="{ background: seatColors[slot.node_index] || 'var(--ui-bg-accented)' }" />
           <span class="truncate text-xs tabular text-muted">{{ slotLabel(slot) }}</span>
@@ -159,10 +160,11 @@ const menu = computed(() => [
             variant="ghost"
             size="sm"
             class="min-w-0 flex-1"
+            :ui="{ base: 'h-7 text-sm md:text-sm font-medium text-highlighted' }"
             :search-input="{ placeholder: t('Find pilot…') }"
             @update:model-value="(v: any) => setSlot(slot, { pilot: v, ...(planned ? { method: 0 } : {}) })"
           />
-          <span v-else class="flex-1 truncate text-sm" :class="slotPilot(slot) ? 'font-medium text-highlighted' : 'text-dimmed'">
+          <span v-else class="block h-7 min-w-0 flex-1 truncate px-2.5 text-sm leading-7" :class="slotPilot(slot) ? 'font-medium text-highlighted' : 'text-dimmed'">
             {{ slotPilot(slot)?.callsign || seedLabel(slot) || '—' }}
           </span>
         </template>

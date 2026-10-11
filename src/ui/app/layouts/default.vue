@@ -46,19 +46,24 @@ watch(admin, (isAdmin) => {
 })
 
 // a full URL: the router's links don't add the app's base path to a link opening a new tab
-const liveHref = `${useRuntimeConfig().app.baseURL}live`
+// it opens in presentation mode, for a projector or a second screen
+const liveHref = `${useRuntimeConfig().app.baseURL}live?kiosk=1`
+const kiosk = useKiosk()
+// while saved credentials are being checked the menu already takes the admin shape, so the
+// sections don't push each other down once the check returns
+const navAdmin = computed(() => admin.value === true || (admin.value === null && hasCredentials()))
 const raceItems = computed<NavigationMenuItem[]>(() => [
-  ...(admin.value
+  ...(navAdmin.value
     ? [{ label: t('Race'), icon: 'i-lucide-flag', to: '/', badge: raceLive.value ? { label: t('Live'), color: 'error' as const, variant: 'solid' as const, size: 'sm' as const } : undefined },
         { label: t('Marshal'), icon: 'i-lucide-pencil-ruler', to: '/marshal' },
         // the spectator page, for a projector or second screen: its own tab, so race control stays open
         { label: t('Live view'), icon: 'i-lucide-monitor-play', to: liveHref, target: '_blank', external: true }]
     : [{ label: t('Live'), icon: 'i-lucide-radio', to: '/live' }]),
   { label: t('Results'), icon: 'i-lucide-trophy', to: '/results' },
-  ...(admin.value ? [] : [{ label: t('Event'), icon: 'i-lucide-calendar-days', to: '/event' }])
+  ...(navAdmin.value ? [] : [{ label: t('Event'), icon: 'i-lucide-calendar-days', to: '/event' }])
 ])
 
-const eventItems = computed<NavigationMenuItem[]>(() => admin.value
+const eventItems = computed<NavigationMenuItem[]>(() => navAdmin.value
   ? [
       { label: t('Event'), icon: 'i-lucide-calendar-days', to: '/event' },
       { label: t('Pilots'), icon: 'i-lucide-users', to: '/pilots' },
@@ -67,7 +72,7 @@ const eventItems = computed<NavigationMenuItem[]>(() => admin.value
     ]
   : [])
 
-const systemItems = computed<NavigationMenuItem[]>(() => admin.value
+const systemItems = computed<NavigationMenuItem[]>(() => navAdmin.value
   ? [
       { label: t('Timer'), icon: 'i-lucide-radio-tower', to: '/timer' },
       { label: t('Settings'), icon: 'i-lucide-settings', to: '/settings', badge: restartRequired.value ? { label: t('Restart'), color: 'warning' as const, variant: 'subtle' as const, size: 'sm' as const } : undefined },
@@ -256,63 +261,84 @@ const classicHref = computed(() => {
     return `/interface/classic?to=${encodeURIComponent(`/docs?d=${encodeURIComponent(d)}`)}`
   }
   const match = CLASSIC_FOR.find(([app]) => route.path === app || route.path.startsWith(app + '/'))
+  // the classic pilot and heat editors are on the (admin-only) Format page; guests get the Event page
+  if (match && admin.value && ['/pilots', '/heats'].includes(match[0])) return `/interface/classic?to=${encodeURIComponent('/format')}`
   return match ? `/interface/classic?to=${encodeURIComponent(match[1])}` : '/interface/classic'
 })
 
 
-// A plugin bar at the top (e.g. Telemetry) arrives after the app and first draws as a thin
-// strip until its stylesheet loads. Last visit's height (0: no bar) is kept per device:
-// - known height: keep that much room and show the bar once it has drawn properly;
-// - first visit on this device: hold the page back until the plugin scripts have loaded
-//   and the bar has drawn (or there turns out to be none), so it appears in place once
-//   instead of pushing the page down twice. Both give up after a few seconds.
+// A plugin bar at the top (e.g. Telemetry) arrives a moment after the app, and first draws as
+// a thin strip until its stylesheet loads. The page is never held back for it; instead its
+// room is kept from the start, so the bar drops into place without pushing the page down:
+// - last visit's height on this device (0: there was no bar);
+// - on a first visit, a neutral bar-high strip, which folds away if no bar turns up.
+// The server lists the site-wide plugin scripts in /app-info (usePluginBoot().expectBar), so
+// the strip folds away as soon as it is known there is no bar. The room is kept until the
+// plugins have finished loading (generously capped, for slow devices), not for a fixed time.
 const pluginTop = ref<HTMLElement | null>(null)
 const PLUGIN_TOP_KEY = 'rh.pluginTopHeight'
+const PLUGIN_TOP_GUESS = 34
 let storedTop: string | null = null
 try { storedTop = localStorage.getItem(PLUGIN_TOP_KEY) } catch { /* storage unavailable */ }
-const firstVisit = storedTop === null
-const pluginTopReserve = ref(Number(storedTop) || 0)
-const pluginTopSettled = ref(!pluginTopReserve.value)
-const holdPage = ref(firstVisit)
+const pluginTopReserve = ref(storedTop === null ? PLUGIN_TOP_GUESS : Number(storedTop) || 0)
+// reserving room (the strip shows) until the bar has drawn, or there turns out to be none
+const pluginTopWaiting = ref(pluginTopReserve.value > 0)
+// the strip has folded away and there is no bar: take no room at all
+const pluginTopGone = ref(!pluginTopWaiting.value)
 const boot = usePluginBoot()
 let topRO: ResizeObserver | undefined
 let topTimer: ReturnType<typeof setTimeout> | undefined
+let noBarTimer: ReturnType<typeof setTimeout> | undefined
 onMounted(() => {
   const el = pluginTop.value
-  if (!el) { holdPage.value = false; return }
+  if (!el) return
   const barHeight = () => Math.max(0, ...Array.from(el.children).map(c => (c as HTMLElement).offsetHeight || 0))
   const remember = (h: number) => { try { localStorage.setItem(PLUGIN_TOP_KEY, String(h)) } catch { /* storage unavailable */ } }
-  const settle = () => {
+  const arrived = (h: number) => {
     clearTimeout(topTimer)
-    pluginTopSettled.value = true
+    clearTimeout(noBarTimer)
+    remember(h)
+    pluginTopWaiting.value = false
+    pluginTopGone.value = false
     pluginTopReserve.value = 0
-    holdPage.value = false
   }
-  topTimer = setTimeout(() => {
-    // no bar drew in time (plugin removed?): stop reserving space for it
-    remember(el.children.length ? barHeight() : 0)
-    settle()
-  }, firstVisit ? 3000 : 2500)
+  const noBar = () => {
+    clearTimeout(topTimer)
+    clearTimeout(noBarTimer)
+    if (el.children.length) return
+    remember(0)
+    if (!pluginTopWaiting.value) return
+    // fold the strip away (min-height transition), then take no room
+    pluginTopReserve.value = 0
+    pluginTopWaiting.value = false
+    setTimeout(() => { if (!el.children.length) pluginTopGone.value = true }, 250)
+  }
+  // slow device or a bar that never draws properly: show what there is
+  topTimer = setTimeout(() => (el.children.length ? arrived(barHeight()) : noBar()), 20000)
   const check = () => {
     const h = barHeight()
     if (h >= 20) {
-      remember(h)
-      settle()
-    } else if (holdPage.value && !el.children.length && !boot.value.panelsPending && !boot.value.scripts) {
-      // every plugin script has run and none drew a bar (give a late one a moment to insert itself)
-      setTimeout(() => {
-        if (el.children.length || !holdPage.value) return
-        remember(0)
-        settle()
-      }, 150)
+      if (pluginTopWaiting.value || h !== pluginTopReserve.value) arrived(h)
+      return
+    }
+    if (!pluginTopWaiting.value || el.children.length) return
+    // the server says no plugin draws a bar
+    if (boot.value.expectBar === false) return noBar()
+    // every plugin script has run and none drew a bar (give a late one a moment to insert itself)
+    if (!boot.value.panelsPending && !boot.value.scripts) {
+      clearTimeout(noBarTimer)
+      noBarTimer = setTimeout(() => { if (!el.children.length) noBar() }, boot.value.expectBar ? 4000 : 300)
     }
   }
   topRO = new ResizeObserver(check)
   topRO.observe(el)
-  new MutationObserver(() => Array.from(el.children).forEach(c => topRO?.observe(c))).observe(el, { childList: true })
-  watch(() => [boot.value.panelsPending, boot.value.scripts], check, { immediate: true })
+  new MutationObserver(() => {
+    pluginTopGone.value = false
+    Array.from(el.children).forEach(c => topRO?.observe(c))
+  }).observe(el, { childList: true })
+  watch(() => [boot.value.panelsPending, boot.value.scripts, boot.value.expectBar], check, { immediate: true })
 })
-onBeforeUnmount(() => { topRO?.disconnect(); clearTimeout(topTimer) })
+onBeforeUnmount(() => { topRO?.disconnect(); clearTimeout(topTimer); clearTimeout(noBarTimer) })
 
 const logoUrl = useRuntimeConfig().app.baseURL + 'rh-icon.svg'
 const version = computed(() => info.value?.server?.release_version)
@@ -321,6 +347,7 @@ const version = computed(() => info.value?.server?.release_version)
 <template>
   <UDashboardGroup unit="rem" storage="local" storage-key="rh-dashboard">
     <UDashboardSidebar
+      v-if="!kiosk"
       id="rh"
       v-model:open="sidebarOpen"
       collapsible
@@ -421,9 +448,9 @@ const version = computed(() => info.value?.server?.release_version)
 
     <UDashboardSearch v-model:open="searchOpen" :groups="searchGroups" :fuse="searchFuse" :color-mode="false" :placeholder="t('Search pages, settings, pilots and heats…')" />
 
-    <div class="flex min-w-0 flex-1 flex-col" :class="holdPage ? 'invisible' : ''">
+    <div class="flex min-w-0 flex-1 flex-col">
       <div
-        v-if="restartRequired && admin && !restartSnoozed"
+        v-if="restartRequired && admin && !restartSnoozed && !kiosk"
         class="flex shrink-0 items-center gap-3 border-b border-amber-300/60 bg-amber-100 px-4 py-2 text-sm text-amber-950 dark:border-amber-400/20 dark:bg-amber-400/15 dark:text-amber-100"
         role="status"
       >
@@ -444,9 +471,13 @@ const version = computed(() => info.value?.server?.release_version)
       <div
         id="rh-plugin-top"
         ref="pluginTop"
-        class="shrink-0 max-w-full overflow-x-auto"
-        :style="pluginTopReserve ? { minHeight: `${pluginTopReserve}px` } : undefined"
-        :class="[pluginTopReserve ? '' : 'empty:hidden', pluginTopSettled ? '' : '[&>*]:invisible']"
+        class="shrink-0 max-w-full overflow-x-auto transition-[min-height] duration-200 ease-out"
+        :style="{ minHeight: `${pluginTopReserve}px` }"
+        :class="[
+          kiosk ? 'hidden' : pluginTopGone ? 'empty:hidden' : '',
+          pluginTopWaiting ? 'border-b border-default bg-elevated/50 [&>*]:invisible' : ''
+        ]"
+        :aria-busy="pluginTopWaiting || undefined"
       />
       <slot />
     </div>

@@ -340,6 +340,25 @@ class ServerTest(unittest.TestCase):
         for bad in ('https://example.com/', '//example.com', '/hardwarelog', '/docs/../hardwarelog'):
             self.assertTrue(target(bad).endswith('/classic'), bad)
 
+    def test_webapp_site_scripts(self):
+        # a loader script on three or more classic pages is a site-wide add-on (a status bar):
+        # /app-info lists it so the web app can make room for it before the panels arrive
+        rhui = server.RaceContext.rhui
+        saved = (list(rhui._ui_panels), list(rhui._markdowns))
+        try:
+            tag = '<script src="/bar/static/bar.js"></script>'
+            for page in ('run', 'marshal', 'results'):
+                rhui.register_ui_panel(f'bar_{page}', 'Bar', page)
+                rhui.register_markdown(f'bar_{page}', f'bar_md_{page}', tag)
+            rhui.register_ui_panel('one_run', 'One', 'run')
+            rhui.register_markdown('one_run', 'one_md', '<script src="/one/static/one.js"></script>')
+            self.assertEqual(server.webapp_site_scripts(), ['/bar/static/bar.js'])
+            with server.APP.test_request_context('/app-info'):
+                self.assertIn('/bar/static/bar.js', server.render_webapp_info().get_json()['site_scripts'])
+        finally:
+            rhui._ui_panels[:] = saved[0]
+            rhui._markdowns[:] = saved[1]
+
     def test_webapp_admin_session_for_classic_pages(self):
         # the web app signs a browser in to the classic pages with its Basic credentials;
         # the session holds only a fingerprint of the current admin credentials

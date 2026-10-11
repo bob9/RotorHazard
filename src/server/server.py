@@ -54,6 +54,7 @@ import gevent.monkey
 gevent.monkey.patch_all()
 
 import io
+import re
 import os
 import sys
 import base64
@@ -732,6 +733,22 @@ def render_webapp(asset_path=None):
     response.cache_control.no_store = True
     return response
 
+# pages whose plugin panels the web app loads at start-up (classic-bridge.client.ts)
+WEBAPP_PLUGIN_HOST_PAGES = ('run', 'settings', 'format', 'marshal', 'results')
+
+def webapp_site_scripts():
+    '''Loader scripts that plugins put in panels on three or more of the classic pages, which
+    the web app runs on every page (a status bar at the top, for example). Listed in /app-info
+    so the app can make room for such a bar, and start its script, before the panels arrive.'''
+    pages = {}
+    for panel in RaceContext.rhui.ui_panels:
+        if panel.page not in WEBAPP_PLUGIN_HOST_PAGES:
+            continue
+        for md in RaceContext.rhui.get_panel_markdowns(panel.name):
+            for src in re.findall(r'<script[^>]*\ssrc=["\']([^"\']+)["\'][^>]*>\s*</script>', str(md.desc or ''), re.IGNORECASE):
+                pages.setdefault(src, set()).add(panel.page)
+    return [src for src, used_on in pages.items() if len(used_on) >= 3]
+
 @APP.route('/app-info')
 def render_webapp_info():
     '''Server facts the web app needs before its first socket data arrives.'''
@@ -754,6 +771,7 @@ def render_webapp_info():
         'node_fw_updatable': admin and RaceContext.interface.get_fwupd_serial_name() is not None,
         'is_raspberry_pi': RHUtils.is_sys_raspberry_pi(),
         'plugin_pages': [p for p in RaceContext.rhui.plugin_pages() if admin or not p['admin_only']],
+        'site_scripts': webapp_site_scripts(),
         'event': {
             'name': RaceContext.rhdata.get_option('eventName'),
             'description': RaceContext.rhdata.get_option('eventDescription'),

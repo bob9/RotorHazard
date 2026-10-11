@@ -43,6 +43,8 @@ function slug(text: string) {
 }
 const html = computed(() => renderMarkdown(markdown.value))
 const el = ref<HTMLElement>()
+// the doc last laid out: opening another one starts at its top (or at its #section)
+let shownDoc = ''
 const outline = ref<{ id: string, text: string, level: number }[]>([])
 watch(html, () => nextTick(() => {
   const root = el.value
@@ -62,10 +64,49 @@ watch(html, () => nextTick(() => {
     if (/^(\.\/)?img\//.test(src)) img.setAttribute('src', '/' + src.replace(/^\.\//, ''))
   })
   root.querySelectorAll('a').forEach(a => resolveLink(a))
+  root.querySelectorAll('blockquote').forEach(q => makeCallout(q))
   outline.value = items
   trackHeadings()
+  const newDoc = shownDoc !== docName.value
+  shownDoc = docName.value
   if (route.hash) scrollTo(route.hash.slice(1), false)
+  else if (newDoc) scrollParent(root)?.scrollTo({ top: 0 })
 }), { flush: 'post' })
+
+function scrollParent(node: HTMLElement) {
+  for (let p = node.parentElement; p; p = p.parentElement) {
+    const o = getComputedStyle(p).overflowY
+    if ((o === 'auto' || o === 'scroll') && p.scrollHeight > p.clientHeight) return p
+  }
+  return document.scrollingElement as HTMLElement | null
+}
+
+// GitHub alerts ("> [!NOTE]" ...) become callouts with an icon and a title
+const CALLOUTS: Record<string, { title: () => string, icon: string }> = {
+  note: { title: () => t('Note'), icon: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></g>' },
+  tip: { title: () => t('Tip'), icon: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 14c.2-1 .7-1.7 1.5-2.5c1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5c.7.7 1.3 1.5 1.5 2.5m0 4h6m-5 4h4"/>' },
+  important: { title: () => t('Important'), icon: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2zm-10-2h.01M12 7v4"/>' },
+  warning: { title: () => t('Warning'), icon: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21.73 18l-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3M12 9v4m0 4h.01"/>' },
+  caution: { title: () => t('Caution'), icon: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16h.01M12 8v4m3.312-10a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"/>' }
+}
+function makeCallout(q: Element) {
+  const p = q.firstElementChild
+  const first = p?.tagName === 'P' ? p.firstChild : null
+  const m = first?.nodeType === Node.TEXT_NODE ? /^\s*\[!(note|tip|important|warning|caution)\]\s*/i.exec(first.textContent || '') : null
+  if (!p || !first || !m) return
+  const kind = m[1]!.toLowerCase()
+  const c = CALLOUTS[kind]!
+  first.textContent = (first.textContent || '').slice(m[0].length)
+  if (!first.textContent) first.remove()
+  if (p.firstChild?.nodeName === 'BR') p.firstChild.remove()
+  if (!p.textContent?.trim() && !p.children.length) p.remove()
+  const title = document.createElement('div')
+  title.className = 'rh-callout-title'
+  title.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${c.icon}</svg>`
+  title.append(c.title())
+  q.prepend(title)
+  q.classList.add('rh-callout', `rh-callout-${kind}`)
+}
 
 // Links in the docs are written relative to the repository's doc/ folder. Another doc
 // ("Cluster.md", "../doc/Cluster.md#x") opens here; anything else in the repository

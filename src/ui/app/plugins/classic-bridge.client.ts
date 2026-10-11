@@ -60,6 +60,26 @@ export default defineNuxtPlugin((nuxtApp) => {
   const loaded = new Set<string>()
   const boot = usePluginBoot()
   const answered = new Set<string>()
+  function loadSiteScript(src: string) {
+    if (loaded.has(src)) return
+    loaded.add(src)
+    if (document.querySelector(`script[src="${src}"]`)) return
+    const el = document.createElement('script')
+    el.src = src
+    boot.value.scripts++
+    el.onload = el.onerror = () => { boot.value.scripts = Math.max(0, boot.value.scripts - 1) }
+    document.head.appendChild(el)
+  }
+  // the server lists the site-wide scripts in /app-info: start them without waiting for the panels
+  const { info } = useServerInfo()
+  watch(info, (i) => {
+    if (!i || !Array.isArray(i.site_scripts)) return
+    boot.value.expectBar = i.site_scripts.length > 0
+    for (const src of i.site_scripts) {
+      if (!loaderSrcs.has(src)) loaderSrcs.set(src, new Set(['run', 'settings', 'format']))
+      loadSiteScript(src)
+    }
+  }, { immediate: true })
   rh.on('ui', (d: any) => {
     if (!d?.page || !HOST_PAGES.includes(d.page)) return
     answered.add(d.page)
@@ -69,16 +89,7 @@ export default defineNuxtPlugin((nuxtApp) => {
           const src = match[1]!
           if (!loaderSrcs.has(src)) loaderSrcs.set(src, new Set())
           loaderSrcs.get(src)!.add(d.page)
-          if (loaderSrcs.get(src)!.size >= 3 && !loaded.has(src)) {
-            loaded.add(src)
-            if (!document.querySelector(`script[src="${src}"]`)) {
-              const el = document.createElement('script')
-              el.src = src
-              boot.value.scripts++
-              el.onload = el.onerror = () => { boot.value.scripts = Math.max(0, boot.value.scripts - 1) }
-              document.head.appendChild(el)
-            }
-          }
+          if (loaderSrcs.get(src)!.size >= 3) loadSiteScript(src)
         }
       }
     }
@@ -103,6 +114,9 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
   }
   new MutationObserver(adoptBodyElements).observe(document.body, { childList: true })
+  // a bar drawn before the app had rendered its slot is moved in once the slot is there
+  nuxtApp.hook('app:mounted', adoptBodyElements)
+  nuxtApp.hook('page:finish', adoptBodyElements)
 
   // ---- plugin elements inside pages survive navigation ---------------------
   interface Parked { node: Element, anchorId: string | null, parentId: string | null }

@@ -23,9 +23,9 @@ const emit = defineEmits<{ manualLap: [], deleteLap: [number], restoreLap: [numb
 const { t } = useI18n()
 
 const color = computed(() => colorHex(props.node?.activeColor ?? null))
-const hasPilot = computed(() => !!props.node?.pilot_id || !!props.node?.callsign)
-// practice: no pilot, and the server labels the seat with its channel (shown on the line below)
-const practiceSeat = computed(() => !props.node?.pilot_id && !!props.node?.callsign)
+// a seat without a pilot (practice, an empty seat) is named by its number, as on the
+// leaderboard ("Seat 1"), with its channel on the line below
+const practiceSeat = computed(() => !props.node?.pilot_id)
 const disabled = computed(() => !props.freq?.frequency)
 
 const visibleLaps = computed(() => [...(props.laps || [])].reverse())
@@ -56,7 +56,7 @@ const pct = (v?: number) => `${Math.min(100, Math.max(0, ((v || 0) / scaleMax.va
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-2">
           <span class="truncate text-lg font-semibold text-highlighted">
-            {{ practiceSeat ? `${t('Seat')} ${seat + 1}` : hasPilot ? node?.callsign : t('No pilot') }}
+            {{ practiceSeat ? `${t('Seat')} ${seat + 1}` : node?.callsign }}
           </span>
           <UBadge v-if="row?.position && lapCount" :label="`P${row.position}`" size="sm" variant="subtle" color="neutral" class="tabular" />
           <UBadge v-if="finished" :label="t('Done')" size="sm" variant="subtle" color="success" />

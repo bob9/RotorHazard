@@ -247,40 +247,60 @@ function commitMarshal(c: any) {
 // hotkeys (classic: z start, x stop, c save, v discard, space = primary action, alt+n manual lap)
 
 // Plugin widgets in the dock (Auto Marshalling, Gate Walkthrough...) are drawn by their own
-// scripts after the page. Keep last visit's dock height in reserve, and show the widgets once
-// they have stopped moving, so they don't nudge each other and the tools below into place.
+// scripts after the page. Last visit's dock height is kept in reserve (the widgets show as soon
+// as they draw), so the tools below don't jump as they arrive. The room is released once the
+// widgets have stopped growing, or when this page's plugins turn out to have no scripts.
+// While they arrange themselves (one widget makes room for the next) they are drawn
+// invisibly, for a second at most, so they don't slide sideways in view.
 const DOCK_KEY = 'rh.pluginDockHeight'
 const dock = useTemplateRef<HTMLElement>('dock')
 let storedDock = 0
 try { storedDock = Number(localStorage.getItem(DOCK_KEY)) || 0 } catch { /* storage unavailable */ }
 const dockReserve = ref(storedDock)
 const dockSettled = ref(false)
+const dockShown = ref(false)
+let dockShowTimer: ReturnType<typeof setTimeout> | undefined
+const pluginBoot = usePluginBoot()
+const { panelsFor } = usePluginUI()
+const runHasScripts = computed(() => panelsFor('run').some((p: any) => (p.markdowns || []).some((m: any) => /<script[^>]*\ssrc=/i.test(String(m.desc || '')))))
 let dockRO: ResizeObserver | undefined
 let dockQuiet: ReturnType<typeof setTimeout> | undefined
 let dockCap: ReturnType<typeof setTimeout> | undefined
+let stopDockWatch: (() => void) | undefined
 watch(dock, (el) => {
   dockRO?.disconnect()
+  stopDockWatch?.()
   if (!el) return
   const settle = () => {
     clearTimeout(dockQuiet)
     clearTimeout(dockCap)
+    clearTimeout(dockShowTimer)
     dockSettled.value = true
+    dockShown.value = true
     dockReserve.value = 0
     try { localStorage.setItem(DOCK_KEY, String(el.children.length ? el.offsetHeight : 0)) } catch { /* storage unavailable */ }
   }
-  dockCap = setTimeout(settle, 2500)
+  // generous: plugin scripts can take several seconds on a slow device
+  dockCap = setTimeout(settle, 15000)
   dockRO = new ResizeObserver(() => {
     if (dockSettled.value) return
     clearTimeout(dockQuiet)
-    // settled: quiet for a moment, at the remembered height (or with nothing to show)
+    // settled: quiet for a moment, at the remembered height
     dockQuiet = setTimeout(() => {
       if (el.children.length && el.offsetHeight >= dockReserve.value - 4) settle()
     }, 400)
   })
   dockRO.observe(el)
-  new MutationObserver(() => Array.from(el.children).forEach(c => dockRO?.observe(c))).observe(el, { childList: true })
+  new MutationObserver(() => {
+    Array.from(el.children).forEach(c => dockRO?.observe(c))
+    if (el.children.length && !dockShown.value && !dockShowTimer) dockShowTimer = setTimeout(() => { dockShown.value = true }, 1000)
+  }).observe(el, { childList: true })
+  // every plugin panel list is in and none of this page's panels loads a script: no widgets coming
+  stopDockWatch = watch(() => [pluginBoot.value.panelsPending, runHasScripts.value], () => {
+    if (!dockSettled.value && !pluginBoot.value.panelsPending && !runHasScripts.value && !el.children.length) settle()
+  }, { immediate: true })
 })
-onBeforeUnmount(() => { dockRO?.disconnect(); clearTimeout(dockQuiet); clearTimeout(dockCap) })
+onBeforeUnmount(() => { dockRO?.disconnect(); stopDockWatch?.(); clearTimeout(dockQuiet); clearTimeout(dockCap); clearTimeout(dockShowTimer) })
 function onKey(e: KeyboardEvent) {
   const el = e.target as HTMLElement
   if (!admin.value || el?.closest('input, textarea, [contenteditable], [role="dialog"], [role="listbox"]')) return
@@ -521,7 +541,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           id="rh-plugin-dock"
           ref="dock"
           class="flex flex-wrap gap-3"
-          :class="[dockReserve ? '' : 'empty:hidden', dockSettled ? '' : '[&>*]:invisible']"
+          :class="[dockReserve ? '' : 'empty:hidden', dockShown ? '' : '[&>*]:invisible']"
           :style="dockReserve ? { minHeight: `${dockReserve}px` } : undefined"
         />
 
