@@ -123,7 +123,8 @@ const PAGE_KEYWORDS: Record<string, string> = {
 const settingsIndex = computed(() => admin.value
   ? [
       { label: t('Frequencies'), description: t('Timer'), icon: 'i-lucide-radio', to: '/timer', keywords: 'frequency channel band raceband vtx' },
-      { label: t('Sensor Tuning'), description: t('Timer'), icon: 'i-lucide-activity', to: '/timer', keywords: 'tuning enterat exitat rssi calibration signal gate threshold' },
+      { label: t('Sensor Tuning'), description: t('Timer'), icon: 'i-lucide-activity', to: '/timer?tab=tuning', keywords: 'tuning enterat exitat rssi calibration signal gate threshold' },
+      { label: t('Start Threshold'), description: t('Timer'), icon: 'i-lucide-sliders-horizontal', to: '/timer?tab=advanced', keywords: 'start threshold lower amount lower duration first pass launch advanced' },
       { label: t('Race duration and scoring'), description: t('Formats'), icon: 'i-lucide-timer', to: '/formats', keywords: 'duration length time clock minutes staging tones win condition laps scoring holeshot hole shot grace period prestage first crossing staggered start laps to win team co-op points random staging' },
       { label: t('Grace Period'), description: t('Formats'), icon: 'i-lucide-hourglass', to: '/formats#grace-period', keywords: 'grace period grace final lap after the clock overtime wait for a manual stop' },
       ...tools.value.map(x => ({ label: x.label, description: x.description, icon: x.icon, to: x.to, keywords: x.keywords })),
@@ -250,22 +251,41 @@ const CLASSIC_FOR: [string, string][] = [
   ['/database', '/database'], ['/scanner', '/scanner'], ['/vrx-status', '/vrxstatus'],
   ['/imdtabler', '/imdtabler'], ['/update-nodes', '/updatenodes']
 ]
+// "Skip to content": focus the page's own panel (the last one, after a settings list)
+function skipToContent() {
+  const bodies = document.querySelectorAll<HTMLElement>('[id^="rh-dashboard-panel-"] > [data-slot="body"]')
+  const body = bodies[bodies.length - 1]
+  if (!body) return
+  if (!body.hasAttribute('tabindex')) body.setAttribute('tabindex', '-1')
+  body.style.outline = 'none'
+  body.focus()
+}
 // admins are signed in to the classic pages first, so they don't get the browser's login prompt
 async function openClassic() {
+  rememberAppPage()
   if (admin.value) await classicSession()
   window.location.href = classicHref.value
 }
-const classicHref = computed(() => {
-  if (route.path === '/') return '/interface/classic?to=/run'
+// the classic page that matches this one
+const classicTo = computed(() => {
+  if (route.path === '/') return '/run'
   if (route.path === '/docs') {
     const d = typeof route.query.d === 'string' && route.query.d ? route.query.d : 'README.md'
-    return `/interface/classic?to=${encodeURIComponent(`/docs?d=${encodeURIComponent(d)}`)}`
+    return `/docs?d=${encodeURIComponent(d)}`
   }
   const match = CLASSIC_FOR.find(([app]) => route.path === app || route.path.startsWith(app + '/'))
   // the classic pilot and heat editors are on the (admin-only) Format page; guests get the Event page
-  if (match && admin.value && ['/pilots', '/heats'].includes(match[0])) return `/interface/classic?to=${encodeURIComponent('/format')}`
-  return match ? `/interface/classic?to=${encodeURIComponent(match[1])}` : '/interface/classic'
+  if (match && admin.value && ['/pilots', '/heats'].includes(match[0])) return '/format'
+  return match ? match[1] : ''
 })
+const classicHref = computed(() => (classicTo.value ? `/interface/classic?to=${encodeURIComponent(classicTo.value)}` : '/interface/classic'))
+// "New Interface" on that classic page comes back to this very page (Pilots, not Formats, for
+// the classic Format page; the tab that was open): the server reads this short-lived cookie
+// in /interface/app while the classic page is still the one it was opened for
+function rememberAppPage() {
+  const classicPath = (classicTo.value || '/classic').split('?')[0]
+  document.cookie = `rh_app_return=${encodeURIComponent(`${classicPath}|${route.fullPath}`)}; path=/; max-age=7200; samesite=lax`
+}
 
 
 // A plugin bar at the top (e.g. Telemetry) arrives a moment after the app, and first draws as
@@ -347,6 +367,8 @@ const version = computed(() => info.value?.server?.release_version)
 
 <template>
   <UDashboardGroup unit="rem" storage="local" storage-key="rh-dashboard">
+    <!-- first stop for the keyboard: past the sidebar, straight to the page -->
+    <a v-if="!kiosk" href="#" class="rh-skip" @click.prevent="skipToContent">{{ t('Skip to content') }}</a>
     <UDashboardSidebar
       v-if="!kiosk"
       id="rh"
@@ -424,6 +446,7 @@ const version = computed(() => info.value?.server?.release_version)
             :to="classicHref"
             external
             target="_self"
+            @click="rememberAppPage"
           />
           <UDropdownMenu
             v-else

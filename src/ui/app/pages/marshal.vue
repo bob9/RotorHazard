@@ -322,7 +322,7 @@ function reassign() {
                     :class="p.pilot_id === pilotId ? 'bg-primary text-inverted' : 'bg-elevated text-muted'"
                   >{{ p.node_index + 1 }}</span>
                   <span class="min-w-0">
-                    <span class="block truncate text-sm font-semibold text-highlighted">{{ p.callsign || '–' }}</span>
+                    <span class="block truncate text-sm font-semibold text-highlighted">{{ p.callsign || '—' }}</span>
                     <span class="block truncate text-xs text-muted">{{ p.pilot_freq || `${t('Seat')} ${p.node_index + 1}` }}</span>
                   </span>
                 </button>

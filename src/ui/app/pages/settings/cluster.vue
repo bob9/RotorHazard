@@ -45,7 +45,7 @@ function contactInfo(s: StatusRow) {
   const connected = /^\d+s$/.test(text)
   return { text, connected, retryId: retry ? Number(retry[1]) : null }
 }
-const ms = (v: number | null | undefined) => (v === null || v === undefined ? '–' : String(v))
+const ms = (v: number | null | undefined) => (v === null || v === undefined ? '—' : String(v))
 function duration(secs: number) {
   if (!secs) return '0s'
   const h = Math.floor(secs / 3600)
@@ -187,7 +187,7 @@ const environment = computed(() => (Array.isArray(rh.state.environmental_data) ?
     readings: keys.map(k => ({
       key: k,
       label: t(READING_LABEL[k] || k),
-      value: READING_DECIMALS[k] !== undefined && data[k]?.value !== null && data[k]?.value !== undefined ? Number(data[k].value).toFixed(READING_DECIMALS[k]) : String(data[k]?.value ?? '–'),
+      value: READING_DECIMALS[k] !== undefined && data[k]?.value !== null && data[k]?.value !== undefined ? Number(data[k].value).toFixed(READING_DECIMALS[k]) : String(data[k]?.value ?? '—'),
       units: data[k]?.units || ''
     }))
   }

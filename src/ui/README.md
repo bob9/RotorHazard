@@ -14,7 +14,9 @@ at `/classic` and its existing URLs (`/run`, `/format`, `/settings`, ...).
 - Each device chooses for itself: "Classic interface" in the app (sidebar or
   account menu) and "New Interface" in the classic menu go through
   `/interface/classic` and `/interface/app`, which remember the choice in a
-  cookie and decide what `/` opens on that device.
+  cookie and decide what `/` opens on that device. Each switch opens the matching
+  page of the other interface (`?to=`); returning from a classic page reopens the
+  app page that sent you there (a short-lived `rh_app_return` cookie).
 - Devices that have not chosen get the timer's default, set in
   Settings › General › Default Interface (config `UI.classicInterface`;
   the new interface unless set to classic).
@@ -106,3 +108,9 @@ Several race-control events (`stage_race`, `stop_race`, `save_laps`,
   build time by scanning the source).
 - Use semantic colors (`text-muted`, `bg-elevated`, `text-highlighted`,
   `ring-default`, `primary`, `error`...) so light and dark modes both work.
+  `text-dimmed` and `text-muted` meet 4.5:1 on every background up to `bg-elevated`
+  (`assets/css/main.css`); tinted badges and alerts use deeper text shades (`app.config.ts`).
+- A missing value in a table or card is `<RhValue :value="x" />`: the value, or one
+  dimmed em dash.
+- Tabs that a link or search result can open keep their tab in the address
+  (`?tab=`, replaced rather than pushed), as on Timer, Results and Plugins.

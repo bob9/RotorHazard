@@ -109,7 +109,7 @@ function remove() {
             class="overflow-hidden rounded-2xl bg-default ring-1 ring-default shadow-xs"
           >
             <div class="flex items-start gap-3 bg-elevated/40 px-4 py-3">
-              <span class="flex size-7 shrink-0 items-center justify-center mt-6 rounded-full bg-amber-500/15 text-xs font-semibold text-amber-600 tabular max-sm:hidden dark:text-amber-400">
+              <span class="flex size-7 shrink-0 items-center justify-center mt-6 rounded-full bg-amber-500/15 text-xs font-semibold text-amber-800 tabular max-sm:hidden dark:text-amber-400">
                 {{ i + 1 }}
               </span>
               <div class="grid min-w-0 flex-1 gap-2 sm:grid-cols-2">

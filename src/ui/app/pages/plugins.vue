@@ -305,11 +305,20 @@ function tagFor(p: RemotePlugin) {
 
 function remoteAction(p: RemotePlugin) {
   const d = p.manifest.domain
-  if (changed[d] === 'installed') return { label: t('Installed'), icon: 'i-lucide-check', disabled: true }
-  if (removedIds.value.has(d)) return { label: t('Install'), icon: undefined, disabled: false }
-  if (hasUpdate(p.update_status)) return { label: t('Update'), icon: undefined, disabled: false }
-  if (p.update_status === NO_UPDATE || installedIds.value.has(d)) return { label: t('Reinstall'), icon: undefined, disabled: false }
-  return { label: t('Install'), icon: undefined, disabled: false }
+  if (changed[d] === 'installed') return { label: t('Installed'), icon: 'i-lucide-check', disabled: true, installed: false }
+  if (removedIds.value.has(d)) return { label: t('Install'), icon: undefined, disabled: false, installed: false }
+  if (hasUpdate(p.update_status)) return { label: t('Update'), icon: undefined, disabled: false, installed: false }
+  // up to date: the card says so, and offers Reinstall in its menu rather than as the main action
+  if (p.update_status === NO_UPDATE || installedIds.value.has(d)) return { label: t('Installed'), icon: 'i-lucide-check', disabled: false, installed: true }
+  return { label: t('Install'), icon: undefined, disabled: false, installed: false }
+}
+function reinstallItems(p: RemotePlugin) {
+  return [[{
+    label: showReleases.value && tagFor(p) ? `${t('Install')} ${tagFor(p)}` : t('Reinstall'),
+    icon: 'i-lucide-refresh-cw',
+    disabled: !!pending.value,
+    onSelect: () => installRemote(p)
+  }]]
 }
 function installRemote(p: RemotePlugin) {
   install(p.manifest.domain, showReleases.value ? tagFor(p) : undefined)
@@ -673,7 +682,7 @@ function initials(name: string) {
                         {{ p.manifest.author || p.repository }}
                       </div>
                       <div class="mt-1 flex flex-wrap items-center gap-1.5">
-                        <UBadge v-if="installedIds.has(p.manifest.domain) || changed[p.manifest.domain] === 'installed'" color="success" variant="subtle" size="sm" icon="i-lucide-check" :label="t('Installed')" />
+                        <UBadge v-if="(installedIds.has(p.manifest.domain) || changed[p.manifest.domain] === 'installed') && !remoteAction(p).installed" color="success" variant="subtle" size="sm" icon="i-lucide-check" :label="t('Installed')" />
                         <UBadge v-if="hasUpdate(p.update_status)" color="primary" variant="subtle" size="sm" :label="t('Update available')" />
                         <UBadge v-if="!p.rh_version_supported" color="warning" variant="subtle" size="sm" icon="i-lucide-triangle-alert" :label="t('Not supported')" />
                       </div>
@@ -712,7 +721,16 @@ function initials(name: string) {
                         :aria-label="t('Install Version')"
                         @update:model-value="(v: any) => { tags[p.manifest.domain] = v }"
                       />
+                      <template v-if="remoteAction(p).installed && !isBusy(p.manifest.domain)">
+                        <span class="inline-flex shrink-0 items-center gap-1 ps-1 text-sm font-semibold text-success-800 dark:text-success-300">
+                          <UIcon name="i-lucide-check" class="size-4" />{{ t('Installed') }}
+                        </span>
+                        <UDropdownMenu :items="reinstallItems(p)" :content="{ align: 'end' }">
+                          <UButton icon="i-lucide-ellipsis" color="neutral" variant="ghost" size="sm" :aria-label="`${t('More')}: ${p.manifest.name}`" />
+                        </UDropdownMenu>
+                      </template>
                       <UButton
+                        v-else
                         :label="isBusy(p.manifest.domain) ? t('Installing…') : remoteAction(p).label"
                         :icon="remoteAction(p).icon"
                         :color="remoteAction(p).label === t('Update') ? 'primary' : 'neutral'"
@@ -763,7 +781,16 @@ function initials(name: string) {
                   :aria-label="t('Install Version')"
                   @update:model-value="(v: any) => { tags[detail!.manifest.domain] = v }"
                 />
+                <template v-if="remoteAction(detail).installed && !isBusy(detail.manifest.domain)">
+                  <span class="inline-flex items-center gap-1 px-1 text-sm font-semibold text-success-800 dark:text-success-300">
+                    <UIcon name="i-lucide-check" class="size-4" />{{ t('Installed') }}
+                  </span>
+                  <UDropdownMenu :items="reinstallItems(detail)" :content="{ align: 'start' }">
+                    <UButton icon="i-lucide-ellipsis" color="neutral" variant="ghost" size="sm" :aria-label="t('More')" />
+                  </UDropdownMenu>
+                </template>
                 <UButton
+                  v-else
                   :label="isBusy(detail.manifest.domain) ? t('Installing…') : remoteAction(detail).label"
                   :icon="remoteAction(detail).icon"
                   size="sm"

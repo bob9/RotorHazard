@@ -23,7 +23,17 @@ const tabs = computed(() => [
   { label: t('Event Totals'), value: 'event', icon: 'i-lucide-trophy' },
   ...groups.value.map(g => ({ label: g.name, value: g.id }))
 ])
-const tab = ref('event')
+// the tab is part of the address (/results?tab=<class>), so a link or Back opens the same one
+const route = useRoute()
+const router = useRouter()
+const tab = computed({
+  get: () => {
+    const q = typeof route.query.tab === 'string' ? route.query.tab : ''
+    // a class that no longer has results falls back to the event totals
+    return q && (!hasData.value || groups.value.some(g => g.id === q)) ? q : 'event'
+  },
+  set: v => router.replace({ query: { ...route.query, tab: v === 'event' ? undefined : v } })
+})
 const group = computed(() => groups.value.find(g => g.id === tab.value))
 
 const fastest = computed(() => data.value?.event_leaderboard?.meta?.fastest_race_lap_data?.text)

@@ -3,6 +3,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import gevent
 from datetime import datetime
 from flask.blueprints import Blueprint
@@ -339,6 +340,30 @@ class ServerTest(unittest.TestCase):
         # unknown or external targets fall back to the classic home page
         for bad in ('https://example.com/', '//example.com', '/hardwarelog', '/docs/../hardwarelog'):
             self.assertTrue(target(bad).endswith('/classic'), bad)
+
+    def test_new_interface_link_returns_to_app_page(self):
+        def target(to, cookie=None):
+            headers = {'Cookie': 'rh_app_return=' + cookie} if cookie else {}
+            with server.APP.test_request_context('/interface/app', query_string={'to': to}, headers=headers):
+                with mock.patch.object(server, 'webapp_available', return_value=True):
+                    resp = server.set_interface('app')
+                self.assertEqual(resp.status_code, 302)
+                return resp.headers['Location']
+        # the app's page for the classic page
+        self.assertTrue(target('/run').endswith('/app/'))
+        self.assertTrue(target('/current').endswith('/app/live'))
+        self.assertTrue(target('/format').endswith('/app/formats'))
+        self.assertTrue(target('/docs?d=User%20Guide.md').endswith('/app/docs?d=User%20Guide.md'))
+        # the app page that opened this classic page (still the one it was opened for)
+        self.assertTrue(target('/format', '%2Fformat%7C%2Fpilots').endswith('/app/pilots'))
+        self.assertTrue(target('/settings', '%2Fsettings%7C%2Ftimer%3Ftab%3Dtuning').endswith('/app/timer?tab=tuning'))
+        self.assertTrue(target('/run', '%2Fformat%7C%2Fpilots').endswith('/app/'))
+        # unknown, external or malformed targets: the app's home page
+        for bad in ('https://example.com/', '//example.com', '/hardwarelog', '/docs/../hardwarelog', ''):
+            self.assertTrue(target(bad).endswith('/app/'), bad)
+        for cookie in ('%2Fformat%7C%2F%2Fexample.com', '%2Fformat%7Chttps%3A%2F%2Fexample.com', '%2Fformat%7C%2Fwelcome',
+                       '%2Fformat%7C%2Fpilots%0D%0ALocation%3A%20x'):
+            self.assertTrue(target('/format', cookie).endswith('/app/formats'), cookie)
 
     def test_webapp_site_scripts(self):
         # a loader script on three or more classic pages is a site-wide add-on (a status bar):

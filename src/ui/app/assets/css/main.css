@@ -25,8 +25,17 @@
 :root {
   --ui-radius: 0.3rem;
   --ui-primary: var(--ui-color-primary-600);
+  /* secondary text stays readable (WCAG AA, 4.5:1) on every background it sits on, up to
+     bg-elevated; muted is a step darker than dimmed, so the two still read as different levels */
+  --ui-text-dimmed: color-mix(in oklab, var(--ui-color-neutral-500) 70%, var(--ui-color-neutral-600));
+  --ui-text-muted: var(--ui-color-neutral-600);
+  /* keyboard focus: a solid ring with a gap, 3:1 or more against the page */
+  --rh-focus: var(--ui-color-primary-700);
 }
 .dark {
+  --ui-text-dimmed: color-mix(in oklab, var(--ui-color-neutral-400) 65%, var(--ui-color-neutral-500));
+  --ui-text-muted: var(--ui-color-neutral-400);
+  --rh-focus: var(--ui-color-primary-400);
   --ui-primary: var(--ui-color-primary-500);
   --ui-bg: #0b0b0f;
   --ui-bg-muted: #141418;
@@ -41,6 +50,40 @@ html {
 }
 
 .tabular { font-variant-numeric: tabular-nums; }
+
+/* Keyboard focus: one clearly visible ring for every control (buttons, fields, tabs, links,
+   menu and nav items, switches, checkboxes), instead of the faint 25% outline. Unlayered, so it
+   wins over the components' own focus-visible outline classes. */
+:focus-visible {
+  outline: 2px solid var(--rh-focus);
+  outline-offset: 2px;
+}
+/* on a solid colour (the orange Start Race button, a red Delete) the ring takes the text colour,
+   so it never blends into the button */
+:is(.bg-primary, .bg-error, .bg-success, .bg-warning, .bg-info, .bg-inverted):focus-visible {
+  outline-color: var(--ui-text-highlighted);
+}
+/* sidebar and menu items draw their focus on a pseudo-element; the ring on the item replaces it */
+[data-slot="link"]:focus-visible { border-radius: calc(var(--ui-radius) * 1.5); }
+[data-slot="link"]:focus-visible::before { outline: none; }
+/* text fields already show focus by their border; the ring sits right on it */
+:is(input, textarea, select, [role="combobox"]):focus-visible { outline-offset: 0; }
+
+/* "Skip to content": hidden until reached with the keyboard */
+.rh-skip {
+  position: fixed;
+  top: .5rem;
+  left: .5rem;
+  z-index: 100;
+  padding: .5rem 1rem;
+  border-radius: .5rem;
+  background: var(--ui-bg-inverted);
+  color: var(--ui-text-inverted);
+  font-weight: 600;
+  font-size: .875rem;
+  transform: translateY(calc(-100% - 1rem));
+}
+.rh-skip:focus { transform: none; }
 
 .font-display { font-family: var(--font-display); letter-spacing: -0.022em; }
 

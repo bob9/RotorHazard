@@ -65,6 +65,7 @@ import functools
 import signal
 import werkzeug
 import urllib3
+from urllib.parse import unquote
 
 from flask import Flask, send_from_directory, request, session, make_response, Response, templating, redirect, abort, copy_current_request_context
 from flask.blueprints import Blueprint
@@ -529,20 +530,51 @@ def preferred_interface():
         return choice
     return 'classic' if RaceContext.serverconfig.get_item('UI', 'classicInterface') is True else 'app'
 
+# classic page -> the web app's page for it ('New Interface' on a classic page)
+APP_FOR_CLASSIC = {'/run': '/', '/current': '/live', '/marshal': '/marshal', '/results': '/results', '/event': '/event',
+                   '/format': '/formats', '/settings': '/settings', '/streams': '/settings/plugins', '/plugins': '/plugins',
+                   '/docs': '/docs', '/database': '/database', '/scanner': '/scanner', '/vrxstatus': '/vrx-status',
+                   '/imdtabler': '/imdtabler', '/updatenodes': '/update-nodes'}
+# web app pages a browser may be sent back to (with their query, e.g. /timer?tab=tuning)
+APP_PAGES = set(APP_FOR_CLASSIC.values()) | {'/pilots', '/heats', '/timer', '/page'} | \
+    {'/settings/' + s for s in ('general', 'audio', 'leds', 'vrx', 'actions', 'data', 'cluster', 'system', 'plugins')}
+# set by the web app when it opens a classic page: '<classic path>|<app page>'
+APP_RETURN_COOKIE = 'rh_app_return'
+APP_PAGE_RE = re.compile(r'^(/[A-Za-z0-9/_-]*)(\?[A-Za-z0-9_.~%=&+-]*)?(#[A-Za-z0-9_.~%-]*)?$')
+
+def app_return_page(classic_path):
+    '''The web app page that opened this classic page (if it is still the one opened), else None.'''
+    value = unquote(request.cookies.get(APP_RETURN_COOKIE) or '')
+    opened_for, _, page = value.partition('|')
+    match = APP_PAGE_RE.match(page)
+    if opened_for == classic_path and match and match.group(1) in APP_PAGES:
+        return page
+    return None
+
 @APP.route('/interface/<choice>')
 def set_interface(choice):
     '''Switches this browser to the web app ('app') or the classic interface ('classic').'''
     if choice not in ('app', 'classic') or (choice == 'app' and not webapp_available()):
         abort(404)
     target = "/app/" if choice == 'app' else "/classic"
-    # ?to= opens the matching classic page (the app maps its own page); known pages only
+    # ?to= opens the matching page of the other interface; known pages only
     to = request.args.get('to') or ''
-    if choice == 'classic' and to.startswith('/') and not to.startswith('//'):
+    if to.startswith('/') and not to.startswith('//'):
         path, _, query = to.partition('?')
-        if path in CLASSIC_PAGES:
+        if choice == 'classic' and path in CLASSIC_PAGES:
             target = path + ('?' + query if query and path in CLASSIC_PAGES_WITH_QUERY else '')
+        elif choice == 'app' and path in APP_FOR_CLASSIC:
+            # back to the app page that opened this classic page, else the app's page for it
+            page = app_return_page(path)
+            if not page:
+                page = APP_FOR_CLASSIC[path]
+                if query and path in CLASSIC_PAGES_WITH_QUERY and APP_PAGE_RE.match(page + '?' + query):
+                    page += '?' + query
+            target = '/app' + page
     response = redirect(target, code=302)
     response.set_cookie(INTERFACE_COOKIE, choice, max_age=60*60*24*365*5, samesite='Lax')
+    if choice == 'app':
+        response.delete_cookie(APP_RETURN_COOKIE)
     return response
 
 @APP.route('/classic')

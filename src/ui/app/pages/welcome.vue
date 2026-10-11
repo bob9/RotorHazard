@@ -10,6 +10,15 @@ const { refresh: refreshAuth } = useAuth()
 const { refresh: refreshInfo, info } = useServerInfo()
 rh.load(['language', 'all_languages'])
 
+// only for a timer that hasn't been set up: afterwards (for admins and guests alike) this
+// screen would offer defaults that overwrite the real name and login, so it opens the app instead
+const show = ref(false)
+watch(info, (i) => {
+  if (!i || show.value) return
+  if (i.first_run) show.value = true
+  else navigateTo('/', { replace: true })
+}, { immediate: true })
+
 const step = ref(0)
 const language = ref<string>('')
 watch(() => rh.state.language?.language, (l) => { if (l !== undefined) language.value = l || 'en' }, { immediate: true })
@@ -51,7 +60,7 @@ const logoUrl = useRuntimeConfig().app.baseURL + 'rh-icon.svg'
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 grid overflow-y-auto bg-default lg:grid-cols-[1.15fr_1fr]">
+  <div v-if="show" class="fixed inset-0 z-50 grid overflow-y-auto bg-default lg:grid-cols-[1.15fr_1fr]">
     <div class="relative h-56 overflow-hidden bg-neutral-950 sm:h-72 lg:sticky lg:top-0 lg:h-dvh">
       <!-- shown until (or instead of) the generated artwork -->
       <div class="rh-glow absolute inset-0" />

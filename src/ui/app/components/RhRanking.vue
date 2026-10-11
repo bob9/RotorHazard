@@ -29,7 +29,7 @@ const team = computed(() => rows.value.some(r => r.team_name) && props.ranking?.
       <tbody class="divide-y divide-default">
         <tr v-for="(r, i) in rows" :key="r.pilot_id ?? i">
           <td class="px-3 py-2.5 font-semibold text-highlighted">
-            {{ r.position ?? '–' }}
+            <RhValue :value="r.position" />
           </td>
           <td class="px-3 py-2.5 font-medium text-highlighted">
             {{ r.callsign }}
@@ -38,7 +38,7 @@ const team = computed(() => rows.value.some(r => r.team_name) && props.ranking?.
             {{ r.team_name }}
           </td>
           <td v-for="f in fields" :key="f.name" class="px-3 py-2.5 text-right">
-            {{ r[f.name] ?? '—' }}
+            <RhValue :value="r[f.name]" />
           </td>
         </tr>
       </tbody>

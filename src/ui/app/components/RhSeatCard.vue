@@ -118,9 +118,9 @@ const pct = (v?: number) => `${Math.min(100, Math.max(0, ((v || 0) / scaleMax.va
       @click="expanded = !expanded"
     >
       <span class="text-dimmed">{{ t('Last') }}</span>
-      <span class="tabular font-medium text-highlighted">{{ timeOrDash(row?.last_lap) }}</span>
+      <span class="tabular font-medium text-highlighted"><RhValue :value="row?.last_lap" /></span>
       <span class="text-dimmed">{{ t('Fastest') }}</span>
-      <span class="tabular font-medium text-highlighted">{{ timeOrDash(row?.fastest_lap) }}</span>
+      <span class="tabular font-medium text-highlighted"><RhValue :value="row?.fastest_lap" /></span>
       <UIcon name="i-lucide-chevron-down" class="ms-auto size-4 text-dimmed transition-transform" :class="expanded ? 'rotate-180' : ''" />
     </button>
 
@@ -130,7 +130,7 @@ const pct = (v?: number) => `${Math.min(100, Math.max(0, ((v || 0) / scaleMax.va
           {{ t('Last') }}
         </div>
         <div class="tabular text-[15px] font-medium text-highlighted">
-          {{ timeOrDash(row?.last_lap) }}
+          <RhValue :value="row?.last_lap" />
         </div>
       </div>
       <div class="bg-default px-4 py-2">
@@ -138,7 +138,7 @@ const pct = (v?: number) => `${Math.min(100, Math.max(0, ((v || 0) / scaleMax.va
           {{ t('Fastest') }}
         </div>
         <div class="tabular text-[15px] font-medium text-highlighted">
-          {{ timeOrDash(row?.fastest_lap) }}
+          <RhValue :value="row?.fastest_lap" />
         </div>
       </div>
     </div>

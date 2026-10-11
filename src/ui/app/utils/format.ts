@@ -21,10 +21,6 @@ export function channelLabel(f?: { band?: string | null, channel?: number | null
 }
 
 /** Empty or zero lap times show as a dash */
-export function timeOrDash(v?: string | null) {
-  return !v || v === '0:00.000' ? '—' : v
-}
-
 /** ms → m:ss.sss */
 export function formatLapMs(ms?: number | null) {
   if (ms === null || ms === undefined || Number.isNaN(ms)) return '—'

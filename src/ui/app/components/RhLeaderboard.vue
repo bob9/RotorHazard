@@ -37,7 +37,7 @@ function source(s: any) {
   return s.round ? `${s.displayname} / ${t('Round')} ${s.round}` : s.displayname
 }
 function avgSpeed(r: any) {
-  return r.speed_count ? (r.speed_total / r.speed_count).toFixed(1) : '—'
+  return r.speed_count ? (r.speed_total / r.speed_count).toFixed(1) : null
 }
 // numeric columns hug their content; the outer columns line up with the card's padding
 // (a little tighter on phones, so a pilot column and four figures fit a 360px screen)
@@ -48,6 +48,8 @@ const inset = computed(() => props.dense ? 'px-2 sm:px-4' : 'px-1 sm:px-3')
 const consecClass = computed(() => combined.value ? 'hidden sm:table-cell' : '')
 // ...and the total time, so pilot names stay readable (laps and fastest lap remain)
 const totalClass = consecClass
+// the pilots (or seats) on the board; it changes with the heat, not while a race runs
+const rowsKey = computed(() => rows.value.map((r, i) => r.pilot_id ?? `n${r.node}-${i}`).sort().join(','))
 </script>
 
 <template>
@@ -101,15 +103,17 @@ const totalClass = consecClass
           </th>
         </tr>
       </thead>
-      <TransitionGroup tag="tbody" name="rh" class="divide-y divide-default">
+      <!-- keyed by who is on the board: another heat replaces the rows at once, instead of the
+           old rows fading out beside the new ones -->
+      <TransitionGroup :key="rowsKey" tag="tbody" name="rh" class="divide-y divide-default">
         <tr v-for="(r, i) in rows" :key="r.pilot_id ?? `n${r.node}-${i}`" class="tabular">
           <td :class="cell" class="font-semibold text-highlighted">
             <span
               v-if="r.position"
               class="inline-flex size-6 items-center justify-center rounded-full text-xs"
-              :class="r.position === 1 ? 'bg-amber-400/20 text-amber-600 dark:text-amber-300' : r.position === 2 ? 'bg-zinc-400/20 text-zinc-600 dark:text-zinc-300' : r.position === 3 ? 'bg-orange-700/20 text-orange-700 dark:text-orange-300' : 'text-muted'"
+              :class="r.position === 1 ? 'bg-amber-400/20 text-amber-800 dark:text-amber-300' : r.position === 2 ? 'bg-zinc-400/20 text-zinc-600 dark:text-zinc-300' : r.position === 3 ? 'bg-orange-700/20 text-orange-800 dark:text-orange-300' : 'text-muted'"
             >{{ r.position }}</span>
-            <span v-else class="text-dimmed">–</span>
+            <RhValue v-else />
           </td>
           <td :class="cell" class="min-w-24 max-w-0 font-medium text-highlighted sm:min-w-28">
             <div class="flex min-w-0 items-center gap-2">
@@ -134,17 +138,17 @@ const totalClass = consecClass
               ><span aria-hidden="true">−{{ r.behind }}</span><span class="sr-only">({{ t('Laps behind the leader') }}: {{ r.behind }})</span></span>
             </td>
             <td :class="[cell, totalClass]" class="text-right">
-              {{ timeOrDash(staggered ? r.total_time_laps : r.total_time) }}
+              <RhValue :value="staggered ? r.total_time_laps : r.total_time" />
             </td>
             <td :class="cell" class="text-right text-muted hidden sm:table-cell">
-              {{ timeOrDash(r.average_lap) }}
+              <RhValue :value="r.average_lap" />
             </td>
             <td v-if="showAvgSpeed" :class="cell" class="text-right text-muted">
-              {{ avgSpeed(r) }}
+              <RhValue :value="avgSpeed(r)" />
             </td>
           </template>
           <td v-if="showFastest" :class="cell" class="text-right" :title="source(r.fastest_lap_source)">
-            <span :class="minLapMs && r.fastest_lap_raw && r.fastest_lap_raw < minLapMs ? 'text-amber-700 dark:text-amber-400' : ''">{{ timeOrDash(r.fastest_lap) }}</span>
+            <span :class="minLapMs && r.fastest_lap_raw && r.fastest_lap_raw < minLapMs ? 'text-amber-700 dark:text-amber-400' : ''"><RhValue :value="r.fastest_lap" /></span>
           </td>
           <td v-if="showFastest && showSource" :class="cell" class="text-muted hidden md:table-cell">
             {{ source(r.fastest_lap_source) }}
@@ -153,16 +157,16 @@ const totalClass = consecClass
             <template v-if="r.consecutives && r.consecutives !== '0:00.000'">
               <span class="text-xs text-dimmed">{{ r.consecutives_base }}/</span>{{ r.consecutives }}
             </template>
-            <span v-else class="text-dimmed">—</span>
+            <RhValue v-else />
           </td>
           <td v-if="showConsec && showSource" :class="cell" class="text-muted hidden md:table-cell">
             {{ source(r.consecutives_source) }}
           </td>
           <td v-if="showTopSpeed" :class="cell" class="text-right text-muted">
-            {{ r.top_speed ?? '—' }}
+            <RhValue :value="r.top_speed" />
           </td>
           <td v-if="showPoints" :class="cell" class="text-right font-semibold">
-            {{ r.points ?? '—' }}
+            <RhValue :value="r.points" />
           </td>
         </tr>
       </TransitionGroup>

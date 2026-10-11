@@ -90,7 +90,14 @@ const vrxBySeat = computed(() => {
 // the timer's frequency and firmware tools (the full list is under Settings › System)
 const timerTools = useTools().tools(['scanner', 'imdtabler', 'update-nodes'])
 
-const tab = ref('frequencies')
+// the tab is part of the address (/timer?tab=tuning), so search results and links open the right one
+const route = useRoute()
+const router = useRouter()
+const TABS = ['frequencies', 'tuning', 'advanced']
+const tab = computed({
+  get: () => (TABS.includes(String(route.query.tab)) ? String(route.query.tab) : 'frequencies'),
+  set: v => router.replace({ query: { ...route.query, tab: v === 'frequencies' ? undefined : v } })
+})
 const tabs = computed(() => [
   { label: t('Frequencies'), value: 'frequencies', icon: 'i-lucide-radio' },
   { label: t('Sensor Tuning'), value: 'tuning', icon: 'i-lucide-activity' },
@@ -120,7 +127,15 @@ const tabs = computed(() => [
         </template>
       </UDashboardNavbar>
       <UDashboardToolbar>
-        <UTabs v-model="tab" :items="tabs" :content="false" variant="link" />
+        <!-- on a phone the three tabs share the width, without icons, so all of them stay on screen -->
+        <UTabs
+          v-model="tab"
+          :items="tabs"
+          :content="false"
+          variant="link"
+          class="w-full min-w-0 sm:w-auto"
+          :ui="{ list: 'w-full sm:w-auto', trigger: 'flex-1 justify-center px-1.5 text-[13px] sm:flex-none sm:px-3 sm:text-sm', leadingIcon: 'hidden sm:inline-flex', label: 'truncate' }"
+        />
       </UDashboardToolbar>
     </template>
 

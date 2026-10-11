@@ -41,7 +41,7 @@ const consecutives = computed(() => props.board?.meta?.consecutives_count || 3)
       <tbody class="divide-y divide-default tabular">
         <tr v-for="r in rows" :key="r.name">
           <td v-if="!coop" class="px-3 py-2.5 font-semibold first:pl-4 sm:first:pl-6">
-            {{ r.position ?? '–' }}
+            <RhValue :value="r.position" />
           </td>
           <td class="max-w-0 truncate px-3 py-2.5 font-medium text-highlighted first:pl-4 sm:first:pl-6">
             {{ coop ? t('Group') : r.name }}
@@ -54,14 +54,14 @@ const consecutives = computed(() => props.board?.meta?.consecutives_count || 3)
               {{ r.laps }}
             </td>
             <td class="whitespace-nowrap px-3 py-2.5 text-right last:pr-4 sm:last:pr-6">
-              {{ timeOrDash(coop ? r.coop_total_time || r.total_time : r.average_lap) }}
+              <RhValue :value="coop ? r.coop_total_time || r.total_time : r.average_lap" />
             </td>
           </template>
           <td v-else-if="key === 'by_avg_fastest_lap'" class="whitespace-nowrap px-3 py-2.5 text-right last:pr-4 sm:last:pr-6">
-            {{ timeOrDash(r.average_fastest_lap) }}
+            <RhValue :value="r.average_fastest_lap" />
           </td>
           <td v-else class="whitespace-nowrap px-3 py-2.5 text-right last:pr-4 sm:last:pr-6">
-            {{ timeOrDash(r.average_consecutives) }}
+            <RhValue :value="r.average_consecutives" />
           </td>
         </tr>
       </tbody>

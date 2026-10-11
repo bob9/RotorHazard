@@ -42,6 +42,7 @@ const statusMessage = computed(() => currentStatusMessage(lb.value))
 const minLapMs = computed(() => (S.min_lap?.min_lap || 0) * 1000)
 const nextHeat = computed(() => S.leaderboard?.current?.displayname)
 const nextRound = computed(() => S.current_heat?.next_round)
+const nextPilots = computed(() => Object.values(heatNodes.value).map((n: any) => n.callsign).filter(Boolean).join(' · '))
 // the card names what it shows: the race being run, a finished one awaiting save, or the heat about to run
 const heroLabel = computed(() => showLast.value
   ? t('Last race')
@@ -103,7 +104,9 @@ async function fit() {
     for (const withSeats of [true, false]) {
       seatsFit.value = withSeats
       let lo = 0.3
-      let hi = Math.min(3.6, preferred * 1.3)
+      // up to well past the width's preferred size, so a short board fills the screen's height
+      // instead of leaving its lower part empty (the table and card checks still bound the width)
+      let hi = Math.min(5, preferred * 1.8)
       if (!(await fits(hi))) {
         // the largest size that fits, to within a few percent
         while (hi - lo > 0.02) {
@@ -228,20 +231,20 @@ const kioskZoom = computed(() => (kiosk.value ? { zoom: zoom.value } : undefined
 
     <template #body>
       <div v-if="!loaded" class="mx-auto w-full max-w-6xl space-y-6" aria-busy="true" :style="kioskZoom">
-        <USkeleton class="h-48 w-full rounded-3xl" />
+        <USkeleton class="h-48 w-full rounded-2xl" />
         <USkeleton class="h-64 w-full rounded-2xl" />
       </div>
       <div
         v-else
         ref="kioskBody"
         class="mx-auto grid w-full gap-6"
-        :class="kiosk && landscape ? 'grid-cols-[minmax(0,5fr)_minmax(0,7fr)] items-start' : 'max-w-6xl grid-cols-1'"
+        :class="kiosk && landscape ? 'grid-cols-[minmax(0,4fr)_minmax(0,8fr)] items-start' : 'max-w-6xl grid-cols-1'"
         :style="kioskZoom"
       >
         <div class="min-w-0 space-y-6">
           <!-- between races: a compact header for the last race; during one: the big clock -->
           <section
-            class="flex flex-col items-center gap-2 rounded-3xl bg-default px-6 text-center ring-1 ring-default"
+            class="flex flex-col items-center gap-2 rounded-2xl bg-default px-6 text-center ring ring-default"
             :class="showLast ? 'py-5' : 'py-8 sm:py-10'"
           >
             <div class="text-sm font-medium text-muted">
@@ -260,14 +263,18 @@ const kioskZoom = computed(() => (kiosk.value ? { zoom: zoom.value } : undefined
             </div>
           </section>
 
-          <UAlert
-            v-if="showLast && nextHeat"
-            icon="i-lucide-arrow-right-circle"
-            color="neutral"
-            variant="subtle"
-            :title="`${t('Up next')}: ${nextHeat}${nextRound ? ` · ${t('Round')} ${nextRound}` : ''}`"
-            :description="Object.values(heatNodes).map((n: any) => n.callsign).filter(Boolean).join(' · ')"
-          />
+          <!-- the same card as the race card and the leaderboard beside it -->
+          <section v-if="showLast && nextHeat" class="flex items-start gap-3 rounded-2xl bg-default px-5 py-4 ring ring-default">
+            <UIcon name="i-lucide-arrow-right-circle" class="mt-0.5 size-5 shrink-0 text-muted" />
+            <div class="min-w-0 space-y-1">
+              <div class="text-sm font-semibold text-highlighted">
+                {{ t('Up next') }}: {{ nextHeat }}<template v-if="nextRound"> · {{ t('Round') }} {{ nextRound }}</template>
+              </div>
+              <div v-if="nextPilots" class="text-sm text-muted">
+                {{ nextPilots }}
+              </div>
+            </div>
+          </section>
         </div>
 
         <div class="min-w-0 space-y-6">

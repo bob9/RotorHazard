@@ -551,7 +551,7 @@ defineExpose({ dirty, recalc, reset: load, setEnter, setExit })
                 @click="select(r.i)"
               >
                 <td class="px-3 py-2 font-semibold sm:pl-5" :class="r.lap.deleted ? '' : 'text-highlighted'">
-                  {{ r.num === 0 ? 'HS' : (r.num ?? '–') }}
+                  {{ r.num === 0 ? 'HS' : (r.num ?? '—') }}
                 </td>
                 <td class="px-3 py-2 text-right" :class="r.lap.deleted ? 'line-through' : ''">
                   {{ fmtStamp(r.lap.lap_time_stamp) }}
