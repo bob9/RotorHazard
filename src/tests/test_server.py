@@ -162,6 +162,17 @@ class ServerTest(unittest.TestCase):
                 return
         self.fail('No matching format in response')
 
+    def test_alter_other_race_format_keeps_current(self):
+        self.client.emit('load_data', {'load_types': ['format_data']})
+        fmt_ids = [f['id'] for f in self.get_response('format_data')['formats']]
+        self.client.emit('set_race_format', {'race_format': fmt_ids[0]})
+        self.client.emit('alter_race_format', {'format_id': fmt_ids[1], 'race_time_sec': 77})
+        self.client.emit('load_data', {'load_types': ['race_status']})
+        self.assertEqual(self.get_response('race_status')['race_format_id'], fmt_ids[0])
+        self.client.emit('alter_race_format', {'format_id': fmt_ids[0], 'race_time_sec': 78})
+        self.client.emit('load_data', {'load_types': ['race_status']})
+        self.assertEqual(self.get_response('race_status')['race_format_id'], fmt_ids[0])
+
     def test_delete_race_format(self):
         self.client.emit('load_data', {'load_types': ['format_data']})
         resp = self.get_response('format_data')

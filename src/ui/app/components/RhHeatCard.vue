@@ -177,7 +177,9 @@ const menu = computed(() => [
           :items="methodItems.map(m => ({ ...m, type: 'checkbox' as const, checked: (slot.method === -1 ? 0 : slot.method) === m.value, onUpdateChecked: () => setSlot(slot, { method: m.value, seed_heat_id: 0, seed_class_id: 0 }) }))"
           :content="{ align: 'end' }"
         >
-          <UButton icon="i-lucide-shuffle" color="neutral" variant="ghost" size="xs" :aria-label="t('Seeding')" :class="slot.method > 0 ? 'text-primary' : 'text-dimmed'" />
+          <UTooltip :text="t('Fill this seat with a pilot, or from a heat or class result')">
+            <UButton icon="i-lucide-git-merge" color="neutral" variant="ghost" size="xs" :aria-label="t('Seeding')" :class="slot.method > 0 ? 'text-primary' : 'text-dimmed'" />
+          </UTooltip>
         </UDropdownMenu>
       </li>
       <li v-if="!visibleSlots.length" class="px-4 py-3 text-sm text-dimmed">

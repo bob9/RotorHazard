@@ -23,6 +23,7 @@ export function useMessages() {
   const rh = useRH()
   const toast = useToast()
   const { admin } = useAuth()
+  const { t } = useI18n()
 
   if (!started && import.meta.client) {
     started = true
@@ -32,7 +33,17 @@ export function useMessages() {
       const m: RHMessage = { id: nextId++, message: d.message, interrupt: !!d.interrupt, time: new Date() }
       messages.value = [m, ...messages.value].slice(0, 100)
       unread.value++
-      if (m.interrupt) alerts.value.push(m)
+      // the server's "errors were logged" notice links to the classic log page: show it as a
+      // toast that opens the app's own log viewer, not a pop-up blocking the whole app
+      if (/href="\/hardwarelog/.test(m.message)) {
+        toast.add({
+          title: stripHtml(m.message.split('<br')[0]!),
+          icon: 'i-lucide-triangle-alert',
+          color: 'warning',
+          duration: 12000,
+          actions: [{ label: t('View error log'), color: 'neutral', variant: 'outline', onClick: () => { navigateTo('/settings/system?log=ERROR') } }]
+        })
+      } else if (m.interrupt) alerts.value.push(m)
       else toast.add({ description: stripHtml(m.message), icon: 'i-lucide-bell', color: 'neutral' })
     }, { global: true })
     rh.on('clear_priority_messages', () => {

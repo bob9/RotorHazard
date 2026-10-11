@@ -73,3 +73,27 @@ html {
     radial-gradient(70% 60% at 60% 60%, rgb(124 58 237 / .18), transparent 70%),
     #09090b;
 }
+
+/* a setting reached from search: brief highlight */
+.rh-flash {
+  animation: rh-flash 1.8s ease-out;
+  outline-offset: 6px;
+  border-radius: 0.75rem;
+}
+@keyframes rh-flash {
+  0%, 45% { outline: 3px solid color-mix(in oklab, var(--ui-primary) 60%, transparent); }
+  100% { outline: 3px solid transparent; }
+}
+
+/* widgets plugins drop into a page's dock keep to the screen width (they bring their own styling) */
+#rh-plugin-dock {
+  justify-content: center;
+  max-width: 100%;
+}
+#rh-plugin-dock > * {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  /* the dock spaces its widgets; their own outer margins assume the classic page */
+  margin: 0 !important;
+}

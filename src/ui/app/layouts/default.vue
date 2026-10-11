@@ -73,10 +73,14 @@ function prettyPath(url: string) {
 
 // Search covers pages, settings (with everyday synonyms), and event data
 const searchData = ref(false)
+// where each page's plugin panels are shown in this app; other pages go to Plugins & Streams
+const PANEL_ROUTES: Record<string, string> = { run: '/', format: '/event', results: '/results', marshal: '/marshal', settings: '/settings/plugins', streams: '/settings/plugins' }
+const { pages: pluginPages } = usePluginUI()
 watch(searchOpen, (o) => {
   if (o && !searchData.value) {
     searchData.value = true
     rh.load(['pilot_data', 'heat_data', 'class_data', 'format_data'])
+    if (admin.value) rh.load(Object.keys(PANEL_ROUTES).map(value => ({ type: 'ui' as const, value })))
   }
 })
 const settingsIndex = computed(() => admin.value
@@ -84,17 +88,41 @@ const settingsIndex = computed(() => admin.value
       { label: t('Frequencies'), description: t('Timer'), icon: 'i-lucide-radio', to: '/timer', keywords: 'frequency frequencies channel channels band raceband vtx video node nodes imd preset' },
       { label: t('Sensor Tuning'), description: t('Timer'), icon: 'i-lucide-activity', to: '/timer', keywords: 'tuning enterat exitat rssi calibration signal gate threshold' },
       { label: t('Race duration and scoring'), description: t('Formats'), icon: 'i-lucide-timer', to: '/formats', keywords: 'duration length time clock minutes staging tones win condition laps scoring holeshot' },
-      { label: t('Minimum Lap Time'), description: t('Race'), icon: 'i-lucide-gauge', to: '/', keywords: 'min lap minimum short laps ignore crossings' },
+      { label: t('Minimum Lap Time'), description: t('Race'), icon: 'i-lucide-gauge', to: '/#min-lap', keywords: 'min lap minimum short laps ignore crossings' },
+      { label: t('Pilots'), description: t('Callsign, name, team and color'), icon: 'i-lucide-users', to: '/pilots', keywords: 'pilot callsign name team color colour phonetic add pilot' },
+      ...(info.value?.led_enabled || info.value?.led_events_enabled ? [{ label: t('LEDs'), description: t('Settings'), icon: 'i-lucide-lightbulb', to: '/settings/leds', keywords: 'led leds lights strip panel brightness color colour effects' }] : []),
+      ...(info.value?.vrx_enabled ? [{ label: t('VRx Control'), description: t('Settings'), icon: 'i-lucide-tv', to: '/settings/vrx', keywords: 'vrx goggles receiver osd mqtt video receiver' }] : []),
       { label: t('Audio'), description: t('Settings'), icon: 'i-lucide-volume-2', to: '/settings/audio', keywords: 'voice callouts sound speech tones beep volume announce' },
       { label: t('Event Actions'), description: t('Settings'), icon: 'i-lucide-zap', to: '/settings/actions', keywords: 'automation actions effects trigger' },
       { label: t('Data & Backups'), description: t('Settings'), icon: 'i-lucide-hard-drive', to: '/settings/data', keywords: 'backup restore export import csv json database new event archive reset' },
-      { label: t('Admin Login'), description: t('Settings'), icon: 'i-lucide-key-round', to: '/settings/general', keywords: 'password username login admin security' },
-      { label: t('Language'), description: t('Settings'), icon: 'i-lucide-languages', to: '/settings/general', keywords: 'language translation timer name logo appearance dark light theme interface classic' },
+      { label: t('Admin Login'), description: t('Settings'), icon: 'i-lucide-key-round', to: '/settings/general#admin-login', keywords: 'password username login admin security' },
+      { label: t('Language'), description: t('Settings'), icon: 'i-lucide-languages', to: '/settings/general#language', keywords: 'language translation timer name logo appearance dark light theme interface classic' },
       { label: t('Secondary Timers'), description: t('Settings'), icon: 'i-lucide-network', to: '/settings/cluster', keywords: 'cluster split mirror secondary sensors' },
       { label: t('System'), description: t('Settings'), icon: 'i-lucide-cpu', to: '/settings/system', keywords: 'restart reboot shutdown logs version firmware advanced port' },
       { label: t('Plugins & Streams'), description: t('Settings'), icon: 'i-lucide-cast', to: '/settings/plugins', keywords: 'plugin settings stream overlay obs video' }
     ]
   : [])
+// plugin settings, found by panel title or by any of their field labels
+const pluginIndex = computed(() => {
+  if (!searchData.value || !admin.value) return []
+  const items: any[] = []
+  for (const [page, panels] of Object.entries(pluginPages)) {
+    const route = PANEL_ROUTES[page] || '/settings/plugins'
+    const where = page === 'run' ? t('Race') : page === 'format' ? t('Event') : page === 'results' ? t('Results') : page === 'marshal' ? t('Marshal') : t('Plugins & Streams')
+    for (const p of panels || []) {
+      const fields = [...(p.settings || []), ...(p.fn_binds || []), ...(p.quickbuttons || [])]
+      if (!fields.length) continue
+      items.push({
+        label: t(p.panel.label),
+        description: `${t('Plugin')} · ${where}`,
+        icon: 'i-lucide-puzzle',
+        to: `${route}#panel-${p.panel.name}`,
+        keywords: fields.map((f: any) => t(f.label || f.field?.label || '')).join(' ')
+      })
+    }
+  }
+  return items
+})
 const dataIndex = computed(() => {
   if (!searchData.value) return []
   const items: any[] = []
@@ -114,7 +142,7 @@ const searchGroups = computed(() => [
     items: [...raceItems.value, ...eventItems.value, ...systemItems.value, ...pluginItems.value]
       .map(i => ({ label: i.label, icon: i.icon, to: i.to as string }))
   },
-  ...(settingsIndex.value.length ? [{ id: 'settings', label: t('Settings'), items: settingsIndex.value }] : []),
+  ...(settingsIndex.value.length ? [{ id: 'settings', label: t('Settings'), items: [...settingsIndex.value, ...pluginIndex.value] }] : []),
   ...(dataIndex.value.length ? [{ id: 'event', label: t('Event'), items: dataIndex.value, ignoreFilter: false }] : []),
   {
     id: 'actions',
@@ -127,16 +155,43 @@ const searchGroups = computed(() => [
     ]
   }
 ])
-const searchFuse = { fuseOptions: { keys: ['label', 'description', 'keywords'], threshold: 0.35, ignoreLocation: true }, resultLimit: 40 }
+// whole-phrase matching ("min lap" shouldn't match "Admin Login" on "min"), names count most
+const searchFuse = {
+  fuseOptions: {
+    keys: [{ name: 'label', weight: 3 }, { name: 'keywords', weight: 2 }, { name: 'description', weight: 0.5 }],
+    threshold: 0.3,
+    ignoreLocation: true,
+    useTokenSearch: false
+  },
+  resultLimit: 40
+}
+
+// '#id' in a search result: scroll that setting into view and flash it
+watch(() => route.fullPath, () => {
+  const id = route.hash.slice(1)
+  if (!id) return
+  let tries = 0
+  const find = () => {
+    const el = document.getElementById(decodeURIComponent(id))
+    if (!el) {
+      if (++tries < 30) setTimeout(find, 100)
+      return
+    }
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // the page may still be growing as its data arrives: settle on the target again
+    setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 600)
+    el.classList.add('rh-flash')
+    setTimeout(() => el.classList.remove('rh-flash'), 1800)
+  }
+  nextTick(find)
+}, { immediate: true })
 
 const restartOpen = ref(false)
 // 'Later' hides the restart banner for this visit; the Settings item keeps a badge
 const restartSnoozed = ref(false)
 const { restartServer } = useMessages()
 
-defineShortcuts({
-  meta_k: () => { searchOpen.value = !searchOpen.value }
-})
+// Ctrl/Cmd+K is bound by UDashboardSearch itself
 
 const logoUrl = useRuntimeConfig().app.baseURL + 'rh-icon.svg'
 const version = computed(() => info.value?.server?.release_version)

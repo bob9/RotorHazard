@@ -992,7 +992,10 @@
 			"Not in a heat": "Noch in keinem Heat",
 			"Already in a heat": "Bereits in einem Heat",
 			"all rounds raced": "alle Runden gefahren",
-			"Review the results, or generate heats for the next stage.": "Sieh dir die Ergebnisse an oder erstelle Heats für die nächste Stufe."
+			"Review the results, or generate heats for the next stage.": "Sieh dir die Ergebnisse an oder erstelle Heats für die nächste Stufe.",
+			"Callsign, name, team and color": "Rufname, Name, Team und Farbe",
+			"Fill this seat with a pilot, or from a heat or class result": "Diesen Platz mit einem Piloten oder aus einem Heat- bzw. Klassenergebnis besetzen",
+			"Plugin": "Plugin"
 		}
 	},
 	"es": {
@@ -2108,7 +2111,10 @@
 			"Not in a heat": "Sin manga",
 			"Already in a heat": "Ya en una manga",
 			"all rounds raced": "todas las rondas corridas",
-			"Review the results, or generate heats for the next stage.": "Revisa los resultados o genera mangas para la siguiente fase."
+			"Review the results, or generate heats for the next stage.": "Revisa los resultados o genera mangas para la siguiente fase.",
+			"Callsign, name, team and color": "Indicativo, nombre, equipo y color",
+			"Fill this seat with a pilot, or from a heat or class result": "Asigna este puesto a un piloto o desde el resultado de una manga o clase",
+			"Plugin": "Plugin"
 		}
 	},
 	"fr-be": {
@@ -3018,7 +3024,10 @@
 			"Not in a heat": "Dans aucune série",
 			"Already in a heat": "Déjà dans une série",
 			"all rounds raced": "toutes les séries courues",
-			"Review the results, or generate heats for the next stage.": "Consultez les résultats ou générez les séries de l’étape suivante."
+			"Review the results, or generate heats for the next stage.": "Consultez les résultats ou générez les séries de l’étape suivante.",
+			"Callsign, name, team and color": "Indicatif, nom, équipe et couleur",
+			"Fill this seat with a pilot, or from a heat or class result": "Attribuer cette place à un pilote, ou d’après le résultat d’une série ou d’une classe",
+			"Plugin": "Plugin"
 		}
 	},
 	"it": {
@@ -4402,7 +4411,10 @@
 			 "Not in a heat": "Non in una batteria",
 			 "Already in a heat": "Già in una batteria",
 			 "all rounds raced": "tutti i round corsi",
-			 "Review the results, or generate heats for the next stage.": "Controlla i risultati o genera le batterie per la fase successiva."
+			 "Review the results, or generate heats for the next stage.": "Controlla i risultati o genera le batterie per la fase successiva.",
+			 "Callsign, name, team and color": "Nominativo, nome, squadra e colore",
+			 "Fill this seat with a pilot, or from a heat or class result": "Assegna questo posto a un pilota o dal risultato di una batteria o classe",
+			 "Plugin": "Plugin"
 		}
 	},
 	"nl-be": {
@@ -5302,7 +5314,10 @@
 			"Not in a heat": "Nog in geen heat",
 			"Already in a heat": "Al in een heat",
 			"all rounds raced": "alle rondes gevlogen",
-			"Review the results, or generate heats for the next stage.": "Bekijk de resultaten of genereer heats voor de volgende fase."
+			"Review the results, or generate heats for the next stage.": "Bekijk de resultaten of genereer heats voor de volgende fase.",
+			"Callsign, name, team and color": "Roepnaam, naam, team en kleur",
+			"Fill this seat with a pilot, or from a heat or class result": "Vul deze plek met een piloot, of vanuit een heat- of klasseresultaat",
+			"Plugin": "Plugin"
 		}
 	},
 	"pl": {
@@ -6239,7 +6254,10 @@
 			"Not in a heat": "Bez wyścigu",
 			"Already in a heat": "Już w wyścigu",
 			"all rounds raced": "wszystkie rundy rozegrane",
-			"Review the results, or generate heats for the next stage.": "Sprawdź wyniki lub wygeneruj wyścigi na następny etap."
+			"Review the results, or generate heats for the next stage.": "Sprawdź wyniki lub wygeneruj wyścigi na następny etap.",
+			"Callsign, name, team and color": "Znak wywoławczy, imię, drużyna i kolor",
+			"Fill this seat with a pilot, or from a heat or class result": "Obsadź to miejsce pilotem lub według wyniku wyścigu albo klasy",
+			"Plugin": "Wtyczka"
 		}
 	},
 	"ja-JP": {
@@ -7473,7 +7491,10 @@
 			"Not in a heat": "ヒート未割り当て",
 			"Already in a heat": "割り当て済み",
 			"all rounds raced": "全ラウンド完了",
-			"Review the results, or generate heats for the next stage.": "結果を確認するか、次のステージのヒートを生成してください。"
+			"Review the results, or generate heats for the next stage.": "結果を確認するか、次のステージのヒートを生成してください。",
+			"Callsign, name, team and color": "コールサイン、名前、チーム、色",
+			"Fill this seat with a pilot, or from a heat or class result": "この枠をパイロット、またはヒート／クラスの結果から割り当てます",
+			"Plugin": "プラグイン"
 		}
 	},
 	"zh-CN": {
@@ -8999,7 +9020,10 @@
 			"Not in a heat": "未分组",
 			"Already in a heat": "已在分组中",
 			"all rounds raced": "所有回合已完成",
-			"Review the results, or generate heats for the next stage.": "查看结果，或为下一阶段生成分组。"
+			"Review the results, or generate heats for the next stage.": "查看结果，或为下一阶段生成分组。",
+			"Callsign, name, team and color": "呼号、姓名、队伍和颜色",
+			"Fill this seat with a pilot, or from a heat or class result": "为此位置指定飞手，或按分组/组别结果填充",
+			"Plugin": "插件"
 		}
 	},
 	"ru": {
@@ -10301,7 +10325,10 @@
             "Not in a heat": "Не в заезде",
             "Already in a heat": "Уже в заезде",
             "all rounds raced": "все раунды проведены",
-            "Review the results, or generate heats for the next stage.": "Посмотрите результаты или создайте заезды для следующего этапа."
+            "Review the results, or generate heats for the next stage.": "Посмотрите результаты или создайте заезды для следующего этапа.",
+            "Callsign, name, team and color": "Позывной, имя, команда и цвет",
+            "Fill this seat with a pilot, or from a heat or class result": "Назначьте на это место пилота или по результату заезда либо класса",
+            "Plugin": "Плагин"
         }
 	}
 }

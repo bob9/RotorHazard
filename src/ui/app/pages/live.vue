@@ -9,6 +9,7 @@ rh.load(['race_status', 'current_heat', 'current_laps', 'leaderboard', 'frequenc
 
 const S = rh.state
 const status = computed<number>(() => S.race_status?.race_status ?? 0)
+const loaded = computed(() => !!(S.race_status && S.leaderboard && S.current_heat))
 const heatNodes = computed(() => S.current_heat?.heatNodes || {})
 const seats = computed(() => Object.keys(heatNodes.value).map(Number).filter(i => heatNodes.value[i]?.pilot_id || S.current_heat?.current_heat == null))
 const seatColors = computed(() => Object.fromEntries(Object.keys(heatNodes.value).map(i => [Number(i), colorHex(heatNodes.value[i]?.activeColor)])))
@@ -49,15 +50,23 @@ const nextRound = computed(() => S.current_heat?.next_round)
     </template>
 
     <template #body>
-      <div class="mx-auto w-full max-w-6xl space-y-6">
-        <section class="flex flex-col items-center gap-2 rounded-3xl bg-default px-6 py-8 text-center ring-1 ring-default sm:py-10">
+      <div v-if="!loaded" class="mx-auto w-full max-w-6xl space-y-6" aria-busy="true">
+        <USkeleton class="h-48 w-full rounded-3xl" />
+        <USkeleton class="h-64 w-full rounded-2xl" />
+      </div>
+      <div v-else class="mx-auto w-full max-w-6xl space-y-6">
+        <!-- between races: a compact header for the last race; during one: the big clock -->
+        <section
+          class="flex flex-col items-center gap-2 rounded-3xl bg-default px-6 text-center ring-1 ring-default"
+          :class="showLast ? 'py-5' : 'py-8 sm:py-10'"
+        >
           <div class="text-sm font-medium text-muted">
-            {{ showLast ? t('Last race') : t('Now racing') }}
+            {{ showLast ? t('Last race') : t('Now racing') }}<template v-if="showLast && lb.round"> · {{ t('Round') }} {{ lb.round }}</template>
           </div>
-          <h1 class="text-balance font-display text-3xl font-semibold text-highlighted sm:text-4xl">
+          <h1 class="text-balance font-display font-semibold text-highlighted" :class="showLast ? 'text-2xl' : 'text-3xl sm:text-4xl'">
             {{ lb.displayname || t('Practice') }}
           </h1>
-          <div v-if="lb.round" class="text-sm font-medium text-muted">
+          <div v-if="lb.round && !showLast" class="text-sm font-medium text-muted">
             {{ t('Round') }} {{ lb.round }}
           </div>
           <!-- between races this card shows the last race's result, not the next race's clock -->

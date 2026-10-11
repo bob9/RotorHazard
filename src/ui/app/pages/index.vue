@@ -22,7 +22,10 @@ watch(guest, (g) => {
 
 const S = rh.state
 const status = computed<number>(() => S.race_status?.race_status ?? 0)
-const isReady = computed(() => status.value === RACE_STATUS.READY)
+// until the timer has sent the race, heat and seats, show placeholders rather than a
+// made-up Practice race with a live Start button
+const loaded = computed(() => !!(S.race_status && S.current_heat && S.frequency_data && S.heat_data))
+const isReady = computed(() => loaded.value && status.value === RACE_STATUS.READY)
 const isLive = computed(() => status.value === RACE_STATUS.RACING || status.value === RACE_STATUS.STAGING)
 const isRacing = computed(() => status.value === RACE_STATUS.RACING)
 const isDone = computed(() => status.value === RACE_STATUS.DONE)
@@ -267,6 +270,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       <div v-else-if="admin === false" class="p-6">
         <UEmpty icon="i-lucide-lock-keyhole" :title="t('Sign in to run races')" :description="t('Race control is available to the event admin.')" :actions="[{ label: t('Watch live'), to: '/live' }]" />
       </div>
+      <div v-else-if="!loaded" class="mx-auto w-full max-w-[1600px] space-y-6 p-4 sm:p-6" aria-busy="true">
+        <USkeleton class="h-44 w-full rounded-3xl sm:h-52" />
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <USkeleton v-for="i in 4" :key="i" class="h-56 rounded-2xl" />
+        </div>
+        <USkeleton class="h-64 w-full rounded-2xl" />
+      </div>
       <div v-else class="mx-auto w-full max-w-[1600px] space-y-6 p-4 pb-28 sm:p-6 sm:pb-28 lg:pb-6">
         <!-- Race control -->
         <section class="relative overflow-hidden rounded-3xl bg-default ring-1 ring-default shadow-sm">
@@ -458,7 +468,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
       <!-- phone / tablet: race clock and primary action stay within reach -->
       <div
-        v-if="admin !== false"
+        v-if="admin !== false && loaded"
         class="sticky bottom-0 z-20 mt-auto border-t border-default bg-default/85 px-4 pt-3 backdrop-blur-xl lg:hidden"
         style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))"
       >

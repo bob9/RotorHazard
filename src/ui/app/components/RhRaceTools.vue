@@ -92,7 +92,7 @@ const sensors = computed(() => (Array.isArray(S.environmental_data) ? S.environm
     <UTabs v-model="tab" :items="items" variant="link" :unmount-on-hide="false" :ui="{ list: 'px-4 border-b border-default overflow-x-auto', trigger: 'flex-none', label: 'max-sm:sr-only max-sm:group-data-[state=active]:not-sr-only', content: 'p-4 sm:p-6' }">
       <template #timing>
         <div class="grid gap-x-8 gap-y-4 md:grid-cols-2 xl:grid-cols-4">
-          <UFormField :label="t('Minimum Lap Time')" :hint="t('seconds')">
+          <UFormField id="min-lap" :label="t('Minimum Lap Time')" :hint="t('seconds')">
             <UInputNumber :model-value="minLap.min_lap" :min="0" class="w-full" @update:model-value="(v: any) => rh.emit('set_min_lap', { min_lap: v })" />
           </UFormField>
           <UFormField :label="t('Minimum Lap Behavior')">

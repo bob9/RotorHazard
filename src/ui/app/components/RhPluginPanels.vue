@@ -81,6 +81,7 @@ function isBlankPanel(p: any) {
     <RhGroup
       v-for="p in panels"
       v-show="!isBlankPanel(p)"
+      :id="`panel-${p.panel.name}`"
       :key="p.panel.name"
       :title="t(p.panel.label)"
     >

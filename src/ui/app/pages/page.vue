@@ -2,6 +2,9 @@
 // Plugin page viewer: shows a page added with rhapi.ui.blueprint_add() inside the app.
 const { t } = useI18n()
 const { info } = useServerInfo()
+// the classic stylesheet follows prefers-color-scheme, which inside a frame comes from the
+// frame element's color-scheme: pass the app's appearance through
+const colorMode = useColorMode()
 const route = useRoute()
 
 // only same-origin paths ("/x", not "//host" or "/\host") may be framed
@@ -70,7 +73,8 @@ function reload() {
     </template>
 
     <template #body>
-      <div v-if="url" class="relative min-h-0 flex-1">
+      <!-- plugin pages carry their own (usually light) styling: show them as an inset sheet -->
+      <div v-if="url" class="relative min-h-0 flex-1 bg-elevated/40">
         <div v-if="loading" class="absolute inset-x-0 top-0 z-10">
           <UProgress size="2xs" animation="carousel" />
         </div>
@@ -79,7 +83,8 @@ function reload() {
           ref="frame"
           :src="url"
           :title="title"
-          class="absolute inset-0 size-full border-0 bg-white"
+          class="absolute inset-2 h-[calc(100%-1rem)] w-[calc(100%-1rem)] rounded-xl border-0 bg-white shadow-sm ring-1 ring-default sm:inset-4 sm:h-[calc(100%-2rem)] sm:w-[calc(100%-2rem)] dark:ring-white/10"
+          :style="{ colorScheme: colorMode.value === 'dark' ? 'dark' : 'light' }"
           @load="loading = false"
         />
       </div>

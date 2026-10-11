@@ -194,7 +194,7 @@ rh.on('admin_creds_defaulted', (d: any) => {
       </RhGroup>
 
       <RhGroup :title="t('Language & Format')">
-        <RhRow :label="t('Language')" :description="t('Changing the language reloads the page.')">
+        <RhRow id="language" :label="t('Language')" :description="t('Changing the language reloads the page.')">
           <USelect v-model="language" :items="languageItems" class="w-full sm:w-64" />
         </RhRow>
         <RhField :field="timeFormat" @commit="(v: any) => cfg.set('UI', 'timeFormat', v)" />
@@ -207,7 +207,7 @@ rh.on('admin_creds_defaulted', (d: any) => {
         </template>
       </RhGroup>
 
-      <RhGroup :title="t('Admin Login')" :footer="t('Used to sign in to race control and settings. This device is updated automatically when you change them.')">
+      <RhGroup id="admin-login" :title="t('Admin Login')" :footer="t('Used to sign in to race control and settings. This device is updated automatically when you change them.')">
         <RhField :field="username" @commit="setUsername" />
         <RhField :key="passwordKey" :field="passwordField" @commit="setPassword" />
       </RhGroup>

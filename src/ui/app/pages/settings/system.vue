@@ -300,6 +300,13 @@ function requestLog() {
   rh.emit('set_log_level', { log_level_str: logLevel.value })
 }
 watch(logOpen, (o) => { if (o) requestLog() })
+// ?log=ERROR (from the "An error has occurred" notice) opens the viewer at that level
+const route = useRoute()
+watch(() => route.query.log, (lvl) => {
+  if (typeof lvl !== 'string' || !lvl) return
+  if (logLevelItems.value.some(i => i.value === lvl)) logLevel.value = lvl
+  logOpen.value = true
+}, { immediate: true })
 watch(logLevel, () => { if (logOpen.value) requestLog() })
 function scrollLog() {
   nextTick(() => {

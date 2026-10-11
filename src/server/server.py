@@ -2385,9 +2385,12 @@ def on_alter_race_format(data):
     race_format, race_list = RaceContext.rhdata.alter_raceFormat(data)
 
     if race_format != False:
-        RaceContext.race.format = race_format
-        # keep time fields in the current race in sync with the current race format
-        RaceContext.race.set_race_format_time_fields(RaceContext.race.format, RaceContext.race.current_heat)
+        # editing a format other than the current one leaves the current race's format alone
+        current_format = RaceContext.race.format
+        if not current_format or getattr(current_format, 'id', None) == race_format.id:
+            RaceContext.race.format = race_format
+            # keep time fields in the current race in sync with the current race format
+            RaceContext.race.set_race_format_time_fields(RaceContext.race.format, RaceContext.race.current_heat)
         RaceContext.rhui.emit_format_data()
         RaceContext.rhui.emit_heat_data()
         RaceContext.rhui.emit_race_status()
@@ -2398,7 +2401,7 @@ def on_alter_race_format(data):
 
         if len(race_list):
             RaceContext.rhui.emit_result_data()
-            message = __('Alterations made to race format: {0}').format(RaceContext.race.format.name)
+            message = __('Alterations made to race format: {0}').format(race_format.name)
             RaceContext.rhui.emit_priority_message(message, False)
     else:
         RaceContext.rhui.emit_priority_message(__('Format alteration prevented by active race: Stop and save/discard laps'), False, nobroadcast=True)
