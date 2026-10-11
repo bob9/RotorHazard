@@ -120,16 +120,19 @@ function stepHeat(dir: number) {
 
 // actions
 const discardOpen = ref(false)
-// spinner until the race status changes, or 3s if the start was refused (the server
+// spinner on Start/Stop/Save until the race status changes, or 3s if the server refused (the server
 // explains why with a priority message)
 const busy = ref(false)
 let busyTimer: ReturnType<typeof setTimeout> | undefined
-function start() {
-  audio.unlock()
+function send(event: string) {
   busy.value = true
   clearTimeout(busyTimer)
   busyTimer = setTimeout(() => { busy.value = false }, 3000)
-  rh.emit('stage_race')
+  rh.emit(event)
+}
+function start() {
+  audio.unlock()
+  send('stage_race')
 }
 watch(status, () => {
   busy.value = false
@@ -137,10 +140,10 @@ watch(status, () => {
 })
 onBeforeUnmount(() => clearTimeout(busyTimer))
 function stop() {
-  rh.emit('stop_race')
+  send('stop_race')
 }
 function save() {
-  rh.emit('save_laps')
+  send('save_laps')
 }
 // confirm from the server's own notice rather than on click
 rh.on('race_saved', (d: any) => {
@@ -297,6 +300,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
                 color="error"
                 icon="i-lucide-square"
                 :label="t('Stop Race')"
+                :loading="busy"
                 class="justify-center rounded-full px-8 lg:min-w-52"
                 @click="stop"
               />
@@ -307,6 +311,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
                 color="success"
                 icon="i-lucide-check"
                 :label="currentHeatId ? t('Save Results') : t('Clear Laps')"
+                :loading="busy"
                 class="justify-center rounded-full px-8 lg:min-w-52"
                 @click="save"
               />
@@ -455,6 +460,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             color="error"
             icon="i-lucide-square"
             :label="t('Stop Race')"
+            :loading="busy"
             class="rounded-full px-5"
             @click="stop"
           />
@@ -472,6 +478,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               color="success"
               icon="i-lucide-check"
               :label="currentHeatId ? t('Save Results') : t('Clear Laps')"
+              :loading="busy"
               class="rounded-full px-5"
               @click="save"
             />

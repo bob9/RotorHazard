@@ -17,10 +17,23 @@ const confirmed = computed(() => props.heat.status === 2)
 const planned = computed(() => (props.heat.auto_frequency || props.heat.dynamic) && !confirmed.value)
 const editable = computed(() => props.admin && !locked.value)
 
-const pilotItems = computed(() => [
-  { label: t('None'), value: 0 },
-  ...[...pilots.value].sort((a, b) => String(a.callsign).localeCompare(String(b.callsign))).map(p => ({ label: p.callsign, value: p.pilot_id, description: p.name }))
-])
+// pilots not yet in any heat come first; the rest show which heat they're already in
+const pilotHeats = computed(() => {
+  const m: Record<number, string[]> = {}
+  for (const h of S.heat_data?.heats || []) {
+    for (const s of h.slots || []) if (s.pilot_id) (m[s.pilot_id] ||= []).push(h.displayname)
+  }
+  return m
+})
+const pilotItems = computed<any[]>(() => {
+  const sorted = [...pilots.value].sort((a, b) => String(a.callsign).localeCompare(String(b.callsign)))
+  const free = sorted.filter(p => !pilotHeats.value[p.pilot_id])
+  const placed = sorted.filter(p => pilotHeats.value[p.pilot_id])
+  const groups: any[] = [[{ label: t('None'), value: 0 }]]
+  if (free.length) groups.push([{ type: 'label', label: t('Not in a heat') }, ...free.map(p => ({ label: p.callsign, value: p.pilot_id, description: p.name }))])
+  if (placed.length) groups.push([{ type: 'label', label: t('Already in a heat') }, ...placed.map(p => ({ label: p.callsign, value: p.pilot_id, description: pilotHeats.value[p.pilot_id]!.join(', ') }))])
+  return groups
+})
 const methodItems = computed(() => [
   { label: t('Pilot'), value: 0, icon: 'i-lucide-user' },
   { label: t('Heat result'), value: 1, icon: 'i-lucide-layers' },

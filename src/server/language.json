@@ -988,7 +988,9 @@
 			"Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "Deaktiviert: Der Ordnername beginnt mit „_“. Entferne das „_“ und starte neu, um es zu aktivieren.",
 			"Sign in to open that page": "Melde dich an, um diese Seite zu öffnen",
 			"Sort": "Sortieren",
-			"to clear": "zum Leeren"
+			"to clear": "zum Leeren",
+			"Not in a heat": "Noch in keinem Heat",
+			"Already in a heat": "Bereits in einem Heat"
 		}
 	},
 	"es": {
@@ -2100,7 +2102,9 @@
 			"Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "Desactivado: el nombre de su carpeta empieza por \"_\". Quita el \"_\" y reinicia para activarlo.",
 			"Sign in to open that page": "Inicia sesión para abrir esa página",
 			"Sort": "Ordenar",
-			"to clear": "para borrar"
+			"to clear": "para borrar",
+			"Not in a heat": "Sin manga",
+			"Already in a heat": "Ya en una manga"
 		}
 	},
 	"fr-be": {
@@ -3006,7 +3010,9 @@
 			"Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "Désactivé : le nom de son dossier commence par « _ ». Retirez le « _ » et redémarrez pour l’activer.",
 			"Sign in to open that page": "Connectez-vous pour ouvrir cette page",
 			"Sort": "Trier",
-			"to clear": "pour effacer"
+			"to clear": "pour effacer",
+			"Not in a heat": "Dans aucune série",
+			"Already in a heat": "Déjà dans une série"
 		}
 	},
 	"it": {
@@ -4386,7 +4392,9 @@
 			 "Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "Disattivato: il nome della cartella inizia con \"_\". Rimuovi il \"_\" e riavvia per attivarlo.",
 			 "Sign in to open that page": "Accedi per aprire quella pagina",
 			 "Sort": "Ordina",
-			 "to clear": "per cancellare"
+			 "to clear": "per cancellare",
+			 "Not in a heat": "Non in una batteria",
+			 "Already in a heat": "Già in una batteria"
 		}
 	},
 	"nl-be": {
@@ -5282,7 +5290,9 @@
 			"Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "Gedeactiveerd: de mapnaam begint met \"_\". Verwijder de \"_\" en herstart om het in te schakelen.",
 			"Sign in to open that page": "Meld je aan om die pagina te openen",
 			"Sort": "Sorteren",
-			"to clear": "om te wissen"
+			"to clear": "om te wissen",
+			"Not in a heat": "Nog in geen heat",
+			"Already in a heat": "Al in een heat"
 		}
 	},
 	"pl": {
@@ -6215,7 +6225,9 @@
 			"Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "Wyłączony: nazwa jego folderu zaczyna się od „_”. Usuń „_” i uruchom ponownie, aby go włączyć.",
 			"Sign in to open that page": "Zaloguj się, aby otworzyć tę stronę",
 			"Sort": "Sortuj",
-			"to clear": "aby wyczyścić"
+			"to clear": "aby wyczyścić",
+			"Not in a heat": "Bez wyścigu",
+			"Already in a heat": "Już w wyścigu"
 		}
 	},
 	"ja-JP": {
@@ -7445,7 +7457,9 @@
 			"Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "無効：フォルダー名が「_」で始まっています。「_」を削除して再起動すると有効になります。",
 			"Sign in to open that page": "このページを開くにはサインインしてください",
 			"Sort": "並べ替え",
-			"to clear": "でクリア"
+			"to clear": "でクリア",
+			"Not in a heat": "ヒート未割り当て",
+			"Already in a heat": "割り当て済み"
 		}
 	},
 	"zh-CN": {
@@ -8967,7 +8981,9 @@
 			"Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "已停用：其文件夹名以“_”开头。删除“_”并重启即可启用。",
 			"Sign in to open that page": "登录后才能打开该页面",
 			"Sort": "排序",
-			"to clear": "清除"
+			"to clear": "清除",
+			"Not in a heat": "未分组",
+			"Already in a heat": "已在分组中"
 		}
 	},
 	"ru": {
@@ -10265,7 +10281,9 @@
             "Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "Отключён: имя его папки начинается с «_». Удалите «_» и перезапустите, чтобы включить.",
             "Sign in to open that page": "Войдите, чтобы открыть эту страницу",
             "Sort": "Сортировка",
-            "to clear": "— очистить"
+            "to clear": "— очистить",
+            "Not in a heat": "Не в заезде",
+            "Already in a heat": "Уже в заезде"
         }
 	}
 }
