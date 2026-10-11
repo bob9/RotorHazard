@@ -311,7 +311,7 @@ function resetSettings() {
           :label="t('View Database')"
           :description="t('Read-only tables of the current database (debug mode).')"
         >
-          <UButton :label="t('Open')" trailing-icon="i-lucide-external-link" color="neutral" variant="ghost" to="/database" target="_blank" external />
+          <UButton :label="t('Open')" trailing-icon="i-lucide-chevron-right" color="neutral" variant="ghost" to="/database" />
         </RhRow>
       </RhGroup>
 

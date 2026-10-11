@@ -735,6 +735,7 @@ def render_webapp_info():
         'debug': bool(RaceContext.serverconfig.get_item('GENERAL', 'DEBUG')),
         'restart_required': bool(RaceContext.serverstate.restart_required),
         'num_nodes': RaceContext.race.num_nodes,
+        'imdtabler': bool(Use_imdtabler_jar_flag),
         'led_enabled': bool(RaceContext.led_manager.isEnabled() or
                             (RaceContext.cluster and RaceContext.cluster.hasRecEventsSecondaries())),
         'led_events_enabled': bool(RaceContext.led_manager.isEnabled()),
@@ -759,6 +760,56 @@ def webapp_first_run_done():
     '''Marks first-run setup (done in the web app's welcome screen) as complete.'''
     RaceContext.serverconfig.config_file_status = 1
     return {'done': True}
+
+@APP.route('/app-docs')
+def render_webapp_docs():
+    '''Documentation for the web app: the list of docs, or one doc's Markdown (?d=),
+    preferring the interface language's translation as /docs does.'''
+    doc_base = Path(PROGRAM_DIR).parent.parent.joinpath('doc')
+    language = RaceContext.serverconfig.get_item('UI', 'currentLanguage')
+    docfile = request.args.get('d')
+    if not docfile:
+        docs = sorted(p.name for p in doc_base.glob('*.md'))
+        return {'docs': docs}
+    try:
+        doc_path = werkzeug.security.safe_join(str(doc_base), docfile)
+        if language:
+            translated_base = werkzeug.security.safe_join(str(doc_base), language)
+            translated_path = werkzeug.security.safe_join(translated_base, docfile) if translated_base else None
+            if translated_path and os.path.isfile(translated_path):
+                doc_path = translated_path
+        if doc_path and os.path.isfile(doc_path) and doc_path.endswith('.md'):
+            with io.open(doc_path, 'r', encoding="utf-8") as f:
+                return {'name': docfile, 'markdown': f.read()}
+    except Exception:
+        logger.exception("Exception reading documentation for the web app")
+    return {'error': 'not found'}, 404
+
+@APP.route('/app-node-firmware')
+@requires_auth
+def render_webapp_node_firmware():
+    '''Default node firmware source for the web app's Update Nodes page (as /updatenodes uses).'''
+    return {'src': getDefNodeFwUpdateUrl()}
+
+@APP.route('/app-database')
+@requires_auth
+def render_webapp_database():
+    '''Database tables for the web app's read-only viewer (same content as /database).'''
+    def rows(items, cols):
+        return [{c: getattr(i, c, None) for c in cols} for i in items]
+    rhdata = RaceContext.rhdata
+    return {
+        'pilots': rows(rhdata.get_pilots(), ['id', 'callsign', 'name', 'phonetic', 'team']),
+        'heats': rows(rhdata.get_heats(), ['id', 'name', 'class_id']),
+        'heat_nodes': rows(rhdata.get_heatNodes(), ['id', 'heat_id', 'node_index', 'pilot_id']),
+        'classes': rows(rhdata.get_raceClasses(), ['id', 'name', 'description', 'format_id']),
+        'races': rows(rhdata.get_savedRaceMetas(), ['id', 'round_id', 'heat_id', 'class_id', 'format_id', 'start_time_formatted']),
+        'laps': rows(rhdata.get_savedRaceLaps(), ['id', 'race_id', 'pilotrace_id', 'node_index', 'pilot_id', 'lap_time_stamp', 'lap_time', 'lap_time_formatted', 'deleted']),
+        'profiles': rows(rhdata.get_profiles(), ['id', 'name', 'description', 'frequencies', 'enter_ats', 'exit_ats']),
+        'formats': rows(rhdata.get_raceFormats(), ['id', 'name', 'unlimited_time', 'race_time_sec', 'start_delay_min_ms', 'start_delay_max_ms', 'number_laps_win', 'win_condition', 'team_racing_mode']),
+        'options': [{'option': o.option_name, 'value': o.option_value} for o in rhdata.get_options()
+                    if o.option_name not in ('secret_key',)],
+    }
 
 @APP.route('/app-auth')
 def render_webapp_auth():

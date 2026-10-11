@@ -1,0 +1,1 @@
+import{M as e}from"./Cpfm4dmu.js";import{n as t}from"./CyumtfZ7.js";function n(){let{state:n}=t(),r=e(()=>n.language?.language||``),i=e(()=>{let e=r.value;return e&&n.all_languages?.languages?.[e]?.values||{}});function a(e,...t){if(e==null)return``;let n=i.value[e]||e;return t.forEach((e,t)=>{n=n.replace(`{${t}}`,String(e))}),n}return{t:a,lang:r}}export{n as t};

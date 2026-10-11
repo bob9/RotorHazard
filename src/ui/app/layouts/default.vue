@@ -19,7 +19,7 @@ const aboutOpen = ref(false)
 const raceLive = computed(() => [1, 3].includes(rh.state.race_status?.race_status))
 
 // admin-only pages: guests who open one by address go to Live, with an offer to sign in
-const ADMIN_PAGES = ['/marshal', '/pilots', '/heats', '/formats', '/timer', '/plugins', '/settings/general', '/settings/actions',
+const ADMIN_PAGES = ['/database', '/vrx-status', '/scanner', '/update-nodes', '/marshal', '/pilots', '/heats', '/formats', '/timer', '/plugins', '/settings/general', '/settings/actions',
   '/settings/leds', '/settings/vrx', '/settings/plugins', '/settings/data', '/settings/cluster', '/settings/system']
 const toast = useToast()
 watch([admin, () => route.path], ([isAdmin, path]) => {
@@ -154,7 +154,7 @@ const searchGroups = computed(() => [
     items: [
       { label: colorMode.value === 'dark' ? t('Light appearance') : t('Dark appearance'), icon: colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon', keywords: 'dark mode light mode theme night', onSelect: () => { colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark' } },
       { label: t('Classic interface'), icon: 'i-lucide-history', to: classicHref.value, external: true, target: '_self' },
-      { label: t('Documentation'), icon: 'i-lucide-book-open', to: '/docs?d=README.md', external: true, target: '_blank' },
+      { label: t('Documentation'), icon: 'i-lucide-book-open', to: '/docs' },
       ...(admin.value ? [{ label: t('Restart server'), icon: 'i-lucide-rotate-cw', onSelect: () => { restartOpen.value = true } }] : [])
     ]
   }
@@ -173,7 +173,8 @@ const searchFuse = {
 // '#id' in a search result: scroll that setting into view and flash it
 watch(() => route.fullPath, () => {
   const id = route.hash.slice(1)
-  if (!id) return
+  // the docs page scrolls its own section links to the top of the reading column
+  if (!id || route.path === '/docs') return
   let tries = 0
   const find = () => {
     const el = document.getElementById(decodeURIComponent(id))
@@ -326,7 +327,7 @@ const version = computed(() => info.value?.server?.release_version)
             :items="[
               [{ label: t('About RotorHazard'), icon: 'i-lucide-info', onSelect: () => { aboutOpen = true } },
                { label: t('Classic interface'), icon: 'i-lucide-history', to: classicHref, external: true, target: '_self' },
-               { label: t('Documentation'), icon: 'i-lucide-book-open', to: '/docs?d=README.md', external: true, target: '_blank' }],
+               { label: t('Documentation'), icon: 'i-lucide-book-open', to: '/docs' }],
               [{ label: colorMode.value === 'dark' ? t('Light appearance') : t('Dark appearance'), icon: colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon', onSelect: () => { colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark' } }],
               ...(info?.auth_required ? [[{ label: t('Sign out'), icon: 'i-lucide-log-out', onSelect: logout }]] : [])
             ]"

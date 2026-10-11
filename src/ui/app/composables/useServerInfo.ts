@@ -7,6 +7,7 @@ export interface ServerInfo {
   debug: boolean
   restart_required: boolean
   num_nodes: number
+  imdtabler?: boolean
   led_enabled: boolean
   led_events_enabled: boolean
   vrx_enabled: boolean

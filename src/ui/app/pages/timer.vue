@@ -172,7 +172,7 @@ const tabs = computed(() => [
               {{ showDisabled ? t('Hide disabled nodes') : `${disabledCount} ${disabledCount === 1 ? t('disabled node') : t('disabled nodes')}` }}
             </button>
             <template #footer>
-              <span>{{ t('Frequency set IMD rating (100=best)') }}: <b class="text-highlighted">{{ imd ?? '—' }}</b> · <a href="/imdtabler" target="_blank" class="underline">IMDTabler</a></span>
+              <span>{{ t('Frequency set IMD rating (100=best)') }}: <b class="text-highlighted">{{ imd ?? '—' }}</b> · <NuxtLink to="/imdtabler" class="underline">IMDTabler</NuxtLink></span>
             </template>
           </RhGroup>
         </template>
@@ -212,13 +212,13 @@ const tabs = computed(() => [
           </RhGroup>
           <RhGroup :title="t('Tools')">
             <RhRow v-if="info?.debug" :label="t('Band Scanner')" :description="t('Scan the band for interference.')" icon="i-lucide-scan-line">
-              <UButton to="/scanner" target="_blank" external color="neutral" variant="ghost" trailing-icon="i-lucide-arrow-up-right" :label="t('Open')" />
+              <UButton to="/scanner" color="neutral" variant="ghost" trailing-icon="i-lucide-chevron-right" :label="t('Open')" />
             </RhRow>
             <RhRow :label="t('IMDTabler')" :description="t('Compare frequency sets for intermodulation.')" icon="i-lucide-table">
-              <UButton to="/imdtabler" target="_blank" external color="neutral" variant="ghost" trailing-icon="i-lucide-arrow-up-right" :label="t('Open')" />
+              <UButton to="/imdtabler" color="neutral" variant="ghost" trailing-icon="i-lucide-chevron-right" :label="t('Open')" />
             </RhRow>
             <RhRow v-if="info?.node_fw_updatable" :label="t('Update Nodes')" :description="t('Update the node processor firmware.')" icon="i-lucide-cpu">
-              <UButton to="/updatenodes" target="_blank" external color="neutral" variant="ghost" trailing-icon="i-lucide-arrow-up-right" :label="t('Open')" />
+              <UButton to="/update-nodes" color="neutral" variant="ghost" trailing-icon="i-lucide-chevron-right" :label="t('Open')" />
             </RhRow>
           </RhGroup>
         </template>
