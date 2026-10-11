@@ -1055,7 +1055,15 @@
 			"Unknown": "Unbekannt",
 			"Video lock": "Videosignal",
 			"device": "Gerät",
-			"signal across": "Signal über"
+			"signal across": "Signal über",
+			"Auto Adjust": "Automatisch anpassen",
+			"Auto calibration could not find suggested values": "Die automatische Kalibrierung konnte keine Vorschlagswerte finden",
+			"Auto calibration found no RSSI data for this pilot": "Die automatische Kalibrierung hat keine RSSI-Daten für diesen Piloten gefunden",
+			"Auto calibration found no gate passes in the RSSI data": "Die automatische Kalibrierung hat in den RSSI-Daten keine Gate-Durchflüge gefunden",
+			"Auto calibration found the RSSI signal too weak to show gate passes": "Die automatische Kalibrierung fand das RSSI-Signal zu schwach, um Gate-Durchflüge zu erkennen",
+			"Auto calibration needs RSSI data, but this node records only pass peaks": "Die automatische Kalibrierung benötigt RSSI-Daten, aber dieser Node zeichnet nur Durchflug-Spitzen auf",
+			"EnterAt and ExitAt adjusted": "EnterAt und ExitAt angepasst",
+			"Suggest EnterAt and ExitAt from this race's RSSI history": "EnterAt und ExitAt aus dem RSSI-Verlauf dieses Rennens vorschlagen"
 		}
 	},
 	"es": {
@@ -2234,7 +2242,15 @@
 			"Unknown": "Desconocido",
 			"Video lock": "Señal de vídeo",
 			"device": "dispositivo",
-			"signal across": "señal en"
+			"signal across": "señal en",
+			"Auto Adjust": "Ajuste automático",
+			"Auto calibration could not find suggested values": "La calibración automática no encontró valores sugeridos",
+			"Auto calibration found no RSSI data for this pilot": "La calibración automática no encontró datos RSSI para este piloto",
+			"Auto calibration found no gate passes in the RSSI data": "La calibración automática no encontró pasos por la puerta en los datos RSSI",
+			"Auto calibration found the RSSI signal too weak to show gate passes": "La calibración automática encontró la señal RSSI demasiado débil para mostrar pasos por la puerta",
+			"Auto calibration needs RSSI data, but this node records only pass peaks": "La calibración automática necesita datos RSSI, pero este nodo solo registra picos de paso",
+			"EnterAt and ExitAt adjusted": "EnterAt y ExitAt ajustados",
+			"Suggest EnterAt and ExitAt from this race's RSSI history": "Sugerir EnterAt y ExitAt a partir del historial RSSI de esta carrera"
 		}
 	},
 	"fr-be": {
@@ -3207,7 +3223,15 @@
 			"Unknown": "Inconnu",
 			"Video lock": "Signal vidéo",
 			"device": "appareil",
-			"signal across": "signal sur"
+			"signal across": "signal sur",
+			"Auto Adjust": "Ajustement auto",
+			"Auto calibration could not find suggested values": "La calibration automatique n’a trouvé aucune valeur suggérée",
+			"Auto calibration found no RSSI data for this pilot": "La calibration automatique n’a trouvé aucune donnée RSSI pour ce pilote",
+			"Auto calibration found no gate passes in the RSSI data": "La calibration automatique n’a trouvé aucun passage de porte dans les données RSSI",
+			"Auto calibration found the RSSI signal too weak to show gate passes": "La calibration automatique a trouvé le signal RSSI trop faible pour montrer les passages de porte",
+			"Auto calibration needs RSSI data, but this node records only pass peaks": "La calibration automatique a besoin de données RSSI, mais ce nœud n’enregistre que les pics de passage",
+			"EnterAt and ExitAt adjusted": "EnterAt et ExitAt ajustés",
+			"Suggest EnterAt and ExitAt from this race's RSSI history": "Suggérer EnterAt et ExitAt d’après l’historique RSSI de cette course"
 		}
 	},
 	"it": {
@@ -4654,7 +4678,15 @@
 			 "Unknown": "Sconosciuto",
 			 "Video lock": "Aggancio video",
 			 "device": "dispositivo",
-			 "signal across": "segnale su"
+			 "signal across": "segnale su",
+			 "Auto Adjust": "Regolazione automatica",
+			 "Auto calibration could not find suggested values": "La calibrazione automatica non ha trovato valori suggeriti",
+			 "Auto calibration found no RSSI data for this pilot": "La calibrazione automatica non ha trovato dati RSSI per questo pilota",
+			 "Auto calibration found no gate passes in the RSSI data": "La calibrazione automatica non ha trovato passaggi dal gate nei dati RSSI",
+			 "Auto calibration found the RSSI signal too weak to show gate passes": "La calibrazione automatica ha trovato il segnale RSSI troppo debole per mostrare i passaggi dal gate",
+			 "Auto calibration needs RSSI data, but this node records only pass peaks": "La calibrazione automatica richiede dati RSSI, ma questo nodo registra solo i picchi di passaggio",
+			 "EnterAt and ExitAt adjusted": "EnterAt ed ExitAt regolati",
+			 "Suggest EnterAt and ExitAt from this race's RSSI history": "Suggerisci EnterAt ed ExitAt dalla cronologia RSSI di questa gara"
 		}
 	},
 	"nl-be": {
@@ -5617,7 +5649,15 @@
 			"Unknown": "Onbekend",
 			"Video lock": "Videolock",
 			"device": "apparaat",
-			"signal across": "signaal over"
+			"signal across": "signaal over",
+			"Auto Adjust": "Automatisch aanpassen",
+			"Auto calibration could not find suggested values": "De automatische kalibratie vond geen voorgestelde waarden",
+			"Auto calibration found no RSSI data for this pilot": "De automatische kalibratie vond geen RSSI-gegevens voor deze piloot",
+			"Auto calibration found no gate passes in the RSSI data": "De automatische kalibratie vond geen gate-passages in de RSSI-gegevens",
+			"Auto calibration found the RSSI signal too weak to show gate passes": "De automatische kalibratie vond het RSSI-signaal te zwak om gate-passages te tonen",
+			"Auto calibration needs RSSI data, but this node records only pass peaks": "De automatische kalibratie heeft RSSI-gegevens nodig, maar deze node registreert alleen passagepieken",
+			"EnterAt and ExitAt adjusted": "EnterAt en ExitAt aangepast",
+			"Suggest EnterAt and ExitAt from this race's RSSI history": "EnterAt en ExitAt voorstellen op basis van de RSSI-geschiedenis van deze race"
 		}
 	},
 	"pl": {
@@ -6617,7 +6657,15 @@
 			"Unknown": "Nieznane",
 			"Video lock": "Sygnał wideo",
 			"device": "urządzenie",
-			"signal across": "sygnał w zakresie"
+			"signal across": "sygnał w zakresie",
+			"Auto Adjust": "Dostosuj automatycznie",
+			"Auto calibration could not find suggested values": "Automatyczna kalibracja nie znalazła sugerowanych wartości",
+			"Auto calibration found no RSSI data for this pilot": "Automatyczna kalibracja nie znalazła danych RSSI dla tego pilota",
+			"Auto calibration found no gate passes in the RSSI data": "Automatyczna kalibracja nie znalazła przelotów przez bramkę w danych RSSI",
+			"Auto calibration found the RSSI signal too weak to show gate passes": "Automatyczna kalibracja uznała sygnał RSSI za zbyt słaby, by pokazać przeloty przez bramkę",
+			"Auto calibration needs RSSI data, but this node records only pass peaks": "Automatyczna kalibracja wymaga danych RSSI, ale ten węzeł zapisuje tylko szczyty przelotów",
+			"EnterAt and ExitAt adjusted": "Dostosowano EnterAt i ExitAt",
+			"Suggest EnterAt and ExitAt from this race's RSSI history": "Zaproponuj EnterAt i ExitAt na podstawie historii RSSI tego wyścigu"
 		}
 	},
 	"ja-JP": {
@@ -7914,7 +7962,15 @@
 			"Unknown": "不明",
 			"Video lock": "映像ロック",
 			"device": "デバイス",
-			"signal across": "信号範囲"
+			"signal across": "信号範囲",
+			"Auto Adjust": "自動調整",
+			"Auto calibration could not find suggested values": "自動キャリブレーションで推奨値が見つかりませんでした",
+			"Auto calibration found no RSSI data for this pilot": "自動キャリブレーションでこのパイロットのRSSIデータが見つかりませんでした",
+			"Auto calibration found no gate passes in the RSSI data": "自動キャリブレーションでRSSIデータにゲート通過が見つかりませんでした",
+			"Auto calibration found the RSSI signal too weak to show gate passes": "RSSI信号が弱すぎてゲート通過を判別できませんでした",
+			"Auto calibration needs RSSI data, but this node records only pass peaks": "自動キャリブレーションにはRSSIデータが必要ですが、このノードは通過ピークのみを記録します",
+			"EnterAt and ExitAt adjusted": "EnterAtとExitAtを調整しました",
+			"Suggest EnterAt and ExitAt from this race's RSSI history": "このレースのRSSI履歴からEnterAtとExitAtを提案します"
 		}
 	},
 	"zh-CN": {
@@ -9503,7 +9559,15 @@
 			"Unknown": "未知",
 			"Video lock": "图传锁定",
 			"device": "设备",
-			"signal across": "信号范围"
+			"signal across": "信号范围",
+			"Auto Adjust": "自动调整",
+			"Auto calibration could not find suggested values": "自动校准未找到建议值",
+			"Auto calibration found no RSSI data for this pilot": "自动校准未找到该飞手的 RSSI 数据",
+			"Auto calibration found no gate passes in the RSSI data": "自动校准未在 RSSI 数据中找到过门记录",
+			"Auto calibration found the RSSI signal too weak to show gate passes": "自动校准发现 RSSI 信号太弱，无法识别过门",
+			"Auto calibration needs RSSI data, but this node records only pass peaks": "自动校准需要 RSSI 数据，但该节点只记录过门峰值",
+			"EnterAt and ExitAt adjusted": "已调整 EnterAt 和 ExitAt",
+			"Suggest EnterAt and ExitAt from this race's RSSI history": "根据本场比赛的 RSSI 历史建议 EnterAt 和 ExitAt"
 		}
 	},
 	"ru": {
@@ -10868,7 +10932,15 @@
             "Unknown": "Неизвестно",
             "Video lock": "Захват видео",
             "device": "устройство",
-            "signal across": "сигнал в диапазоне"
+            "signal across": "сигнал в диапазоне",
+            "Auto Adjust": "Автоподстройка",
+            "Auto calibration could not find suggested values": "Автокалибровка не нашла рекомендуемых значений",
+            "Auto calibration found no RSSI data for this pilot": "Автокалибровка не нашла данных RSSI для этого пилота",
+            "Auto calibration found no gate passes in the RSSI data": "Автокалибровка не нашла пролётов через ворота в данных RSSI",
+            "Auto calibration found the RSSI signal too weak to show gate passes": "Автокалибровка сочла сигнал RSSI слишком слабым, чтобы увидеть пролёты через ворота",
+            "Auto calibration needs RSSI data, but this node records only pass peaks": "Автокалибровке нужны данные RSSI, но этот узел записывает только пики пролёта",
+            "EnterAt and ExitAt adjusted": "EnterAt и ExitAt подстроены",
+            "Suggest EnterAt and ExitAt from this race's RSSI history": "Предложить EnterAt и ExitAt по истории RSSI этой гонки"
         }
 	}
 }

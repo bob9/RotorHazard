@@ -338,6 +338,7 @@ function reassign() {
               :start-time="round.start_time"
               :format-id="round.format_id"
               :seat="pilotrace.node_index"
+              :pilotrace-id="pilotrace.pilotrace_id"
               @commit="commit"
               @discard="loadRace"
               @update:dirty="(v: boolean) => (dirty = v)"

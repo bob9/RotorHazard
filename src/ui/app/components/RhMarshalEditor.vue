@@ -30,6 +30,8 @@ const props = withDefaults(defineProps<{
   formatId?: number | null
   /** seat (node index): enables "Load from Node" / "Save to Node" in manual calibration mode */
   seat?: number | null
+  /** saved pilot run for Auto Adjust; leave unset for the current (stopped) race, which uses `seat` */
+  pilotraceId?: number | null
   color?: string
   canCommit?: boolean
   commitLabel?: string
@@ -249,6 +251,38 @@ function onSeek(time: number) {
   }
 }
 
+// ---- Auto Adjust: the server suggests EnterAt/ExitAt from this run's RSSI history ----
+const autoAdjusting = ref(false)
+const canAutoAdjust = computed(() => !!props.data && marshalType.value !== MARSHAL_TYPE.PASS_PEAK_ONLY
+  && (props.pilotraceId != null || (props.seat !== null && props.seat !== undefined)))
+function autoAdjust() {
+  if (!canAutoAdjust.value) return
+  autoAdjusting.value = true
+  rh.emit('suggest_calibration', { pilotrace_id: props.pilotraceId ?? null, node: props.seat ?? null })
+}
+const NO_SUGGESTION: Record<string, string> = {
+  no_history: 'Auto calibration found no RSSI data for this pilot',
+  pass_peak_only: 'Auto calibration needs RSSI data, but this node records only pass peaks',
+  weak_signal: 'Auto calibration found the RSSI signal too weak to show gate passes',
+  no_gate_passes: 'Auto calibration found no gate passes in the RSSI data'
+}
+rh.on('calibration_suggestion', (d: any) => {
+  if (!autoAdjusting.value) return
+  // a reply for another run (the selection changed meanwhile) is ignored
+  if ((d?.pilotrace_id ?? null) !== (props.pilotraceId ?? null)) return
+  if (d?.pilotrace_id == null && d?.node !== props.seat) return
+  autoAdjusting.value = false
+  if (d.enter_at === null || d.enter_at === undefined) {
+    toast.add({ title: t(NO_SUGGESTION[d.reason] || 'Auto calibration could not find suggested values'), icon: 'i-lucide-circle-alert', color: 'warning' })
+    return
+  }
+  enterAt.value = Math.max(0, Math.min(255, Number(d.enter_at)))
+  exitAt.value = Math.min(enterAt.value, Math.max(0, Math.min(255, Number(d.exit_at))))
+  recalc()
+  toast.add({ title: t('EnterAt and ExitAt adjusted'), description: `${t('EnterAt')} ${enterAt.value} · ${t('ExitAt')} ${exitAt.value}`, icon: 'i-lucide-wand-sparkles', color: 'success' })
+})
+watch(() => [props.data, props.pilotraceId], () => { autoAdjusting.value = false })
+
 // ---- node levels (manual calibration mode only, as in the classic page) ----
 const showNodeTools = computed(() => props.seat !== null && props.seat !== undefined && calibrationMode.value === 0)
 let loadPending = false
@@ -257,7 +291,8 @@ rh.on('enter_and_exit_at_levels', (d: any) => {
   loadPending = false
   const en = d?.enter_at_levels?.[props.seat]
   const ex = d?.exit_at_levels?.[props.seat]
-  if (en === undefined || ex === undefined) return
+  // as upstream's marshal.js: only a valid pair (EnterAt above ExitAt) is loaded
+  if (!Number.isInteger(en) || !Number.isInteger(ex) || en <= ex) return
   if (en === enterAt.value && ex === exitAt.value) return
   enterAt.value = en
   exitAt.value = Math.min(ex, en)
@@ -373,13 +408,27 @@ defineExpose({ dirty, recalc, reset: load, setEnter, setExit })
             <span class="inline-flex items-center gap-1.5"><span class="h-3 w-0.5 rounded bg-success" />{{ t('Lap') }}</span>
             <span class="inline-flex items-center gap-1.5"><span class="h-3 w-0 border-l border-dashed border-(--ui-text-dimmed)" />{{ t('Deleted') }}</span>
           </div>
-          <div class="grid w-full grid-cols-[1fr_1fr_auto] items-end gap-2 sm:flex sm:w-auto">
+          <div class="grid w-full grid-cols-[1fr_1fr_auto_auto] items-end gap-2 sm:flex sm:w-auto">
             <UFormField :label="t('EnterAt')" size="sm" class="sm:w-28">
               <UInputNumber :model-value="enterAt" :min="0" :max="255" size="sm" :disabled="!data" @update:model-value="setEnter" />
             </UFormField>
             <UFormField :label="t('ExitAt')" size="sm" class="sm:w-28">
               <UInputNumber :model-value="exitAt" :min="0" :max="255" size="sm" :disabled="!data" @update:model-value="setExit" />
             </UFormField>
+            <UTooltip v-if="marshalType !== MARSHAL_TYPE.PASS_PEAK_ONLY" :text="t('Suggest EnterAt and ExitAt from this race\'s RSSI history')">
+              <UButton
+                color="neutral"
+                variant="outline"
+                size="sm"
+                icon="i-lucide-wand-sparkles"
+                :label="t('Auto Adjust')"
+                :aria-label="t('Auto Adjust')"
+                :ui="{ label: 'hidden sm:inline' }"
+                :loading="autoAdjusting"
+                :disabled="!canAutoAdjust"
+                @click="autoAdjust"
+              />
+            </UTooltip>
             <UTooltip :text="canRecalc ? t('Recalculate laps from the RSSI history') : t('No RSSI history was recorded for this race')">
               <UButton
                 color="neutral"
