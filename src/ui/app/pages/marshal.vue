@@ -163,9 +163,31 @@ function centreRound() {
     if (!scroller || scroller.scrollWidth <= scroller.clientWidth) return
     const offset = tab.getBoundingClientRect().left - scroller.getBoundingClientRect().left + scroller.scrollLeft
     scroller.scrollTo({ left: offset - (scroller.clientWidth - tab.offsetWidth) / 2 })
+    updateRoundFade()
   })
 }
 watch([() => roundKey.value, roundStrip], centreRound, { flush: 'post' })
+// the strip fades out at an edge where more rounds are scrolled out of view, so a round cut
+// off there reads as "more this way" rather than clipped text
+const roundFade = reactive({ start: false, end: false })
+function updateRoundFade() {
+  const el: HTMLElement | undefined = roundStrip.value?.$el
+  if (!el) return
+  const max = el.scrollWidth - el.clientWidth
+  const x = Math.abs(el.scrollLeft) // negative in right-to-left layouts
+  roundFade.start = max > 1 && x > 1
+  roundFade.end = max > 1 && x < max - 1
+}
+let roundStripRO: ResizeObserver | undefined
+watch(roundStrip, (c) => {
+  roundStripRO?.disconnect()
+  const el: HTMLElement | undefined = c?.$el
+  if (!el) return
+  roundStripRO = new ResizeObserver(updateRoundFade)
+  roundStripRO.observe(el)
+  updateRoundFade()
+}, { flush: 'post' })
+onBeforeUnmount(() => roundStripRO?.disconnect())
 const roundModel = computed({ get: () => roundKey.value ?? undefined, set: (v: string | number) => pickRound(String(v)) })
 
 // ---- the selected pilot's race ----
@@ -300,8 +322,10 @@ function reassign() {
                 :content="false"
                 color="neutral"
                 size="sm"
-                class="max-w-full overflow-x-auto"
+                class="rh-scroll-fade max-w-full overflow-x-auto"
+                :class="{ 'rh-fade-start': roundFade.start, 'rh-fade-end': roundFade.end }"
                 :ui="{ list: 'w-fit' }"
+                @scroll.passive="updateRoundFade"
               />
             </div>
 

@@ -16,9 +16,11 @@ const query = ref('')
 
 const sorted = computed(() => {
   const q = query.value.trim().toLowerCase()
-  const list = pilots.value.filter(p => !q || [p.callsign, p.name, p.team].some(v => String(v || '').toLowerCase().includes(q)))
+  const list = pilots.value.filter(p => !q || [p.callsign, pilotName(p), p.team].some(v => String(v || '').toLowerCase().includes(q)))
   const key = sortKey.value
-  return [...list].sort((a, b) => key === 'id' ? a.pilot_id - b.pilot_id : String(a[key] || '').localeCompare(String(b[key] || ''), undefined, { sensitivity: 'base' }))
+  // pilots without a name (or with the placeholder new pilots get) sort by callsign
+  const sortValue = (p: any) => key === 'name' ? pilotName(p) || String(p.callsign || '') : String(p[key] || '')
+  return [...list].sort((a, b) => key === 'id' ? a.pilot_id - b.pilot_id : sortValue(a).localeCompare(sortValue(b), undefined, { sensitivity: 'base' }))
 })
 const sortItems = computed(() => [
   { label: t('Name'), value: 'name' },
@@ -263,7 +265,7 @@ function setColorMode(v: string) {
                   />
                 </td>
                 <td class="px-1 py-1">
-                  <UInput :model-value="p.name" variant="ghost" class="w-full" :ui="{ base: 'disabled:opacity-100 disabled:cursor-default' }" :placeholder="t('Name')" :disabled="!admin" :aria-label="t('Name')" @change="(e: any) => alter(p, 'name', e.target.value)" />
+                  <UInput :model-value="pilotName(p)" variant="ghost" class="w-full" :ui="{ base: 'disabled:opacity-100 disabled:cursor-default' }" :placeholder="t('Name')" :disabled="!admin" :aria-label="t('Name')" @change="(e: any) => alter(p, 'name', e.target.value)" />
                 </td>
                 <td class="hidden px-1 py-1 md:table-cell">
                   <USelect :model-value="p.team" :items="teamItems(p)" variant="ghost" size="sm" class="w-16" :ui="{ base: 'px-2' }" :disabled="!admin" :aria-label="t('Team')" @update:model-value="(v: any) => alter(p, 'team_name', v)" />
@@ -285,7 +287,7 @@ function setColorMode(v: string) {
         </div>
       </div>
 
-      <USlideover :open="!!editing" :title="editing?.callsign || t('Pilot')" :description="editing?.name || undefined" @update:open="(o: boolean) => { if (!o) editing = null }">
+      <USlideover :open="!!editing" :title="editing?.callsign || t('Pilot')" :description="pilotName(editing) || undefined" @update:open="(o: boolean) => { if (!o) editing = null }">
         <template #body>
           <div v-if="editing" class="space-y-6">
             <RhGroup :title="t('Pilot')">
@@ -293,7 +295,7 @@ function setColorMode(v: string) {
                 <UInput :model-value="editing.callsign" class="w-full sm:w-56" :disabled="!admin" @change="(e: any) => alter(editing, 'callsign', e.target.value)" />
               </RhRow>
               <RhRow :label="t('Name')">
-                <UInput :model-value="editing.name" class="w-full sm:w-56" :disabled="!admin" @change="(e: any) => alter(editing, 'name', e.target.value)" />
+                <UInput :model-value="pilotName(editing)" class="w-full sm:w-56" :placeholder="t('Name')" :disabled="!admin" @change="(e: any) => alter(editing, 'name', e.target.value)" />
               </RhRow>
               <RhRow :label="t('Phonetic')" :description="t('How announcers say the callsign.')">
                 <UFieldGroup>

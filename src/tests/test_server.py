@@ -386,6 +386,12 @@ class ServerTest(unittest.TestCase):
         for cookie in ('%2Fprogression%7C%2Fpage%3Furl%3D%252Fhardwarelog', '%2Fprogression%7C%2Fpage%3Furl%3Dhttps%253A%252F%252Fexample.com',
                        '%2Fprogression%7C%2Fpage%3Furl%3D%252Fq_admin%26x%3D1', '%2Fprogression%7C%2Fpage%3Furl%3D%252F%252Fexample.com'):
             self.assertTrue(target('app', '/progression', cookie).endswith('/app/page?url=%2Fprogression'), cookie)
+        # the app's Classic button opens the classic Race page for a plugin page: its New Interface
+        # comes back to the plugin page, but only to a listed one
+        self.assertTrue(target('app', '/run', '%2Frun%7C%2Fpage%3Furl%3D%252Fprogression').endswith('/app/page?url=%2Fprogression'))
+        self.assertTrue(target('app', '/current', '%2Fcurrent%7C%2Fpage%3Furl%3D%252Fq_admin').endswith('/app/page?url=%2Fq_admin'))
+        for cookie in ('%2Frun%7C%2Fpage%3Furl%3D%252Fhardwarelog', '%2Frun%7C%2Fpage%3Furl%3Dhttps%253A%252F%252Fexample.com'):
+            self.assertTrue(target('app', '/run', cookie).endswith('/app/'), cookie)
         # pages that aren't listed plain paths are never targets
         for bad in ('/hardwarelog', 'https://example.com/x', '//example.com', '/a/../hardwarelog'):
             self.assertTrue(target('app', bad).endswith('/app/'), bad)

@@ -87,6 +87,12 @@ function niceStep(sec: number, px: number) {
   return 1200
 }
 
+// label pills: [fill, text] with at least 4.5:1 contrast. Light: 700 shades under white text;
+// dark: bright fills under dark text (the lines themselves keep the brighter hues)
+const PILLS = {
+  light: { exit: ['#b45309', '#fff'], enter: ['#b91c1c', '#fff'], lap: ['#15803d', '#fff'], deleted: ['#525252', '#fff'] },
+  dark: { exit: ['#fbbf24', '#1c1917'], enter: ['#f87171', '#1c1917'], lap: ['#4ade80', '#052e16'], deleted: ['#a3a3a3', '#171717'] }
+} as const
 function draw() {
   raf = requestAnimationFrame(draw)
   const c = canvas.value
@@ -107,6 +113,7 @@ function draw() {
   const { lo, hi } = range()
   const y = (v: number) => h - ((v - lo) / (hi - lo)) * h
   const font = '600 11px -apple-system, system-ui, sans-serif'
+  const pills = PILLS[document.documentElement.classList.contains('dark') ? 'dark' : 'light']
 
   // grid
   const border = css('--ui-border') || '#e4e4e7'
@@ -191,11 +198,12 @@ function draw() {
       if (m.label) {
         ctx.font = font
         const tw = ctx.measureText(m.label).width
-        ctx.fillStyle = m.deleted ? dimmed : col
+        const [fill, ink] = m.deleted ? pills.deleted : pills.lap
+        ctx.fillStyle = fill
         ctx.beginPath()
         ctx.roundRect(x - tw / 2 - 5, 3, tw + 10, 16, 8)
         ctx.fill()
-        ctx.fillStyle = '#fff'
+        ctx.fillStyle = ink
         ctx.fillText(m.label, x - tw / 2, 15)
       }
     }
@@ -264,7 +272,7 @@ function draw() {
     ctx.restore()
   }
 
-  const line = (v: number | undefined, col: string, label: string) => {
+  const line = (v: number | undefined, col: string, label: string, pill: readonly [string, string]) => {
     if (v === undefined || v === null) return
     const yy = Math.round(y(v)) + 0.5
     ctx.strokeStyle = col
@@ -278,15 +286,15 @@ function draw() {
     ctx.font = font
     const text = `${label} ${v}`
     const tw = ctx.measureText(text).width
-    ctx.fillStyle = col
+    ctx.fillStyle = pill[0]
     ctx.beginPath()
     ctx.roundRect(w - tw - 14, yy - 9, tw + 10, 18, 9)
     ctx.fill()
-    ctx.fillStyle = '#fff'
+    ctx.fillStyle = pill[1]
     ctx.fillText(text, w - tw - 9, yy + 4)
   }
-  line(props.exitAt, '#f59e0b', 'Exit')
-  line(props.enterAt, '#ef4444', 'Enter')
+  line(props.exitAt, '#f59e0b', 'Exit', pills.exit)
+  line(props.enterAt, '#ef4444', 'Enter', pills.enter)
 }
 
 function valueAt(e: PointerEvent) {

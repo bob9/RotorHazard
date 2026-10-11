@@ -43,12 +43,13 @@ const minLapMs = computed(() => (S.min_lap?.min_lap || 0) * 1000)
 const nextHeat = computed(() => S.leaderboard?.current?.displayname)
 const nextRound = computed(() => S.current_heat?.next_round)
 const nextPilots = computed(() => Object.values(heatNodes.value).map((n: any) => n.callsign).filter(Boolean).join(' · '))
-// the card names what it shows: the race being run, a finished one awaiting save, or the heat about to run
-const heroLabel = computed(() => showLast.value
+// the card names what it shows: the race being run, the heat about to run, or the last race
+// (saved, or finished and awaiting save: the status label already says FINISHED)
+const heroLabel = computed(() => showLast.value || status.value === RACE_STATUS.DONE
   ? t('Last race')
   : status.value === RACE_STATUS.RACING || status.value === RACE_STATUS.STAGING
     ? t('Now racing')
-    : status.value === RACE_STATUS.DONE ? t('Finished') : t('Up next'))
+    : t('Up next'))
 
 // ---- presentation mode (?kiosk=1): no app chrome, type scaled up with the screen ----
 const kiosk = useKiosk()
