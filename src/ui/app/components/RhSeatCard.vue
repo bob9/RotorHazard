@@ -29,6 +29,13 @@ const practiceSeat = computed(() => !props.node?.pilot_id && !!props.node?.calls
 const disabled = computed(() => !props.freq?.frequency)
 
 const visibleLaps = computed(() => [...(props.laps || [])].reverse())
+// the server zeroes a deleted lap's time; show what it was: its crossing less the lap before it
+function lapTimeText(lap: any) {
+  if (!lap.deleted || !lap.lap_time_stamp) return lap.lap_time_formatted
+  const laps = props.laps || []
+  const prev = laps.slice(0, laps.indexOf(lap)).filter(l => !l.deleted).pop()
+  return formatLapMs(lap.lap_time_stamp - (prev?.lap_time_stamp || 0))
+}
 // on phones the Last/Fastest grid and lap list collapse into a one-line summary
 const expanded = ref(false)
 const lapCount = computed(() => props.row?.laps ?? (props.laps || []).filter(l => !l.deleted && l.lap_number > 0).length)
@@ -149,7 +156,7 @@ const pct = (v?: number) => `${Math.min(100, Math.max(0, ((v || 0) / scaleMax.va
               !lap.deleted && lap.lap_index === fastestIndex ? 'font-semibold text-success' : '',
               !lap.deleted && minLapMs && lap.lap_number > 0 && lap.lap_time < minLapMs ? 'text-amber-700 dark:text-amber-400' : ''
             ]"
-          >{{ lap.lap_time_formatted }}</span>
+          >{{ lapTimeText(lap) }}</span>
           <UIcon v-if="lap.source === 1" name="i-lucide-hand" class="size-3.5 text-dimmed" :title="t('Manual')" />
           <template v-if="admin">
             <UButton

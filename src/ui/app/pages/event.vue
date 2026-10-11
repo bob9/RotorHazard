@@ -108,7 +108,11 @@ function setConsecutives(v: number) {
 <template>
   <UDashboardPanel id="event">
     <template #header>
-      <UDashboardNavbar :title="t('Event')" />
+      <UDashboardNavbar :title="t('Event')">
+        <template #right>
+          <RhBell />
+        </template>
+      </UDashboardNavbar>
     </template>
 
     <template #body>

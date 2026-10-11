@@ -38,6 +38,7 @@ watch(group, (g) => { openHeats.value = g?.heats?.length ? [String(g.heats[g.hea
     <template #header>
       <UDashboardNavbar :title="t('Results')">
         <template #right>
+          <RhBell />
           <UButton v-if="admin" color="neutral" variant="ghost" icon="i-lucide-refresh-cw" :aria-label="t('Rebuild results')" @click="rh.emit('clean_cache'); rh.refresh(['result_data'])" />
         </template>
       </UDashboardNavbar>

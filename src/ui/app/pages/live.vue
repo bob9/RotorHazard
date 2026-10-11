@@ -37,6 +37,12 @@ const statusMessage = computed(() => currentStatusMessage(lb.value))
 const minLapMs = computed(() => (S.min_lap?.min_lap || 0) * 1000)
 const nextHeat = computed(() => S.leaderboard?.current?.displayname)
 const nextRound = computed(() => S.current_heat?.next_round)
+// the card names what it shows: the race being run, a finished one awaiting save, or the heat about to run
+const heroLabel = computed(() => showLast.value
+  ? t('Last race')
+  : status.value === RACE_STATUS.RACING || status.value === RACE_STATUS.STAGING
+    ? t('Now racing')
+    : status.value === RACE_STATUS.DONE ? t('Finished') : t('Up next'))
 </script>
 
 <template>
@@ -44,6 +50,7 @@ const nextRound = computed(() => S.current_heat?.next_round)
     <template #header>
       <UDashboardNavbar :title="t('Live')">
         <template #right>
+          <RhBell />
           <RhAudioToggle />
         </template>
       </UDashboardNavbar>
@@ -61,7 +68,7 @@ const nextRound = computed(() => S.current_heat?.next_round)
           :class="showLast ? 'py-5' : 'py-8 sm:py-10'"
         >
           <div class="text-sm font-medium text-muted">
-            {{ showLast ? t('Last race') : t('Now racing') }}<template v-if="showLast && lb.round"> · {{ t('Round') }} {{ lb.round }}</template>
+            {{ heroLabel }}<template v-if="showLast && lb.round"> · {{ t('Round') }} {{ lb.round }}</template>
           </div>
           <h1 class="text-balance font-display font-semibold text-highlighted" :class="showLast ? 'text-2xl' : 'text-3xl sm:text-4xl'">
             {{ lb.displayname || t('Practice') }}

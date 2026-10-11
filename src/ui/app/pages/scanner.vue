@@ -93,6 +93,9 @@ function bars(i: number) {
         <template #leading>
           <UButton icon="i-lucide-chevron-left" color="neutral" variant="ghost" to="/timer" :aria-label="t('Timer')" />
         </template>
+        <template #right>
+          <RhBell />
+        </template>
       </UDashboardNavbar>
     </template>
 

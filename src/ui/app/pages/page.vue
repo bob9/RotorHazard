@@ -62,6 +62,7 @@ function reload() {
     <template #header>
       <UDashboardNavbar :title="title">
         <template #right>
+          <RhBell />
           <template v-if="url">
             <UButton
               color="neutral"

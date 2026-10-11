@@ -136,5 +136,3 @@ html {
 .rh-imd th { background: var(--ui-bg-elevated); color: var(--ui-text-highlighted); font-weight: 600; }
 .rh-imd td[title] { cursor: help; }
 
-/* room for the floating notification bell (layouts/default.vue) */
-.rh-bell [data-slot="body"] { padding-bottom: 5rem; }

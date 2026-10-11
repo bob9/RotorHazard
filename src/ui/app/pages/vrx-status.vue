@@ -46,6 +46,7 @@ function raw(d: any) {
           <UButton icon="i-lucide-chevron-left" color="neutral" variant="ghost" to="/settings/system" :aria-label="t('System')" />
         </template>
         <template #right>
+          <RhBell />
           <UButton color="neutral" variant="ghost" icon="i-lucide-refresh-cw" :aria-label="t('Refresh')" @click="rh.refresh(['vrx_list'])" />
         </template>
       </UDashboardNavbar>

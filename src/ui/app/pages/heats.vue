@@ -146,6 +146,7 @@ const navItems = computed(() => [
     <template #header>
       <UDashboardNavbar :title="t('Heats')">
         <template #right>
+          <RhBell />
           <UButton v-if="admin && classHeats.length" color="neutral" variant="soft" icon="i-lucide-wand-sparkles" :label="t('Generate Heats')" @click="openGenerator" />
         </template>
       </UDashboardNavbar>

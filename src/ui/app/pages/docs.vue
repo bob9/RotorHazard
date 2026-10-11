@@ -157,6 +157,7 @@ const classicNames = computed(() => [
     <template #header>
       <UDashboardNavbar :title="label(docName)">
         <template #right>
+          <RhBell />
           <UButton
             color="neutral"
             variant="ghost"

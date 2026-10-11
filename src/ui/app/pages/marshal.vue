@@ -246,7 +246,11 @@ function reassign() {
 <template>
   <UDashboardPanel id="marshal">
     <template #header>
-      <UDashboardNavbar :title="t('Marshal')" />
+      <UDashboardNavbar :title="t('Marshal')">
+        <template #right>
+          <RhBell />
+        </template>
+      </UDashboardNavbar>
     </template>
 
     <template #body>

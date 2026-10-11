@@ -1063,7 +1063,10 @@
 			"Auto calibration found the RSSI signal too weak to show gate passes": "Die automatische Kalibrierung fand das RSSI-Signal zu schwach, um Gate-Durchflüge zu erkennen",
 			"Auto calibration needs RSSI data, but this node records only pass peaks": "Die automatische Kalibrierung benötigt RSSI-Daten, aber dieser Node zeichnet nur Durchflug-Spitzen auf",
 			"EnterAt and ExitAt adjusted": "EnterAt und ExitAt angepasst",
-			"Suggest EnterAt and ExitAt from this race's RSSI history": "EnterAt und ExitAt aus dem RSSI-Verlauf dieses Rennens vorschlagen"
+			"Suggest EnterAt and ExitAt from this race's RSSI history": "EnterAt und ExitAt aus dem RSSI-Verlauf dieses Rennens vorschlagen",
+			"Live view": "Live-Ansicht",
+			"Adds a random extra delay of up to this length.": "Fügt eine zufällige zusätzliche Verzögerung bis zu dieser Länge hinzu.",
+			"Messages": "Nachrichten"
 		}
 	},
 	"es": {
@@ -2250,7 +2253,10 @@
 			"Auto calibration found the RSSI signal too weak to show gate passes": "La calibración automática encontró la señal RSSI demasiado débil para mostrar pasos por la puerta",
 			"Auto calibration needs RSSI data, but this node records only pass peaks": "La calibración automática necesita datos RSSI, pero este nodo solo registra picos de paso",
 			"EnterAt and ExitAt adjusted": "EnterAt y ExitAt ajustados",
-			"Suggest EnterAt and ExitAt from this race's RSSI history": "Sugerir EnterAt y ExitAt a partir del historial RSSI de esta carrera"
+			"Suggest EnterAt and ExitAt from this race's RSSI history": "Sugerir EnterAt y ExitAt a partir del historial RSSI de esta carrera",
+			"Live view": "Vista en vivo",
+			"Adds a random extra delay of up to this length.": "Añade un retraso adicional aleatorio de hasta esta duración.",
+			"Messages": "Mensajes"
 		}
 	},
 	"fr-be": {
@@ -3231,7 +3237,10 @@
 			"Auto calibration found the RSSI signal too weak to show gate passes": "La calibration automatique a trouvé le signal RSSI trop faible pour montrer les passages de porte",
 			"Auto calibration needs RSSI data, but this node records only pass peaks": "La calibration automatique a besoin de données RSSI, mais ce nœud n’enregistre que les pics de passage",
 			"EnterAt and ExitAt adjusted": "EnterAt et ExitAt ajustés",
-			"Suggest EnterAt and ExitAt from this race's RSSI history": "Suggérer EnterAt et ExitAt d’après l’historique RSSI de cette course"
+			"Suggest EnterAt and ExitAt from this race's RSSI history": "Suggérer EnterAt et ExitAt d’après l’historique RSSI de cette course",
+			"Live view": "Vue en direct",
+			"Adds a random extra delay of up to this length.": "Ajoute un délai supplémentaire aléatoire allant jusqu'à cette durée.",
+			"Messages": "Messages"
 		}
 	},
 	"it": {
@@ -4686,7 +4695,9 @@
 			 "Auto calibration found the RSSI signal too weak to show gate passes": "La calibrazione automatica ha trovato il segnale RSSI troppo debole per mostrare i passaggi dal gate",
 			 "Auto calibration needs RSSI data, but this node records only pass peaks": "La calibrazione automatica richiede dati RSSI, ma questo nodo registra solo i picchi di passaggio",
 			 "EnterAt and ExitAt adjusted": "EnterAt ed ExitAt regolati",
-			 "Suggest EnterAt and ExitAt from this race's RSSI history": "Suggerisci EnterAt ed ExitAt dalla cronologia RSSI di questa gara"
+			 "Suggest EnterAt and ExitAt from this race's RSSI history": "Suggerisci EnterAt ed ExitAt dalla cronologia RSSI di questa gara",
+			 "Live view": "Vista dal vivo",
+			 "Adds a random extra delay of up to this length.": "Aggiunge un ritardo extra casuale fino a questa durata."
 		}
 	},
 	"nl-be": {
@@ -5657,7 +5668,10 @@
 			"Auto calibration found the RSSI signal too weak to show gate passes": "De automatische kalibratie vond het RSSI-signaal te zwak om gate-passages te tonen",
 			"Auto calibration needs RSSI data, but this node records only pass peaks": "De automatische kalibratie heeft RSSI-gegevens nodig, maar deze node registreert alleen passagepieken",
 			"EnterAt and ExitAt adjusted": "EnterAt en ExitAt aangepast",
-			"Suggest EnterAt and ExitAt from this race's RSSI history": "EnterAt en ExitAt voorstellen op basis van de RSSI-geschiedenis van deze race"
+			"Suggest EnterAt and ExitAt from this race's RSSI history": "EnterAt en ExitAt voorstellen op basis van de RSSI-geschiedenis van deze race",
+			"Live view": "Liveweergave",
+			"Adds a random extra delay of up to this length.": "Voegt een willekeurige extra vertraging toe van maximaal deze duur.",
+			"Messages": "Berichten"
 		}
 	},
 	"pl": {
@@ -6665,7 +6679,10 @@
 			"Auto calibration found the RSSI signal too weak to show gate passes": "Automatyczna kalibracja uznała sygnał RSSI za zbyt słaby, by pokazać przeloty przez bramkę",
 			"Auto calibration needs RSSI data, but this node records only pass peaks": "Automatyczna kalibracja wymaga danych RSSI, ale ten węzeł zapisuje tylko szczyty przelotów",
 			"EnterAt and ExitAt adjusted": "Dostosowano EnterAt i ExitAt",
-			"Suggest EnterAt and ExitAt from this race's RSSI history": "Zaproponuj EnterAt i ExitAt na podstawie historii RSSI tego wyścigu"
+			"Suggest EnterAt and ExitAt from this race's RSSI history": "Zaproponuj EnterAt i ExitAt na podstawie historii RSSI tego wyścigu",
+			"Live view": "Widok na żywo",
+			"Adds a random extra delay of up to this length.": "Dodaje losowe dodatkowe opóźnienie o długości do tej wartości.",
+			"Messages": "Wiadomości"
 		}
 	},
 	"ja-JP": {
@@ -7970,7 +7987,9 @@
 			"Auto calibration found the RSSI signal too weak to show gate passes": "RSSI信号が弱すぎてゲート通過を判別できませんでした",
 			"Auto calibration needs RSSI data, but this node records only pass peaks": "自動キャリブレーションにはRSSIデータが必要ですが、このノードは通過ピークのみを記録します",
 			"EnterAt and ExitAt adjusted": "EnterAtとExitAtを調整しました",
-			"Suggest EnterAt and ExitAt from this race's RSSI history": "このレースのRSSI履歴からEnterAtとExitAtを提案します"
+			"Suggest EnterAt and ExitAt from this race's RSSI history": "このレースのRSSI履歴からEnterAtとExitAtを提案します",
+			"Live view": "ライブビュー",
+			"Adds a random extra delay of up to this length.": "この長さまでのランダムな追加遅延を加えます。"
 		}
 	},
 	"zh-CN": {
@@ -9567,7 +9586,9 @@
 			"Auto calibration found the RSSI signal too weak to show gate passes": "自动校准发现 RSSI 信号太弱，无法识别过门",
 			"Auto calibration needs RSSI data, but this node records only pass peaks": "自动校准需要 RSSI 数据，但该节点只记录过门峰值",
 			"EnterAt and ExitAt adjusted": "已调整 EnterAt 和 ExitAt",
-			"Suggest EnterAt and ExitAt from this race's RSSI history": "根据本场比赛的 RSSI 历史建议 EnterAt 和 ExitAt"
+			"Suggest EnterAt and ExitAt from this race's RSSI history": "根据本场比赛的 RSSI 历史建议 EnterAt 和 ExitAt",
+			"Live view": "实时视图",
+			"Adds a random extra delay of up to this length.": "添加一段随机的额外延迟，最长为此时长。"
 		}
 	},
 	"ru": {
@@ -10940,7 +10961,9 @@
             "Auto calibration found the RSSI signal too weak to show gate passes": "Автокалибровка сочла сигнал RSSI слишком слабым, чтобы увидеть пролёты через ворота",
             "Auto calibration needs RSSI data, but this node records only pass peaks": "Автокалибровке нужны данные RSSI, но этот узел записывает только пики пролёта",
             "EnterAt and ExitAt adjusted": "EnterAt и ExitAt подстроены",
-            "Suggest EnterAt and ExitAt from this race's RSSI history": "Предложить EnterAt и ExitAt по истории RSSI этой гонки"
+            "Suggest EnterAt and ExitAt from this race's RSSI history": "Предложить EnterAt и ExitAt по истории RSSI этой гонки",
+            "Live view": "Прямой эфир",
+            "Adds a random extra delay of up to this length.": "Добавляет случайную дополнительную задержку не больше этой длительности."
         }
 	}
 }

@@ -89,6 +89,7 @@ const suggestions = computed(() => {
     <template #header>
       <UDashboardNavbar :title="t('Formats')">
         <template #right>
+          <RhBell />
           <UButton v-if="admin && fmt && !(locked && !activeRace)" icon="i-lucide-copy-plus" color="neutral" variant="soft" :label="t('Duplicate')" @click="duplicate" />
         </template>
       </UDashboardNavbar>
@@ -194,11 +195,17 @@ const suggestions = computed(() => {
                 <RhRow :label="t('Staging Tones')">
                   <USelect :model-value="fmt.staging_delay_tones" :items="stagingTones" class="w-48" :disabled="!editable" @update:model-value="(v: any) => alter({ staging_delay_tones: v })" />
                 </RhRow>
-                <RhRow :label="t('Minimum Staging Time')" :description="t('seconds')">
-                  <UInputNumber :model-value="(fmt.start_delay_min || 0) / 1000" :min="0" :step="0.1" :format-options="{ maximumFractionDigits: 1 }" class="w-36" :disabled="!editable" @update:model-value="(v: any) => alter({ start_delay_min_ms: Math.round((v || 0) * 1000) })" />
+                <RhRow :label="t('Minimum Staging Time')">
+                  <div class="flex items-center gap-2">
+                    <UInputNumber :model-value="(fmt.start_delay_min || 0) / 1000" :min="0" :step="0.1" :format-options="{ maximumFractionDigits: 1 }" class="w-36" :disabled="!editable" @update:model-value="(v: any) => alter({ start_delay_min_ms: Math.round((v || 0) * 1000) })" />
+                    <span class="text-sm text-muted">{{ t('sec') }}</span>
+                  </div>
                 </RhRow>
-                <RhRow :label="t('Random Staging Time')" :description="t('Up to this many extra seconds, chosen at random.')">
-                  <UInputNumber :model-value="(fmt.start_delay_max || 0) / 1000" :min="0" :step="0.1" :format-options="{ maximumFractionDigits: 1 }" class="w-36" :disabled="!editable" @update:model-value="(v: any) => alter({ start_delay_max_ms: Math.round((v || 0) * 1000) })" />
+                <RhRow :label="t('Random Staging Time')" :description="t('Adds a random extra delay of up to this length.')">
+                  <div class="flex items-center gap-2">
+                    <UInputNumber :model-value="(fmt.start_delay_max || 0) / 1000" :min="0" :step="0.1" :format-options="{ maximumFractionDigits: 1 }" class="w-36" :disabled="!editable" @update:model-value="(v: any) => alter({ start_delay_max_ms: Math.round((v || 0) * 1000) })" />
+                    <span class="text-sm text-muted">{{ t('sec') }}</span>
+                  </div>
                 </RhRow>
               </RhGroup>
 

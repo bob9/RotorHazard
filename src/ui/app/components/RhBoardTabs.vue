@@ -13,6 +13,7 @@ const options = computed(() => {
   return o
 })
 const sel = ref<string>(props.board?.meta?.primary_leaderboard || 'by_race_time')
+const card = useTemplateRef('card')
 watch(() => props.board?.meta?.primary_leaderboard, (v) => { if (v) sel.value = v })
 
 // 'Fastest Speeds' is derived client-side (ties share a position)
@@ -29,13 +30,13 @@ const speedBoard = computed(() => {
 </script>
 
 <template>
-  <UCard :ui="{ body: 'p-0 sm:p-0', header: 'p-3 sm:px-4' }">
+  <UCard ref="card" :ui="{ body: 'p-0 sm:p-0', header: 'p-3 sm:px-4' }">
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-3">
         <h3 v-if="title" class="font-semibold text-highlighted">
           {{ title }}
         </h3>
-        <UTabs v-model="sel" :items="options" :content="false" size="xs" color="neutral" class="max-w-full overflow-x-auto" :ui="{ list: 'w-fit' }" />
+        <UTabs v-model="sel" :items="options" :content="false" size="xs" color="neutral" class="max-w-full overflow-x-auto" :ui="{ list: 'w-fit' }" @update:model-value="revealAfterTabChange(card)" />
       </div>
     </template>
     <div v-if="sel === 'by_fastest_speed'" class="overflow-x-auto">

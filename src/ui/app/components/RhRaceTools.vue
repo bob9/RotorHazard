@@ -19,6 +19,7 @@ const items = computed(() => [
   { label: t('Status'), icon: 'i-lucide-activity', slot: 'status' as const, value: 'status' }
 ])
 const tab = ref('timing')
+const card = useTemplateRef('card')
 
 // timing
 const minLap = computed(() => S.min_lap || {})
@@ -86,10 +87,10 @@ const sensors = computed(() => (Array.isArray(S.environmental_data) ? S.environm
 </script>
 
 <template>
-  <UCard :ui="{ body: 'p-0 sm:p-0' }">
+  <UCard ref="card" :ui="{ body: 'p-0 sm:p-0' }">
     <!-- phones show icons, with the label visible on the active tab only (sr-only on the rest) -->
     <!-- tabs stay mounted so plugin panels (and the scripts some of them load) run without opening their tab -->
-    <UTabs v-model="tab" :items="items" variant="link" :unmount-on-hide="false" :ui="{ list: 'px-4 border-b border-default overflow-x-auto', trigger: 'flex-none', label: 'max-sm:sr-only max-sm:group-data-[state=active]:not-sr-only', content: 'p-4 sm:p-6' }">
+    <UTabs v-model="tab" :items="items" variant="link" :unmount-on-hide="false" @update:model-value="revealAfterTabChange(card)" :ui="{ list: 'px-4 border-b border-default overflow-x-auto', trigger: 'flex-none', label: 'max-sm:sr-only max-sm:group-data-[state=active]:not-sr-only', content: 'p-4 sm:p-6' }">
       <template #timing>
         <div class="grid gap-x-8 gap-y-4 md:grid-cols-2 xl:grid-cols-4">
           <UFormField id="min-lap" :label="t('Minimum Lap Time')" :hint="t('seconds')">

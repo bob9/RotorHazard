@@ -186,6 +186,7 @@ function setColorMode(v: string) {
           <UBadge :label="String(pilots.length)" variant="subtle" color="neutral" />
         </template>
         <template #right>
+          <RhBell />
           <UButton v-if="admin" icon="i-lucide-plus" :label="t('Add Pilot')" @click="addPilot" />
         </template>
       </UDashboardNavbar>

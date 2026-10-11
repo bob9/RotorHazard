@@ -3,9 +3,11 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 
 const rh = useRH()
 const { t } = useI18n()
-const { admin, loginOpen, logout, classicSession } = useAuth()
+const { admin, loginOpen, logout, classicSession, hasCredentials } = useAuth()
+// while saved credentials are being checked, the footer already takes the signed-in shape
+const guestFooter = computed(() => admin.value === false || (admin.value === null && !hasCredentials()))
 const { info } = useServerInfo()
-const { unread, restartRequired, restarting } = useMessages()
+const { restartRequired, restarting } = useMessages()
 const colorMode = useColorMode()
 const route = useRoute()
 
@@ -13,7 +15,8 @@ rh.load(['all_languages', 'language', 'race_status', 'current_heat'])
 
 const sidebarOpen = ref(false)
 const searchOpen = ref(false)
-const messagesOpen = ref(false)
+// opened from the bell in each page's navbar (RhBell)
+const messagesOpen = useState('rh.messagesOpen', () => false)
 const aboutOpen = ref(false)
 
 const raceLive = computed(() => [1, 3].includes(rh.state.race_status?.race_status))
@@ -42,10 +45,14 @@ watch(admin, (isAdmin) => {
   offerSignIn()
 })
 
+// a full URL: the router's links don't add the app's base path to a link opening a new tab
+const liveHref = `${useRuntimeConfig().app.baseURL}live`
 const raceItems = computed<NavigationMenuItem[]>(() => [
   ...(admin.value
     ? [{ label: t('Race'), icon: 'i-lucide-flag', to: '/', badge: raceLive.value ? { label: t('Live'), color: 'error' as const, variant: 'solid' as const, size: 'sm' as const } : undefined },
-        { label: t('Marshal'), icon: 'i-lucide-pencil-ruler', to: '/marshal' }]
+        { label: t('Marshal'), icon: 'i-lucide-pencil-ruler', to: '/marshal' },
+        // the spectator page, for a projector or second screen: its own tab, so race control stays open
+        { label: t('Live view'), icon: 'i-lucide-monitor-play', to: liveHref, target: '_blank', external: true }]
     : [{ label: t('Live'), icon: 'i-lucide-radio', to: '/live' }]),
   { label: t('Results'), icon: 'i-lucide-trophy', to: '/results' },
   ...(admin.value ? [] : [{ label: t('Event'), icon: 'i-lucide-calendar-days', to: '/event' }])
@@ -96,7 +103,7 @@ watch(searchOpen, (o) => {
 // everyday words for the pages themselves ("start race" → Race)
 const PAGE_KEYWORDS: Record<string, string> = {
   '/': 'start race stop race run race control clock',
-  '/live': 'live current race spectator watch',
+  '/live': 'live view current race spectator projector big screen second screen display tv watch',
   '/marshal': 'marshal fix lap edit laps',
   '/results': 'results standings leaderboard',
   '/event': 'event overview',
@@ -168,7 +175,7 @@ const searchGroups = computed(() => [
     id: 'pages',
     label: t('Go to'),
     items: [...raceItems.value, ...eventItems.value, ...systemItems.value, ...pluginItems.value]
-      .map(i => ({ label: i.label, icon: i.icon, to: i.to as string, keywords: PAGE_KEYWORDS[i.to as string] }))
+      .map(i => ({ label: i.label, icon: i.icon, to: i.to as string, target: i.target, external: i.external, keywords: PAGE_KEYWORDS[i.to === liveHref ? '/live' : i.to as string] }))
       .concat([{ label: t('Documentation'), icon: 'i-lucide-book-open', to: '/docs', keywords: 'docs documentation help guide manual user guide how to' } as any])
   },
   ...(settingsIndex.value.length ? [{ id: 'settings', label: t('Settings'), items: settingsIndex.value }] : []),
@@ -229,12 +236,6 @@ const { restartServer } = useMessages()
 
 // Ctrl/Cmd+K is bound by UDashboardSearch itself
 
-// while the floating notification bell shows, pages leave room below their content so
-// the last rows (a leaderboard's, say) can scroll clear of it
-watch(() => !!(unread.value || messagesOpen.value), (on) => {
-  if (import.meta.client) document.documentElement.classList.toggle('rh-bell', on)
-}, { immediate: true })
-
 // 'Classic interface' opens the classic page matching this one
 const CLASSIC_FOR: [string, string][] = [
   ['/live', '/current'], ['/marshal', '/marshal'], ['/results', '/results'], ['/event', '/event'],
@@ -260,35 +261,56 @@ const classicHref = computed(() => {
 
 
 // A plugin bar at the top (e.g. Telemetry) arrives after the app and first draws as a thin
-// strip: keep last visit's height in reserve and show the bar once it has drawn properly,
-// so the page doesn't jump. The height is a per-device convenience.
+// strip until its stylesheet loads. Last visit's height (0: no bar) is kept per device:
+// - known height: keep that much room and show the bar once it has drawn properly;
+// - first visit on this device: hold the page back until the plugin scripts have loaded
+//   and the bar has drawn (or there turns out to be none), so it appears in place once
+//   instead of pushing the page down twice. Both give up after a few seconds.
 const pluginTop = ref<HTMLElement | null>(null)
 const PLUGIN_TOP_KEY = 'rh.pluginTopHeight'
-let storedTop = 0
-try { storedTop = Number(localStorage.getItem(PLUGIN_TOP_KEY)) || 0 } catch { /* storage unavailable */ }
-const pluginTopReserve = ref(storedTop)
-const pluginTopSettled = ref(!storedTop)
+let storedTop: string | null = null
+try { storedTop = localStorage.getItem(PLUGIN_TOP_KEY) } catch { /* storage unavailable */ }
+const firstVisit = storedTop === null
+const pluginTopReserve = ref(Number(storedTop) || 0)
+const pluginTopSettled = ref(!pluginTopReserve.value)
+const holdPage = ref(firstVisit)
+const boot = usePluginBoot()
 let topRO: ResizeObserver | undefined
 let topTimer: ReturnType<typeof setTimeout> | undefined
 onMounted(() => {
   const el = pluginTop.value
-  if (!el) return
-  const settle = () => { pluginTopSettled.value = true; pluginTopReserve.value = 0 }
+  if (!el) { holdPage.value = false; return }
+  const barHeight = () => Math.max(0, ...Array.from(el.children).map(c => (c as HTMLElement).offsetHeight || 0))
+  const remember = (h: number) => { try { localStorage.setItem(PLUGIN_TOP_KEY, String(h)) } catch { /* storage unavailable */ } }
+  const settle = () => {
+    clearTimeout(topTimer)
+    pluginTopSettled.value = true
+    pluginTopReserve.value = 0
+    holdPage.value = false
+  }
   topTimer = setTimeout(() => {
     // no bar drew in time (plugin removed?): stop reserving space for it
-    if (!el.children.length) { try { localStorage.removeItem(PLUGIN_TOP_KEY) } catch { /* storage unavailable */ } }
+    remember(el.children.length ? barHeight() : 0)
     settle()
-  }, 2500)
-  topRO = new ResizeObserver(() => {
-    const h = Math.max(0, ...Array.from(el.children).map(c => (c as HTMLElement).offsetHeight || 0))
+  }, firstVisit ? 3000 : 2500)
+  const check = () => {
+    const h = barHeight()
     if (h >= 20) {
-      try { localStorage.setItem(PLUGIN_TOP_KEY, String(h)) } catch { /* storage unavailable */ }
-      clearTimeout(topTimer)
+      remember(h)
       settle()
+    } else if (holdPage.value && !el.children.length && !boot.value.panelsPending && !boot.value.scripts) {
+      // every plugin script has run and none drew a bar (give a late one a moment to insert itself)
+      setTimeout(() => {
+        if (el.children.length || !holdPage.value) return
+        remember(0)
+        settle()
+      }, 150)
     }
-  })
+  }
+  topRO = new ResizeObserver(check)
   topRO.observe(el)
   new MutationObserver(() => Array.from(el.children).forEach(c => topRO?.observe(c))).observe(el, { childList: true })
+  watch(() => [boot.value.panelsPending, boot.value.scripts], check, { immediate: true })
 })
 onBeforeUnmount(() => { topRO?.disconnect(); clearTimeout(topTimer) })
 
@@ -347,7 +369,7 @@ const version = computed(() => info.value?.server?.release_version)
         <div class="flex w-full flex-col gap-1">
           <RhConnection :collapsed="collapsed" />
           <UButton
-            v-if="!admin"
+            v-if="guestFooter"
             :label="collapsed ? undefined : t('Sign in as admin')"
             icon="i-lucide-lock-keyhole"
             color="neutral"
@@ -358,7 +380,7 @@ const version = computed(() => info.value?.server?.release_version)
             @click="loginOpen = true"
           />
           <UButton
-            v-if="!admin"
+            v-if="guestFooter"
             :label="collapsed ? undefined : t('Classic interface')"
             icon="i-lucide-history"
             color="neutral"
@@ -399,7 +421,7 @@ const version = computed(() => info.value?.server?.release_version)
 
     <UDashboardSearch v-model:open="searchOpen" :groups="searchGroups" :fuse="searchFuse" :color-mode="false" :placeholder="t('Search pages, settings, pilots and heats…')" />
 
-    <div class="flex min-w-0 flex-1 flex-col">
+    <div class="flex min-w-0 flex-1 flex-col" :class="holdPage ? 'invisible' : ''">
       <div
         v-if="restartRequired && admin && !restartSnoozed"
         class="flex shrink-0 items-center gap-3 border-b border-amber-300/60 bg-amber-100 px-4 py-2 text-sm text-amber-950 dark:border-amber-400/20 dark:bg-amber-400/15 dark:text-amber-100"
@@ -461,19 +483,5 @@ const version = computed(() => info.value?.server?.release_version)
       </template>
     </UModal>
 
-    <ClientOnly>
-      <Teleport to="body">
-        <UButton
-          v-if="unread || messagesOpen"
-          class="fixed right-4 z-40 rounded-full shadow-lg"
-          :class="route.path === '/' && admin ? 'bottom-24 lg:bottom-4' : 'bottom-4'"
-          color="neutral"
-          variant="solid"
-          icon="i-lucide-bell"
-          :label="String(unread)"
-          @click="messagesOpen = true"
-        />
-      </Teleport>
-    </ClientOnly>
   </UDashboardGroup>
 </template>

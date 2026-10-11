@@ -61,6 +61,7 @@ const columns = computed(() => Object.entries(current.value.cols).map(([key, hea
           <UButton icon="i-lucide-chevron-left" color="neutral" variant="ghost" to="/settings/data" :aria-label="t('Data & Backups')" />
         </template>
         <template #right>
+          <RhBell />
           <UButton color="neutral" variant="ghost" icon="i-lucide-refresh-cw" :loading="loading" :aria-label="t('Refresh')" @click="load" />
         </template>
       </UDashboardNavbar>

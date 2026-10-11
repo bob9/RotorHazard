@@ -253,7 +253,7 @@ function onSeek(time: number) {
 
 // ---- Auto Adjust: the server suggests EnterAt/ExitAt from this run's RSSI history ----
 const autoAdjusting = ref(false)
-const canAutoAdjust = computed(() => !!props.data && marshalType.value !== MARSHAL_TYPE.PASS_PEAK_ONLY
+const canAutoAdjust = computed(() => !!props.data && marshalType.value !== MARSHAL_TYPE.PASS_PEAK_ONLY && hasHistory.value
   && (props.pilotraceId != null || (props.seat !== null && props.seat !== undefined)))
 function autoAdjust() {
   if (!canAutoAdjust.value) return
@@ -385,16 +385,19 @@ defineExpose({ dirty, recalc, reset: load, setEnter, setExit })
             :label="discardLabel || t('Discard Changes')"
             :aria-label="discardLabel || t('Discard Changes')"
             :ui="{ label: 'hidden sm:inline' }"
-            class="ml-auto sm:ml-0"
+            class="ml-auto disabled:text-dimmed sm:ml-0"
             :disabled="!data || (!dirty && !discardWhenClean)"
             @click="discard"
           />
+          <!-- primary only while there is something to commit; a disabled soft-orange button reads as enabled -->
           <UButton
             icon="i-lucide-check"
             :label="commitLabel || t('Commit Changes')"
             :title="dirty ? t('Unsaved changes') : undefined"
             :disabled="!data || !canCommit || !dirty"
-            :variant="dirty ? 'solid' : 'soft'"
+            :color="dirty && canCommit ? 'primary' : 'neutral'"
+            :variant="dirty && canCommit ? 'solid' : 'ghost'"
+            class="disabled:text-dimmed"
             @click="commit"
           />
         </div>
@@ -415,7 +418,7 @@ defineExpose({ dirty, recalc, reset: load, setEnter, setExit })
             <UFormField :label="t('ExitAt')" size="sm" class="sm:w-28">
               <UInputNumber :model-value="exitAt" :min="0" :max="255" size="sm" :disabled="!data" @update:model-value="setExit" />
             </UFormField>
-            <UTooltip v-if="marshalType !== MARSHAL_TYPE.PASS_PEAK_ONLY" :text="t('Suggest EnterAt and ExitAt from this race\'s RSSI history')">
+            <UTooltip v-if="marshalType !== MARSHAL_TYPE.PASS_PEAK_ONLY" :text="!data || hasHistory ? t('Suggest EnterAt and ExitAt from this race\'s RSSI history') : t('No RSSI history was recorded for this race')">
               <UButton
                 color="neutral"
                 variant="outline"

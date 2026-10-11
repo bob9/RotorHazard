@@ -23,8 +23,9 @@ watch(guest, (g) => {
 const S = rh.state
 const status = computed<number>(() => S.race_status?.race_status ?? 0)
 // until the timer has sent the race, heat and seats, show placeholders rather than a
-// made-up Practice race with a live Start button
-const loaded = computed(() => !!(S.race_status && S.current_heat && S.frequency_data && S.heat_data))
+// made-up Practice race with a live Start button (the class and format complete the race
+// card: arriving later they would widen it and push the seats down)
+const loaded = computed(() => !!(S.race_status && S.current_heat && S.frequency_data && S.heat_data && S.class_data && S.format_data))
 const isReady = computed(() => loaded.value && status.value === RACE_STATUS.READY)
 
 // phones: the sticky action bar repeats the clock only when the race card's clock is off screen
@@ -244,6 +245,42 @@ function commitMarshal(c: any) {
 }
 
 // hotkeys (classic: z start, x stop, c save, v discard, space = primary action, alt+n manual lap)
+
+// Plugin widgets in the dock (Auto Marshalling, Gate Walkthrough...) are drawn by their own
+// scripts after the page. Keep last visit's dock height in reserve, and show the widgets once
+// they have stopped moving, so they don't nudge each other and the tools below into place.
+const DOCK_KEY = 'rh.pluginDockHeight'
+const dock = useTemplateRef<HTMLElement>('dock')
+let storedDock = 0
+try { storedDock = Number(localStorage.getItem(DOCK_KEY)) || 0 } catch { /* storage unavailable */ }
+const dockReserve = ref(storedDock)
+const dockSettled = ref(false)
+let dockRO: ResizeObserver | undefined
+let dockQuiet: ReturnType<typeof setTimeout> | undefined
+let dockCap: ReturnType<typeof setTimeout> | undefined
+watch(dock, (el) => {
+  dockRO?.disconnect()
+  if (!el) return
+  const settle = () => {
+    clearTimeout(dockQuiet)
+    clearTimeout(dockCap)
+    dockSettled.value = true
+    dockReserve.value = 0
+    try { localStorage.setItem(DOCK_KEY, String(el.children.length ? el.offsetHeight : 0)) } catch { /* storage unavailable */ }
+  }
+  dockCap = setTimeout(settle, 2500)
+  dockRO = new ResizeObserver(() => {
+    if (dockSettled.value) return
+    clearTimeout(dockQuiet)
+    // settled: quiet for a moment, at the remembered height (or with nothing to show)
+    dockQuiet = setTimeout(() => {
+      if (el.children.length && el.offsetHeight >= dockReserve.value - 4) settle()
+    }, 400)
+  })
+  dockRO.observe(el)
+  new MutationObserver(() => Array.from(el.children).forEach(c => dockRO?.observe(c))).observe(el, { childList: true })
+})
+onBeforeUnmount(() => { dockRO?.disconnect(); clearTimeout(dockQuiet); clearTimeout(dockCap) })
 function onKey(e: KeyboardEvent) {
   const el = e.target as HTMLElement
   if (!admin.value || el?.closest('input, textarea, [contenteditable], [role="dialog"], [role="listbox"]')) return
@@ -274,6 +311,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     <template #header>
       <UDashboardNavbar :title="t('Race')">
         <template #right>
+          <RhBell />
           <RhAudioToggle />
         </template>
       </UDashboardNavbar>
@@ -286,7 +324,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         <UEmpty icon="i-lucide-lock-keyhole" :title="t('Sign in to run races')" :description="t('Race control is available to the event admin.')" :actions="[{ label: t('Watch live'), to: '/live' }]" />
       </div>
       <div v-else-if="!loaded" class="mx-auto w-full max-w-[1600px] space-y-6 p-4 sm:p-6" aria-busy="true">
-        <USkeleton class="h-44 w-full rounded-3xl sm:h-52" />
+        <!-- the race card's height with a typical heat (one row on desktop, stacked below lg) -->
+        <USkeleton class="h-[268px] w-full rounded-3xl sm:h-[288px] lg:h-[188px]" />
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <USkeleton v-for="i in 4" :key="i" class="h-56 rounded-2xl" />
         </div>
@@ -478,7 +517,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         </div>
 
         <!-- classic-page plugins (Gate Walkthrough Calibration, Auto Marshalling...) append their panels here -->
-        <div id="rh-plugin-dock" class="flex flex-wrap gap-3 empty:hidden" />
+        <div
+          id="rh-plugin-dock"
+          ref="dock"
+          class="flex flex-wrap gap-3"
+          :class="[dockReserve ? '' : 'empty:hidden', dockSettled ? '' : '[&>*]:invisible']"
+          :style="dockReserve ? { minHeight: `${dockReserve}px` } : undefined"
+        />
 
         <RhRaceTools />
       </div>

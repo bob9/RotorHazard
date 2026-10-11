@@ -58,8 +58,11 @@ export default defineNuxtPlugin((nuxtApp) => {
   const HOST_PAGES = ['run', 'settings', 'format', 'marshal', 'results']
   const loaderSrcs = new Map<string, Set<string>>()
   const loaded = new Set<string>()
+  const boot = usePluginBoot()
+  const answered = new Set<string>()
   rh.on('ui', (d: any) => {
     if (!d?.page || !HOST_PAGES.includes(d.page)) return
+    answered.add(d.page)
     for (const panel of d.panels || []) {
       for (const m of panel.markdowns || []) {
         for (const match of String(m.desc || '').matchAll(/<script[^>]*\ssrc=["']([^"']+)["'][^>]*>\s*<\/script>/gi)) {
@@ -71,12 +74,16 @@ export default defineNuxtPlugin((nuxtApp) => {
             if (!document.querySelector(`script[src="${src}"]`)) {
               const el = document.createElement('script')
               el.src = src
+              boot.value.scripts++
+              el.onload = el.onerror = () => { boot.value.scripts = Math.max(0, boot.value.scripts - 1) }
               document.head.appendChild(el)
             }
           }
         }
       }
     }
+    // every host page has listed its panels: any site-wide script is known (and counted) by now
+    if (answered.size === HOST_PAGES.length) boot.value.panelsPending = false
   }, { global: true })
   // start the plugin panel store first, so the replies to this request are kept
   usePluginUI()

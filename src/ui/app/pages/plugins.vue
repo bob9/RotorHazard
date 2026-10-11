@@ -328,6 +328,7 @@ function initials(name: string) {
     <template #header>
       <UDashboardNavbar :title="t('Plugins')">
         <template #right>
+          <RhBell />
           <UButton
             v-if="tab === 'discover'"
             color="neutral"

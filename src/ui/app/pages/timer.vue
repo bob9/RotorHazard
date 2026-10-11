@@ -102,6 +102,7 @@ const tabs = computed(() => [
     <template #header>
       <UDashboardNavbar :title="t('Timer')">
         <template #right>
+          <RhBell />
           <div v-if="admin" class="flex items-center gap-2">
             <span class="hidden text-sm text-muted sm:inline">{{ t('Profile') }}</span>
             <USelect :model-value="S.node_tuning?.current_profile" :items="profiles" class="w-44" @update:model-value="(v: any) => rh.emit('set_profile', { profile: v })" />

@@ -52,6 +52,19 @@ const current = computed(() => groups.value.flat().find(s => route.path === s.to
 const atIndex = computed(() => route.path.replace(/\/+$/, '') === '/settings')
 const locked = computed(() => admin.value === false && current.value && !current.value.guest)
 
+// the bar above a section names it only once the section's own large heading has scrolled away
+const heading = useTemplateRef<HTMLElement>('heading')
+const headingVisible = ref(true)
+let headingIO: IntersectionObserver | undefined
+watch(heading, (el) => {
+  headingIO?.disconnect()
+  headingVisible.value = true
+  if (!el || typeof IntersectionObserver === 'undefined') return
+  headingIO = new IntersectionObserver(([e]) => { headingVisible.value = !!e?.isIntersecting })
+  headingIO.observe(el)
+})
+onBeforeUnmount(() => headingIO?.disconnect())
+
 useHead(() => ({ title: current.value ? `${current.value.label} · ${t('Settings')}` : t('Settings') }))
 </script>
 
@@ -68,7 +81,11 @@ useHead(() => ({ title: current.value ? `${current.value.label} · ${t('Settings
       :ui="{ body: 'gap-6 lg:gap-5 p-4 sm:p-6 lg:p-3' }"
     >
       <template #header>
-        <UDashboardNavbar :title="t('Settings')" />
+        <UDashboardNavbar :title="t('Settings')">
+          <template #right>
+            <RhBell class="lg:hidden" />
+          </template>
+        </UDashboardNavbar>
       </template>
 
       <template #body>
@@ -108,8 +125,12 @@ useHead(() => ({ title: current.value ? `${current.value.label} · ${t('Settings
     <!-- selected section -->
     <UDashboardPanel id="settings-content" :class="atIndex ? 'max-lg:hidden' : ''">
       <template #header>
-        <!-- the open section's name, so the bar above it is never empty -->
-        <UDashboardNavbar :title="current?.label || ''" :toggle="false" :ui="{ left: 'gap-1' }">
+        <!-- the open section's name appears here once its large heading has scrolled out of view -->
+        <UDashboardNavbar
+          :title="current?.label || ''"
+          :toggle="false"
+          :ui="{ left: 'gap-1', title: `transition-opacity duration-200 ${current && headingVisible ? 'opacity-0' : 'opacity-100'}` }"
+        >
           <template #leading>
             <UButton
               to="/settings"
@@ -119,6 +140,9 @@ useHead(() => ({ title: current.value ? `${current.value.label} · ${t('Settings
               class="-ms-2.5 lg:hidden"
               :label="t('Settings')"
             />
+          </template>
+          <template #right>
+            <RhBell />
           </template>
         </UDashboardNavbar>
       </template>
@@ -130,7 +154,7 @@ useHead(() => ({ title: current.value ? `${current.value.label} · ${t('Settings
               <UIcon :name="current.icon" class="size-6" />
             </span>
             <div class="min-w-0">
-              <h1 class="font-display text-2xl font-semibold tracking-tight text-highlighted sm:text-[28px]">
+              <h1 ref="heading" class="font-display text-2xl font-semibold tracking-tight text-highlighted sm:text-[28px]">
                 {{ current.label }}
               </h1>
               <p class="mt-0.5 text-sm text-muted">
