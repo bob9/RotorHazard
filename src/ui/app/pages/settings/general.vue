@@ -160,7 +160,7 @@ rh.on('admin_creds_defaulted', (d: any) => {
         </RhRow>
       </RhGroup>
 
-      <RhGroup :title="t('Appearance')" :footer="t('Appearance applies to this device only.')">
+      <RhGroup id="appearance" :title="t('Appearance')" :footer="t('Appearance applies to this device only.')">
         <div class="grid grid-cols-3 gap-3 p-4">
           <button
             v-for="a in appearances"

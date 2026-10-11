@@ -74,6 +74,10 @@ const advanceItems = computed(() => [
 ])
 const classLocked = ref(false)
 watch(cls, (c) => { classLocked.value = !!c?.locked }, { immediate: true })
+// a locked setting reads as plain text, not as a greyed-out control that looks editable
+function itemLabel(items: any[], value: any) {
+  return items.flat().find((i: any) => i?.value === value)?.label ?? '—'
+}
 
 const deleteClassOpen = ref(false)
 const rankSettingsOpen = ref(false)
@@ -96,6 +100,14 @@ function openGenerator() {
   gen.output = sel.value !== 'none' && classHeats.value.length === 0 ? Number(sel.value) : 'new'
   genOpen.value = true
 }
+// ?generate=1 (from search or the class-complete prompt) opens the generator once the
+// class and the generator list are known
+const router = useRouter()
+watch([() => route.query.generate, () => sel.value, () => generators.value.length], ([g, s, n]) => {
+  if (!g || !s || !n || !admin.value) return
+  openGenerator()
+  router.replace({ query: { ...route.query, generate: undefined } })
+}, { immediate: true })
 const generating = ref(false)
 function generate() {
   generating.value = true
@@ -213,13 +225,24 @@ const navItems = computed(() => [
               />
             </header>
 
-            <RhGroup :title="t('Class Settings')" :footer="classLocked ? t('This class has saved races. Unlock it to change the format, ranking or round type.') : undefined">
+            <UAlert
+              v-if="classLocked"
+              icon="i-lucide-lock"
+              color="neutral"
+              variant="subtle"
+              :title="t('Format, ranking and round type are locked')"
+              :description="t('This class has saved races. Unlock it to change the format, ranking or round type.')"
+              :actions="admin ? [{ label: t('Unlock'), icon: 'i-lucide-lock-open', color: 'neutral', variant: 'outline', onClick: () => { classLocked = false } }] : undefined"
+            />
+            <RhGroup :title="t('Class Settings')">
               <RhRow :label="t('Race Format')" :description="t('Races in this class always use this format.')">
-                <USelect :model-value="cls.format || 0" :items="formatItems" class="w-full sm:w-64" :disabled="!admin || classLocked" @update:model-value="(v: any) => alterClass({ class_format: v })" />
+                <span v-if="classLocked" class="flex items-center gap-1.5 text-sm text-highlighted"><UIcon name="i-lucide-lock" class="size-3.5 text-dimmed" />{{ itemLabel(formatItems, cls.format || 0) }}</span>
+                <USelect v-else :model-value="cls.format || 0" :items="formatItems" class="w-full sm:w-64" :disabled="!admin || classLocked" @update:model-value="(v: any) => alterClass({ class_format: v })" />
               </RhRow>
               <RhRow :label="t('Ranking')" :description="rankMethod ? t('How pilots are ranked for the class result.') : t('Ranked by the race format\'s win condition.')">
                 <div class="flex w-full gap-2 sm:w-auto">
-                  <USelect :model-value="cls.win_condition || '__format__'" :items="rankItems" class="w-full sm:w-64" :disabled="!admin || classLocked" @update:model-value="(v: any) => alterClass({ win_condition: v === '__format__' ? '' : v })" />
+                  <span v-if="classLocked" class="flex items-center gap-1.5 text-sm text-highlighted"><UIcon name="i-lucide-lock" class="size-3.5 text-dimmed" />{{ itemLabel(rankItems, cls.win_condition || '__format__') }}</span>
+                  <USelect v-else :model-value="cls.win_condition || '__format__'" :items="rankItems" class="w-full sm:w-64" :disabled="!admin || classLocked" @update:model-value="(v: any) => alterClass({ win_condition: v === '__format__' ? '' : v })" />
                   <UButton v-if="rankMethod?.settings?.length" icon="i-lucide-settings-2" color="neutral" variant="outline" :aria-label="t('Settings')" :disabled="!admin" @click="rankSettingsOpen = true" />
                 </div>
               </RhRow>
@@ -227,7 +250,8 @@ const navItems = computed(() => [
                 <UInputNumber :model-value="cls.rounds || 0" :min="0" class="w-36" :disabled="!admin" @update:model-value="(v: any) => alterClass({ rounds: v })" />
               </RhRow>
               <RhRow :label="t('Round Type')">
-                <USelect :model-value="cls.round_type || 0" :items="roundTypeItems" class="w-full sm:w-64" :disabled="!admin || classLocked" @update:model-value="(v: any) => alterClass({ round_type: v })" />
+                <span v-if="classLocked" class="flex items-center gap-1.5 text-sm text-highlighted"><UIcon name="i-lucide-lock" class="size-3.5 text-dimmed" />{{ itemLabel(roundTypeItems, cls.round_type || 0) }}</span>
+                <USelect v-else :model-value="cls.round_type || 0" :items="roundTypeItems" class="w-full sm:w-64" :disabled="!admin || classLocked" @update:model-value="(v: any) => alterClass({ round_type: v })" />
               </RhRow>
               <RhRow :label="t('Advance Heat')" :description="t('When the Race page moves on to the next heat after saving.')">
                 <USelect :model-value="cls.heat_advance_type ?? 1" :items="advanceItems" class="w-full sm:w-64" :disabled="!admin" @update:model-value="(v: any) => alterClass({ heat_advance_type: v })" />

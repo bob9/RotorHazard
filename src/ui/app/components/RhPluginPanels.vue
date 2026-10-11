@@ -17,10 +17,14 @@ rh.load([{ type: 'ui', value: props.page }])
 // fields named "_…" are plugin-internal state (e.g. "_gate_cal_boot_run"), not settings
 const visible = (fields?: any[]) => (fields || []).filter(f => !String(f?.name ?? '').startsWith('_'))
 
-// guests see only a panel's Markdown: fields and quick buttons act on the timer
+// Guests see only pure-Markdown panels. A panel built around fields or quick buttons acts
+// on the timer, and its text alone ("Press Refresh to load…") makes no sense without
+// them: keep it mounted (its scripts still run) but hidden.
+const hasControls = (p: any) => !!(visible(p.settings).length || visible(p.fn_binds).length || p.quickbuttons?.length)
 const panels = computed(() => panelsFor(props.page)
   .map((p: any) => ({
     ...p,
+    guestHidden: admin.value !== true && hasControls(p),
     settings: admin.value === true ? visible(p.settings) : [],
     fn_binds: admin.value === true ? visible(p.fn_binds) : [],
     quickbuttons: admin.value === true ? (p.quickbuttons || []) : []
@@ -80,7 +84,7 @@ function isBlankPanel(p: any) {
     </h2>
     <RhGroup
       v-for="p in panels"
-      v-show="!isBlankPanel(p)"
+      v-show="!isBlankPanel(p) && !p.guestHidden"
       :id="`panel-${p.panel.name}`"
       :key="p.panel.name"
       :title="t(p.panel.label)"

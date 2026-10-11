@@ -34,6 +34,8 @@ const props = withDefaults(defineProps<{
   canCommit?: boolean
   commitLabel?: string
   discardLabel?: string
+  /** Discard also closes the editor (Race page), so it stays available with nothing changed */
+  discardWhenClean?: boolean
   /** the graph height in px */
   graphHeight?: number
 }>(), { canCommit: true, color: '#3b82f6', formatId: null, seat: null, commitLabel: undefined, discardLabel: undefined, graphHeight: 280 })
@@ -212,7 +214,8 @@ const regions = computed(() => {
 const markers = computed(() => rows.value.map(r => ({
   time: props.startTime + r.lap.lap_time_stamp / 1000,
   deleted: r.lap.deleted,
-  label: r.num === null ? undefined : String(r.num),
+  // lap 0 is the holeshot, labelled HS as on the race cards and results
+  label: r.num === null ? undefined : r.num === 0 ? 'HS' : String(r.num),
   active: r.i === selected.value,
   ...(!isPassPeak.value && r.lap.crossingStart && r.lap.crossingEnd ? { start: r.lap.crossingStart, end: r.lap.crossingEnd } : {})
 })))
@@ -348,14 +351,14 @@ defineExpose({ dirty, recalc, reset: load, setEnter, setExit })
             :aria-label="discardLabel || t('Discard Changes')"
             :ui="{ label: 'hidden sm:inline' }"
             class="ml-auto sm:ml-0"
-            :disabled="!data"
+            :disabled="!data || (!dirty && !discardWhenClean)"
             @click="discard"
           />
           <UButton
             icon="i-lucide-check"
             :label="commitLabel || t('Commit Changes')"
             :title="dirty ? t('Unsaved changes') : undefined"
-            :disabled="!data || !canCommit"
+            :disabled="!data || !canCommit || !dirty"
             :variant="dirty ? 'solid' : 'soft'"
             @click="commit"
           />
@@ -481,7 +484,7 @@ defineExpose({ dirty, recalc, reset: load, setEnter, setExit })
                 @click="select(r.i)"
               >
                 <td class="px-3 py-2 font-semibold sm:pl-5" :class="r.lap.deleted ? '' : 'text-highlighted'">
-                  {{ r.num ?? '–' }}
+                  {{ r.num === 0 ? 'HS' : (r.num ?? '–') }}
                 </td>
                 <td class="px-3 py-2 text-right" :class="r.lap.deleted ? 'line-through' : ''">
                   {{ fmtStamp(r.lap.lap_time_stamp) }}

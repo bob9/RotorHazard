@@ -173,22 +173,25 @@ watch(heats, () => {
   classToCheck.value = null
   const cls = classes.value.find(c => c.id === cid)
   const rounds = Number(cls?.rounds) || 0
-  if (!rounds || classesAnnounced.has(cid)) return
   const classHeats = heats.value.filter(h => h.class_id === cid)
-  const done = cls.round_type === 1
+  const done = !!rounds && (cls.round_type === 1
     ? !classHeats.some(h => h.active !== false)
-    : racedRounds(saved) === rounds && classHeats.filter(h => h.active !== false).every(h => racedRounds(h) >= rounds)
-  if (!done) return
+    : classHeats.filter(h => h.active !== false).every(h => racedRounds(h) >= rounds))
+  // with every heat raced, the server moves the Race page to Practice: say why, every time
+  const toPractice = (currentHeatId.value ?? 0) === 0
+  if (!done || (classesAnnounced.has(cid) && !toPractice)) return
   classesAnnounced.add(cid)
   toast.add({
     title: `${cls.displayname}: ${t('all rounds raced')}`,
-    description: t('Review the results, or generate heats for the next stage.'),
+    description: toPractice
+      ? t('No heats are left to race in this class, so the Race page switched to Practice.')
+      : t('Review the results, or generate heats for the next stage.'),
     icon: 'i-lucide-flag',
     color: 'primary',
     duration: 15000,
     actions: [
       { label: t('Results'), color: 'neutral', variant: 'outline', onClick: () => { navigateTo('/results') } },
-      { label: t('Generate Heats'), color: 'neutral', variant: 'outline', onClick: () => { navigateTo({ path: '/heats', query: { class: String(cid) } }) } }
+      { label: t('Generate Heats'), color: 'neutral', variant: 'outline', onClick: () => { navigateTo({ path: '/heats', query: { class: String(cid), generate: '1' } }) } }
     ]
   })
 })
@@ -564,6 +567,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             :can-commit="!!heatNodes[marshalSeat]?.pilot_id"
             :graph-height="240"
             @commit="commitMarshal"
+            discard-when-clean
             @discard="marshalSeat = null"
           />
         </template>

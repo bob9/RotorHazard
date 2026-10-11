@@ -87,7 +87,9 @@ const settingsIndex = computed(() => admin.value
   ? [
       { label: t('Frequencies'), description: t('Timer'), icon: 'i-lucide-radio', to: '/timer', keywords: 'frequency frequencies channel channels band raceband vtx video node nodes imd preset' },
       { label: t('Sensor Tuning'), description: t('Timer'), icon: 'i-lucide-activity', to: '/timer', keywords: 'tuning enterat exitat rssi calibration signal gate threshold' },
-      { label: t('Race duration and scoring'), description: t('Formats'), icon: 'i-lucide-timer', to: '/formats', keywords: 'duration length time clock minutes staging tones win condition laps scoring holeshot' },
+      { label: t('Race duration and scoring'), description: t('Formats'), icon: 'i-lucide-timer', to: '/formats', keywords: 'duration length time clock minutes staging tones win condition laps scoring holeshot hole shot grace period prestage first crossing staggered start laps to win team co-op points random staging' },
+      { label: t('Generate Heats'), description: t('Heats'), icon: 'i-lucide-wand-sparkles', to: '/heats?generate=1', keywords: 'heat generator generate heats bracket ladder seed seeding random qualifying finals' },
+      { label: t('Appearance'), description: t('Settings'), icon: 'i-lucide-sun-moon', to: '/settings/general#appearance', keywords: 'dark mode light mode theme night colour color scheme appearance' },
       { label: t('Minimum Lap Time'), description: t('Race'), icon: 'i-lucide-gauge', to: '/#min-lap', keywords: 'min lap minimum short laps ignore crossings' },
       { label: t('Pilots'), description: t('Callsign, name, team and color'), icon: 'i-lucide-users', to: '/pilots', keywords: 'pilot callsign name team color colour phonetic add pilot' },
       ...(info.value?.led_enabled || info.value?.led_events_enabled ? [{ label: t('LEDs'), description: t('Settings'), icon: 'i-lucide-lightbulb', to: '/settings/leds', keywords: 'led leds lights strip panel brightness color colour effects' }] : []),
@@ -142,14 +144,16 @@ const searchGroups = computed(() => [
     items: [...raceItems.value, ...eventItems.value, ...systemItems.value, ...pluginItems.value]
       .map(i => ({ label: i.label, icon: i.icon, to: i.to as string }))
   },
-  ...(settingsIndex.value.length ? [{ id: 'settings', label: t('Settings'), items: [...settingsIndex.value, ...pluginIndex.value] }] : []),
+  ...(settingsIndex.value.length ? [{ id: 'settings', label: t('Settings'), items: settingsIndex.value }] : []),
+  // plugin settings come after the timer's own, so they never crowd out a core match
+  ...(pluginIndex.value.length ? [{ id: 'plugin-settings', label: t('Plugin settings'), items: pluginIndex.value }] : []),
   ...(dataIndex.value.length ? [{ id: 'event', label: t('Event'), items: dataIndex.value, ignoreFilter: false }] : []),
   {
     id: 'actions',
     label: t('Actions'),
     items: [
-      { label: colorMode.value === 'dark' ? t('Light appearance') : t('Dark appearance'), icon: colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon', onSelect: () => { colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark' } },
-      { label: t('Classic interface'), icon: 'i-lucide-history', to: '/interface/classic', external: true, target: '_self' },
+      { label: colorMode.value === 'dark' ? t('Light appearance') : t('Dark appearance'), icon: colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon', keywords: 'dark mode light mode theme night', onSelect: () => { colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark' } },
+      { label: t('Classic interface'), icon: 'i-lucide-history', to: classicHref.value, external: true, target: '_self' },
       { label: t('Documentation'), icon: 'i-lucide-book-open', to: '/docs?d=README.md', external: true, target: '_blank' },
       ...(admin.value ? [{ label: t('Restart server'), icon: 'i-lucide-rotate-cw', onSelect: () => { restartOpen.value = true } }] : [])
     ]
@@ -192,6 +196,52 @@ const restartSnoozed = ref(false)
 const { restartServer } = useMessages()
 
 // Ctrl/Cmd+K is bound by UDashboardSearch itself
+
+// 'Classic interface' opens the classic page matching this one
+const CLASSIC_FOR: [string, string][] = [
+  ['/live', '/current'], ['/marshal', '/marshal'], ['/results', '/results'], ['/event', '/event'],
+  ['/pilots', '/event'], ['/heats', '/event'], ['/formats', '/format'], ['/timer', '/settings'],
+  ['/settings/plugins', '/streams'], ['/settings', '/settings'], ['/plugins', '/plugins']
+]
+const classicHref = computed(() => {
+  if (route.path === '/') return '/interface/classic?to=/run'
+  const match = CLASSIC_FOR.find(([app]) => route.path === app || route.path.startsWith(app + '/'))
+  return match ? `/interface/classic?to=${encodeURIComponent(match[1])}` : '/interface/classic'
+})
+
+
+// A plugin bar at the top (e.g. Telemetry) arrives after the app and first draws as a thin
+// strip: keep last visit's height in reserve and show the bar once it has drawn properly,
+// so the page doesn't jump. The height is a per-device convenience.
+const pluginTop = ref<HTMLElement | null>(null)
+const PLUGIN_TOP_KEY = 'rh.pluginTopHeight'
+let storedTop = 0
+try { storedTop = Number(localStorage.getItem(PLUGIN_TOP_KEY)) || 0 } catch { /* storage unavailable */ }
+const pluginTopReserve = ref(storedTop)
+const pluginTopSettled = ref(!storedTop)
+let topRO: ResizeObserver | undefined
+let topTimer: ReturnType<typeof setTimeout> | undefined
+onMounted(() => {
+  const el = pluginTop.value
+  if (!el) return
+  const settle = () => { pluginTopSettled.value = true; pluginTopReserve.value = 0 }
+  topTimer = setTimeout(() => {
+    // no bar drew in time (plugin removed?): stop reserving space for it
+    if (!el.children.length) { try { localStorage.removeItem(PLUGIN_TOP_KEY) } catch { /* storage unavailable */ } }
+    settle()
+  }, 2500)
+  topRO = new ResizeObserver(() => {
+    const h = Math.max(0, ...Array.from(el.children).map(c => (c as HTMLElement).offsetHeight || 0))
+    if (h >= 20) {
+      try { localStorage.setItem(PLUGIN_TOP_KEY, String(h)) } catch { /* storage unavailable */ }
+      clearTimeout(topTimer)
+      settle()
+    }
+  })
+  topRO.observe(el)
+  new MutationObserver(() => Array.from(el.children).forEach(c => topRO?.observe(c))).observe(el, { childList: true })
+})
+onBeforeUnmount(() => { topRO?.disconnect(); clearTimeout(topTimer) })
 
 const logoUrl = useRuntimeConfig().app.baseURL + 'rh-icon.svg'
 const version = computed(() => info.value?.server?.release_version)
@@ -267,7 +317,7 @@ const version = computed(() => info.value?.server?.release_version)
             block
             :square="collapsed"
             class="justify-start"
-            to="/interface/classic"
+            :to="classicHref"
             external
             target="_self"
           />
@@ -275,7 +325,7 @@ const version = computed(() => info.value?.server?.release_version)
             v-else
             :items="[
               [{ label: t('About RotorHazard'), icon: 'i-lucide-info', onSelect: () => { aboutOpen = true } },
-               { label: t('Classic interface'), icon: 'i-lucide-history', to: '/interface/classic', external: true, target: '_self' },
+               { label: t('Classic interface'), icon: 'i-lucide-history', to: classicHref, external: true, target: '_self' },
                { label: t('Documentation'), icon: 'i-lucide-book-open', to: '/docs?d=README.md', external: true, target: '_blank' }],
               [{ label: colorMode.value === 'dark' ? t('Light appearance') : t('Dark appearance'), icon: colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon', onSelect: () => { colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark' } }],
               ...(info?.auth_required ? [[{ label: t('Sign out'), icon: 'i-lucide-log-out', onSelect: logout }]] : [])
@@ -320,7 +370,13 @@ const version = computed(() => info.value?.server?.release_version)
         :title="restarting ? t('Server is restarting…') : t('Connection to the timer lost. Reconnecting…')"
       />
       <!-- bars that classic-page plugins add to <body> (classic-bridge.client.ts) -->
-      <div id="rh-plugin-top" class="empty:hidden shrink-0 max-w-full overflow-x-auto" />
+      <div
+        id="rh-plugin-top"
+        ref="pluginTop"
+        class="shrink-0 max-w-full overflow-x-auto"
+        :style="pluginTopReserve ? { minHeight: `${pluginTopReserve}px` } : undefined"
+        :class="[pluginTopReserve ? '' : 'empty:hidden', pluginTopSettled ? '' : '[&>*]:invisible']"
+      />
       <slot />
     </div>
 

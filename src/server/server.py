@@ -512,6 +512,7 @@ def render_index():
     return render_template('home.html')
 
 INTERFACE_COOKIE = 'rh_interface'
+CLASSIC_PAGES = ('/run', '/current', '/marshal', '/results', '/event', '/format', '/settings', '/streams', '/plugins')
 
 def preferred_interface():
     '''Interface opened at '/': this browser's own choice, else the timer's default.'''
@@ -525,7 +526,11 @@ def set_interface(choice):
     '''Switches this browser to the web app ('app') or the classic interface ('classic').'''
     if choice not in ('app', 'classic') or (choice == 'app' and not webapp_available()):
         abort(404)
-    response = redirect("/app/" if choice == 'app' else "/classic", code=302)
+    target = "/app/" if choice == 'app' else "/classic"
+    # ?to= opens the matching classic page (the app maps its own page); known pages only
+    if choice == 'classic' and request.args.get('to') in CLASSIC_PAGES:
+        target = request.args.get('to')
+    response = redirect(target, code=302)
     response.set_cookie(INTERFACE_COOKIE, choice, max_age=60*60*24*365*5, samesite='Lax')
     return response
 

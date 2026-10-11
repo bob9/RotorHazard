@@ -16,7 +16,7 @@ onMounted(() => runScripts(descEl.value))
     :is="to ? NuxtLink : 'div'"
     :to="to"
     class="flex gap-x-4 gap-y-2 px-4 py-3 min-h-12"
-    :class="[stacked ? 'flex-col' : inline ? 'flex-row items-center' : 'flex-col sm:flex-row sm:items-center', to ? 'hover:bg-elevated/60 transition-colors' : '']"
+    :class="[stacked ? 'flex-col' : inline || to ? 'flex-row items-center' : 'flex-col sm:flex-row sm:items-center', to ? 'hover:bg-elevated/60 transition-colors' : '']"
   >
     <div v-if="label || description || $slots.label" class="flex min-w-0 flex-1 items-center gap-3">
       <UIcon v-if="icon" :name="icon" class="size-5 shrink-0 text-muted" />

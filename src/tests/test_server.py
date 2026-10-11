@@ -323,6 +323,19 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(server.RHAPI.API_VERSION_MINOR, 8)
         self.assertEqual(server.RHAPI.__, server.RHAPI.language.__)
 
+    def test_classic_interface_link_opens_matching_page(self):
+        # call the view in a request context: a real request would end Flask's setup
+        # phase and stop later tests registering blueprints
+        def target(to):
+            with server.APP.test_request_context('/interface/classic', query_string={'to': to}):
+                resp = server.set_interface('classic')
+                self.assertEqual(resp.status_code, 302)
+                return resp.headers['Location']
+        self.assertTrue(target('/marshal').endswith('/marshal'))
+        # unknown or external targets fall back to the classic home page
+        for bad in ('https://example.com/', '//example.com', '/hardwarelog'):
+            self.assertTrue(target(bad).endswith('/classic'), bad)
+
     def test_interface_api_add_kept(self):
         # an interface a plugin adds while loading must survive the server's interface setup
         import MockInterface

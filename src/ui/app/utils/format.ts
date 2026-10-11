@@ -47,3 +47,10 @@ export const WIN_CONDITIONS = [
   { value: 5, label: 'Most Laps Only' },
   { value: 6, label: 'Most Laps Only with Overtime' }
 ]
+
+/** The server's "2026-10-11 00:45:34.159" race start, as a short local date and time. */
+export function formatStartTime(s?: string | null) {
+  if (!s) return ''
+  const d = new Date(String(s).replace(' ', 'T'))
+  return Number.isNaN(d.getTime()) ? String(s) : d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+}

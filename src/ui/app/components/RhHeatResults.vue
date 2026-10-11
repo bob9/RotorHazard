@@ -33,7 +33,7 @@ function visibleLaps(node: any) {
       >
         <div class="min-w-0">
           <span class="font-medium text-highlighted">{{ t('Round') }} {{ r.id }}</span>
-          <span class="ml-2 text-sm text-muted">{{ r.start_time_formatted }}</span>
+          <span class="ml-2 text-sm text-muted">{{ formatStartTime(r.start_time_formatted) }}</span>
           <span class="ml-2 hidden text-sm text-dimmed sm:inline">· {{ r.format_name }}</span>
         </div>
         <UIcon name="i-lucide-chevron-down" class="size-4 text-muted transition-transform" :class="openRound === r.id ? 'rotate-180' : ''" />

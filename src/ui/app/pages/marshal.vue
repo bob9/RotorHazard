@@ -191,12 +191,7 @@ watch(() => pilotrace.value?.pilotrace_id, loadRace, { immediate: true })
 watch(() => rh.status.connected, (c) => { if (c && pilotrace.value && !dirty.value) loadRace() })
 
 const format = computed(() => formats.value.find(f => f.id === round.value?.format_id) || null)
-const startedAt = computed(() => {
-  const s = round.value?.start_time_formatted
-  if (!s) return ''
-  const d = new Date(String(s).replace(' ', 'T'))
-  return Number.isNaN(d.getTime()) ? s : d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
-})
+const startedAt = computed(() => formatStartTime(round.value?.start_time_formatted))
 
 function commit(c: MarshalCommit) {
   const pr = pilotrace.value

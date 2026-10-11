@@ -31,10 +31,24 @@ useHead({ title })
 const frame = ref<HTMLIFrameElement | null>(null)
 const loading = ref(true)
 const nonce = ref(0)
-watch(url, () => { loading.value = true })
+// a plugin page that fails (missing template, crash) would show the server's raw
+// traceback in the frame: check its status first and say so plainly instead
+const failedStatus = ref<number | null>(null)
+async function checkPage() {
+  failedStatus.value = null
+  if (!url.value) return
+  try {
+    const r = await fetch(url.value, { method: 'HEAD', credentials: 'same-origin' })
+    if (r.status >= 500 || r.status === 404) failedStatus.value = r.status
+  } catch {
+    // network trouble: let the frame show what it can
+  }
+}
+watch([url, nonce], () => { loading.value = true; checkPage() }, { immediate: true })
 
 function reload() {
   loading.value = true
+  checkPage()
   try {
     frame.value?.contentWindow?.location.reload()
   } catch {
@@ -74,7 +88,19 @@ function reload() {
 
     <template #body>
       <!-- plugin pages carry their own (usually light) styling: show them as an inset sheet -->
-      <div v-if="url" class="relative min-h-0 flex-1 bg-elevated/40">
+      <div v-if="url && failedStatus" class="flex flex-1 items-center justify-center p-6">
+        <UEmpty
+          icon="i-lucide-file-warning"
+          :title="t('This plugin page failed to load')"
+          :description="`${t('The timer answered with an error')} (${failedStatus}). ${t('Check the plugin, or its log entries in Settings › System.')}`"
+          :actions="[
+            { label: t('Open in new tab'), icon: 'i-lucide-external-link', to: url, target: '_blank', external: true, color: 'neutral', variant: 'subtle' },
+            { label: t('Manage Plugins'), icon: 'i-lucide-puzzle', to: '/plugins', color: 'neutral', variant: 'subtle' }
+          ]"
+          variant="naked"
+        />
+      </div>
+      <div v-else-if="url" class="relative min-h-0 flex-1 bg-elevated/40">
         <div v-if="loading" class="absolute inset-x-0 top-0 z-10">
           <UProgress size="2xs" animation="carousel" />
         </div>

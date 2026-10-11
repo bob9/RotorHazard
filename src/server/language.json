@@ -997,7 +997,13 @@
 			"Fill this seat with a pilot, or from a heat or class result": "Diesen Platz mit einem Piloten oder aus einem Heat- bzw. Klassenergebnis besetzen",
 			"Plugin": "Plugin",
 			"Race times adjusted for: {0} · Round {1} / {2}": "Rennzeiten angepasst für: {0} · Runde {1} / {2}",
-			"Open-source plugins from the community, free to use at any event.": "Open-Source-Plugins aus der Community, kostenlos für jedes Event."
+			"Open-source plugins from the community, free to use at any event.": "Open-Source-Plugins aus der Community, kostenlos für jedes Event.",
+			"Check the plugin, or its log entries in Settings › System.": "Prüfe das Plugin oder seine Protokolleinträge unter Einstellungen › System.",
+			"Format, ranking and round type are locked": "Format, Wertung und Rundentyp sind gesperrt",
+			"No heats are left to race in this class, so the Race page switched to Practice.": "In dieser Klasse sind keine Heats mehr zu fliegen, daher ist die Rennseite auf Training umgeschaltet.",
+			"Plugin settings": "Plugin-Einstellungen",
+			"The timer answered with an error": "Der Timer hat mit einem Fehler geantwortet",
+			"This plugin page failed to load": "Diese Plugin-Seite konnte nicht geladen werden"
 		}
 	},
 	"es": {
@@ -2118,7 +2124,13 @@
 			"Fill this seat with a pilot, or from a heat or class result": "Asigna este puesto a un piloto o desde el resultado de una manga o clase",
 			"Plugin": "Plugin",
 			"Race times adjusted for: {0} · Round {1} / {2}": "Tiempos de carrera ajustados para: {0} · Ronda {1} / {2}",
-			"Open-source plugins from the community, free to use at any event.": "Plugins de código abierto de la comunidad, gratis para cualquier evento."
+			"Open-source plugins from the community, free to use at any event.": "Plugins de código abierto de la comunidad, gratis para cualquier evento.",
+			"Check the plugin, or its log entries in Settings › System.": "Revisa el plugin o sus entradas de registro en Ajustes › Sistema.",
+			"Format, ranking and round type are locked": "El formato, la clasificación y el tipo de ronda están bloqueados",
+			"No heats are left to race in this class, so the Race page switched to Practice.": "No quedan mangas por correr en esta clase, así que la página de carrera cambió a Práctica.",
+			"Plugin settings": "Ajustes de plugins",
+			"The timer answered with an error": "El cronometrador respondió con un error",
+			"This plugin page failed to load": "No se pudo cargar esta página del plugin"
 		}
 	},
 	"fr-be": {
@@ -3033,7 +3045,13 @@
 			"Fill this seat with a pilot, or from a heat or class result": "Attribuer cette place à un pilote, ou d’après le résultat d’une série ou d’une classe",
 			"Plugin": "Plugin",
 			"Race times adjusted for: {0} · Round {1} / {2}": "Temps de course ajustés pour : {0} · Tour {1} / {2}",
-			"Open-source plugins from the community, free to use at any event.": "Des plugins open source de la communauté, gratuits pour tout événement."
+			"Open-source plugins from the community, free to use at any event.": "Des plugins open source de la communauté, gratuits pour tout événement.",
+			"Check the plugin, or its log entries in Settings › System.": "Vérifiez le plugin ou ses entrées de journal dans Paramètres › Système.",
+			"Format, ranking and round type are locked": "Le format, le classement et le type de tour sont verrouillés",
+			"No heats are left to race in this class, so the Race page switched to Practice.": "Il ne reste aucune série à courir dans cette classe : la page Course est passée en Entraînement.",
+			"Plugin settings": "Paramètres des plugins",
+			"The timer answered with an error": "Le chronométreur a répondu par une erreur",
+			"This plugin page failed to load": "Impossible de charger cette page du plugin"
 		}
 	},
 	"it": {
@@ -4422,7 +4440,13 @@
 			 "Fill this seat with a pilot, or from a heat or class result": "Assegna questo posto a un pilota o dal risultato di una batteria o classe",
 			 "Plugin": "Plugin",
 			 "Race times adjusted for: {0} · Round {1} / {2}": "Tempi di gara aggiustati per: {0} · Round {1} / {2}",
-			 "Open-source plugins from the community, free to use at any event.": "Plugin open source della community, gratuiti per qualsiasi evento."
+			 "Open-source plugins from the community, free to use at any event.": "Plugin open source della community, gratuiti per qualsiasi evento.",
+			 "Check the plugin, or its log entries in Settings › System.": "Controlla il plugin o le sue voci di registro in Impostazioni › Sistema.",
+			 "Format, ranking and round type are locked": "Formato, classifica e tipo di round sono bloccati",
+			 "No heats are left to race in this class, so the Race page switched to Practice.": "Non restano batterie da correre in questa classe, quindi la pagina Gara è passata a Prove.",
+			 "Plugin settings": "Impostazioni plugin",
+			 "The timer answered with an error": "Il cronometro ha risposto con un errore",
+			 "This plugin page failed to load": "Impossibile caricare questa pagina del plugin"
 		}
 	},
 	"nl-be": {
@@ -5327,7 +5351,13 @@
 			"Fill this seat with a pilot, or from a heat or class result": "Vul deze plek met een piloot, of vanuit een heat- of klasseresultaat",
 			"Plugin": "Plugin",
 			"Race times adjusted for: {0} · Round {1} / {2}": "Racetijden aangepast voor: {0} · Ronde {1} / {2}",
-			"Open-source plugins from the community, free to use at any event.": "Open-source plugins uit de community, gratis voor elk evenement."
+			"Open-source plugins from the community, free to use at any event.": "Open-source plugins uit de community, gratis voor elk evenement.",
+			"Check the plugin, or its log entries in Settings › System.": "Controleer de plugin of de logregels onder Instellingen › Systeem.",
+			"Format, ranking and round type are locked": "Format, rangschikking en rondetype zijn vergrendeld",
+			"No heats are left to race in this class, so the Race page switched to Practice.": "Er zijn geen heats meer te vliegen in deze klasse, dus de racepagina is overgeschakeld naar Training.",
+			"Plugin settings": "Plugin-instellingen",
+			"The timer answered with an error": "De timer antwoordde met een fout",
+			"This plugin page failed to load": "Deze pluginpagina kon niet worden geladen"
 		}
 	},
 	"pl": {
@@ -6269,7 +6299,13 @@
 			"Fill this seat with a pilot, or from a heat or class result": "Obsadź to miejsce pilotem lub według wyniku wyścigu albo klasy",
 			"Plugin": "Wtyczka",
 			"Race times adjusted for: {0} · Round {1} / {2}": "Czasy wyścigu dostosowane dla: {0} · Runda {1} / {2}",
-			"Open-source plugins from the community, free to use at any event.": "Wtyczki open source od społeczności, bezpłatne na każde wydarzenie."
+			"Open-source plugins from the community, free to use at any event.": "Wtyczki open source od społeczności, bezpłatne na każde wydarzenie.",
+			"Check the plugin, or its log entries in Settings › System.": "Sprawdź wtyczkę lub jej wpisy w dzienniku w Ustawienia › System.",
+			"Format, ranking and round type are locked": "Format, ranking i typ rundy są zablokowane",
+			"No heats are left to race in this class, so the Race page switched to Practice.": "W tej klasie nie ma już wyścigów do rozegrania, więc strona wyścigu przełączyła się na Trening.",
+			"Plugin settings": "Ustawienia wtyczek",
+			"The timer answered with an error": "Timer odpowiedział błędem",
+			"This plugin page failed to load": "Nie udało się wczytać tej strony wtyczki"
 		}
 	},
 	"ja-JP": {
@@ -7508,7 +7544,13 @@
 			"Fill this seat with a pilot, or from a heat or class result": "この枠をパイロット、またはヒート／クラスの結果から割り当てます",
 			"Plugin": "プラグイン",
 			"Race times adjusted for: {0} · Round {1} / {2}": "レースタイム調整: {0} · ラウンド {1} / {2}",
-			"Open-source plugins from the community, free to use at any event.": "コミュニティによるオープンソースのプラグイン。どのイベントでも無料で使えます。"
+			"Open-source plugins from the community, free to use at any event.": "コミュニティによるオープンソースのプラグイン。どのイベントでも無料で使えます。",
+			"Check the plugin, or its log entries in Settings › System.": "プラグイン、または 設定 › システム のログを確認してください。",
+			"Format, ranking and round type are locked": "フォーマット、順位付け、ラウンドの種類はロックされています",
+			"No heats are left to race in this class, so the Race page switched to Practice.": "このクラスで走るヒートが残っていないため、レースページは練習に切り替わりました。",
+			"Plugin settings": "プラグインの設定",
+			"The timer answered with an error": "タイマーがエラーを返しました",
+			"This plugin page failed to load": "このプラグインページを読み込めませんでした"
 		}
 	},
 	"zh-CN": {
@@ -9039,7 +9081,13 @@
 			"Fill this seat with a pilot, or from a heat or class result": "为此位置指定飞手，或按分组/组别结果填充",
 			"Plugin": "插件",
 			"Race times adjusted for: {0} · Round {1} / {2}": "比赛时间调整: {0} · 回合 {1} / {2}",
-			"Open-source plugins from the community, free to use at any event.": "来自社区的开源插件，任何赛事均可免费使用。"
+			"Open-source plugins from the community, free to use at any event.": "来自社区的开源插件，任何赛事均可免费使用。",
+			"Check the plugin, or its log entries in Settings › System.": "请检查该插件，或在 设置 › 系统 中查看其日志。",
+			"Format, ranking and round type are locked": "赛制、排名方式和回合类型已锁定",
+			"No heats are left to race in this class, so the Race page switched to Practice.": "此组别已没有待比赛的分组，因此比赛页面已切换到练习。",
+			"Plugin settings": "插件设置",
+			"The timer answered with an error": "计时器返回了错误",
+			"This plugin page failed to load": "无法加载此插件页面"
 		}
 	},
 	"ru": {
@@ -10346,7 +10394,13 @@
             "Fill this seat with a pilot, or from a heat or class result": "Назначьте на это место пилота или по результату заезда либо класса",
             "Plugin": "Плагин",
             "Race times adjusted for: {0} · Round {1} / {2}": "Данные вылета поправлены для: {0} · Раунд {1} / {2}",
-            "Open-source plugins from the community, free to use at any event.": "Плагины с открытым исходным кодом от сообщества, бесплатно для любого мероприятия."
+            "Open-source plugins from the community, free to use at any event.": "Плагины с открытым исходным кодом от сообщества, бесплатно для любого мероприятия.",
+            "Check the plugin, or its log entries in Settings › System.": "Проверьте плагин или его записи в журнале в разделе Настройки › Система.",
+            "Format, ranking and round type are locked": "Формат, ранжирование и тип раунда заблокированы",
+            "No heats are left to race in this class, so the Race page switched to Practice.": "В этом классе не осталось заездов, поэтому страница гонки переключилась на тренировку.",
+            "Plugin settings": "Настройки плагинов",
+            "The timer answered with an error": "Таймер ответил ошибкой",
+            "This plugin page failed to load": "Не удалось загрузить эту страницу плагина"
         }
 	}
 }
