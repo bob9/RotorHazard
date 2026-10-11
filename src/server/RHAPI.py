@@ -87,6 +87,9 @@ class UserInterfaceAPI():
     def blueprint_add(self, blueprint):
         return self._racecontext.rhui.add_blueprint(blueprint)
 
+    def register_nav_link(self, name, label, url, admin_only=False, order=0):
+        return self._racecontext.rhui.register_nav_link(name, label, url, admin_only, order)
+
     # Messaging
     def message_speak(self, message):
         self._racecontext.rhui.emit_phonetic_text(message)

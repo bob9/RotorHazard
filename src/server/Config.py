@@ -108,6 +108,7 @@ class Config:
         self.config['UI']['timeFormat'] = '{m}:{s}.{d}'
         self.config['UI']['timeFormatPhonetic'] = '{m} {s}.{d}'
         self.config['UI']['pilotSort'] = 'name'
+        self.config['UI']['classicInterface'] = False   # True: '/' opens the classic interface instead of the web app
 
         # timing
         self.config['TIMING']['startThreshLowerAmount'] = '0'

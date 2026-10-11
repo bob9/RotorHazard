@@ -2,6 +2,7 @@
 # RHUI Helper
 # Provides abstraction for user interface
 #
+import inspect
 from time import monotonic_ns
 from typing import List, Any  # @UnusedImport
 from dataclasses import dataclass, asdict  # @UnresolvedImport
@@ -30,6 +31,20 @@ logger = logging.getLogger(__name__)
 
 from FlaskAppObj import APP
 APP.app_context().push()
+
+def _view_renders_page(view):
+    '''True if a Flask view function returns an HTML page (renders a template or
+    builds HTML markup), judged from the names and string constants its code uses.'''
+    try:
+        code = inspect.unwrap(view).__code__
+    except Exception:
+        return False
+    if 'jsonify' in code.co_names:
+        return False
+    if {'render_template', 'render_template_string'} & set(code.co_names):
+        return True
+    markers = ('<html', '<!doctype', '<body', '<h1')
+    return any(isinstance(c, str) and any(m in c.lower() for m in markers) for c in code.co_consts)
 
 class UIFieldType(Enum):
     TEXT = "text"
@@ -141,6 +156,8 @@ class RHUI():
         self._ui_fn_bindings = []
         self._quickbuttons = []
         self._markdowns = []
+        self._blueprints = []
+        self._nav_links = []
         self._UI_server_messages = {}
 
     # Pilot Attributes
@@ -344,6 +361,61 @@ class RHUI():
     # Blueprints
     def add_blueprint(self, blueprint):
         self._app.register_blueprint(blueprint)
+        self._blueprints.append(blueprint.name)
+
+    # Navigation links to plugin pages (shown in the web app's sidebar)
+    def register_nav_link(self, name, label, url, admin_only=False, order=0):
+        for idx, link in enumerate(self._nav_links):
+            if link['name'] == name:
+                self._nav_links[idx] = {'name': name, 'label': label, 'url': url,
+                                        'admin_only': admin_only, 'order': order}
+                return self._nav_links
+        self._nav_links.append({'name': name, 'label': label, 'url': url,
+                                'admin_only': admin_only, 'order': order})
+        return self._nav_links
+
+    @property
+    def nav_links(self):
+        return self._nav_links
+
+    def plugin_pages(self):
+        '''Pages plugins added with blueprints: explicit nav links, plus parameterless
+        GET routes of plugin blueprints that render a template (JSON/API endpoints and
+        routes with URL parameters are left out), named after their plugin.'''
+        pages = [dict(link, source='nav_link') for link in self._nav_links]
+        linked = {link['url'] for link in self._nav_links}
+        plugins = [p for p in (getattr(self._racecontext.serverstate, 'plugins', None) or []) if p.module]
+        found = []
+        for rule in self._app.url_map.iter_rules():
+            bp_name = rule.endpoint.rsplit('.', 1)[0] if '.' in rule.endpoint else None
+            if bp_name not in self._blueprints or rule.endpoint.endswith('.static'):
+                continue
+            if 'GET' not in (rule.methods or ()) or rule.arguments or rule.rule in linked:
+                continue
+            view = self._app.view_functions.get(rule.endpoint)
+            if not _view_renders_page(view):
+                continue
+            module_name = getattr(inspect.unwrap(view), '__module__', '') or ''
+            plugin = next((p for p in plugins if module_name == p.module.__name__ or
+                           module_name.startswith(p.module.__name__ + '.')), None)
+            plugin_label = (plugin.meta or {}).get('name') if plugin else None
+            found.append((rule, plugin_label))
+            linked.add(rule.rule)
+        # a plugin's main (shortest) page takes the plugin's name; others add their last path segment
+        main_page = {}
+        for rule, plugin_label in found:
+            if plugin_label not in main_page or len(rule.rule) < len(main_page[plugin_label]):
+                main_page[plugin_label] = rule.rule
+        for rule, plugin_label in found:
+            label = plugin_label
+            if plugin_label and main_page[plugin_label] != rule.rule:
+                segment = rule.rule.rstrip('/').rsplit('/', 1)[-1]
+                label = f"{plugin_label} · {segment.replace('_', ' ').replace('-', ' ').title()}"
+            # discovered pages are listed for admins only; plugins can list a page for
+            #  everyone with register_nav_link(..., admin_only=False)
+            pages.append({'name': rule.endpoint, 'label': label, 'url': rule.rule,
+                          'admin_only': True, 'order': 100, 'source': 'blueprint'})
+        return sorted(pages, key=lambda p: p['order'])
 
     # Socket generics
     def socket_listen(self, message, handler, requires_auth=False):
@@ -509,6 +581,8 @@ class RHUI():
                 plugin_info['enabled'] = plugin.enabled
                 plugin_info['loaded'] = plugin.loaded
                 plugin_info['load_issue'] = plugin.load_issue
+                # deleted since the server started (still loaded until a restart)
+                plugin_info['removed'] = not os.path.isdir(os.path.join(plugin.dir, 'plugins', plugin.name))
 
                 if manager_local_data and plugin.name in manager_local_data:
                     plugin_info['update_status'] = manager_local_data[plugin.name]['update_status']
@@ -583,6 +657,10 @@ class RHUI():
                 for item in items:
                     if section not in config_vals:
                         config_vals[section] = {}
+                    # stored credentials are only disclosed through the
+                    #  credential-guarded 'get_admin_password' handler
+                    if section == 'SECRETS' and item != 'ADMIN_USERNAME':
+                        continue
 
                     config_vals[section][item] = self._racecontext.serverconfig.get_item(section, item)
                     if section == 'GENERAL' and item == 'SECONDARIES' and config_vals[section][item]:
@@ -594,6 +672,8 @@ class RHUI():
 
         if ('nobroadcast' in params):
             emit('config_update', emit_payload)
+        elif params.get('skip_sid'):
+            self._socket.emit('config_update', emit_payload, skip_sid=params['skip_sid'])
         else:
             self._socket.emit('config_update', emit_payload)
 

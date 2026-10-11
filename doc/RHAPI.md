@@ -172,7 +172,7 @@ Register a UI panel and assign it to a page. Returns all panels as `list[UIPanel
 
 - `name` (string): Internal identifier for this panel
 - `label` (string): Text used as visible panel header
-- `page` (string): Page to add panel to; one of "format", "settings"
+- `page` (string): Page to add panel to; one of "format", "settings", "run", "marshal", "results", "streams". In the web app these appear on the Event, Settings › Plugins, Race (Plugins tab), Marshal, Results and Settings › Plugins (Streams) pages.
 - `order` _optional_ (int): Not yet implemented
 - `open` _optional_ (boolean): Whether panel is open or closed (default: `False`)
 
@@ -224,6 +224,17 @@ Add custom pages to RotorHazard's frontend with [Flask Blueprints](https://flask
 Adds a Flask Blueprint which can be used to provide access to custom pages/URLs.
 
 - `blueprint` (blueprint): Flask Blueprint object
+
+Pages served by a blueprint (GET routes without URL parameters that return HTML) are listed for admins under "Plugin Pages" in the web app's sidebar, named after the plugin. Use `ui.register_nav_link` to choose the name, or to list a page for everyone (`admin_only=False`).
+
+#### ui.register_nav_link(name, label, url, admin_only=False, order=0)
+Adds a link to one of the plugin's pages to the web app's sidebar, under "Plugin Pages". The page opens inside the web app. Re-registering a link with the same `name` replaces it.
+
+- `name` (string): Internal identifier for this link
+- `label` (string): Text shown in the sidebar
+- `url` (string): Path of the page on the timer, such as `/my-plugin/overlay`
+- _optional_ `admin_only` (boolean): Show the link only to signed-in admins
+- _optional_ `order` (int): Position among the plugin page links (lower first)
 
 ### UI Messages
 

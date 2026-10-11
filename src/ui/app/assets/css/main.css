@@ -1,0 +1,75 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@source "../../../app";
+
+@theme static {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* RotorHazard orange */
+  --color-rh-50: #fff6ed;
+  --color-rh-100: #ffead4;
+  --color-rh-200: #ffd0a8;
+  --color-rh-300: #ffae71;
+  --color-rh-400: #ff8038;
+  --color-rh-500: #fe5d11;
+  --color-rh-600: #ef4207;
+  --color-rh-700: #c63008;
+  --color-rh-800: #9d280f;
+  --color-rh-900: #7e2410;
+  --color-rh-950: #440f06;
+}
+
+:root {
+  --ui-radius: 0.3rem;
+  --ui-primary: var(--ui-color-primary-600);
+}
+.dark {
+  --ui-primary: var(--ui-color-primary-500);
+  --ui-bg: #0b0b0f;
+  --ui-bg-muted: #141418;
+  --ui-bg-elevated: #1a1a1f;
+  --ui-bg-accented: #24242a;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01";
+}
+
+.tabular { font-variant-numeric: tabular-nums; }
+
+.font-display { font-family: var(--font-display); letter-spacing: -0.022em; }
+
+/* Gentle reveal used for live data rows */
+.rh-enter-active, .rh-leave-active { transition: all .35s cubic-bezier(.2,.8,.2,1); }
+.rh-enter-from { opacity: 0; transform: translateY(-6px); }
+.rh-leave-to { opacity: 0; }
+.rh-move { transition: transform .45s cubic-bezier(.2,.8,.2,1); }
+
+/* HTML from the server and plugins (Markdown blocks, messages, descriptions) */
+.rh-prose > * + *, .rh-desc > * + * { margin-top: .6em; }
+.rh-prose a, .rh-desc a { color: var(--ui-primary); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+.rh-prose a:hover, .rh-desc a:hover { text-decoration-thickness: 2px; }
+.rh-prose h1, .rh-prose h2, .rh-prose h3, .rh-prose h4 { font-weight: 600; color: var(--ui-text-highlighted); line-height: 1.25; }
+.rh-prose h1 { font-size: 1.4em; } .rh-prose h2 { font-size: 1.25em; } .rh-prose h3 { font-size: 1.1em; }
+.rh-prose ul { list-style: disc; padding-left: 1.25em; } .rh-prose ol { list-style: decimal; padding-left: 1.25em; }
+.rh-prose li + li { margin-top: .25em; }
+.rh-prose code { font-family: var(--font-mono); font-size: .9em; background: var(--ui-bg-elevated); padding: .1em .35em; border-radius: .3em; }
+.rh-prose pre { background: var(--ui-bg-elevated); padding: .75em 1em; border-radius: .5em; overflow-x: auto; }
+.rh-prose pre code { background: none; padding: 0; }
+.rh-prose blockquote { border-left: 3px solid var(--ui-border-accented); padding-left: .9em; color: var(--ui-text-muted); }
+.rh-prose table { border-collapse: collapse; } .rh-prose td, .rh-prose th { border: 1px solid var(--ui-border); padding: .3em .6em; }
+.rh-prose strong { color: var(--ui-text-highlighted); }
+
+/* warm light-trail glow used behind hero areas when no artwork is installed */
+.rh-glow {
+  background:
+    radial-gradient(60% 50% at 15% 85%, rgb(254 93 17 / .55), transparent 70%),
+    radial-gradient(45% 40% at 85% 20%, rgb(219 39 119 / .35), transparent 70%),
+    radial-gradient(70% 60% at 60% 60%, rgb(124 58 237 / .18), transparent 70%),
+    #09090b;
+}

@@ -497,12 +497,41 @@ def shutdown_session(exception=None):
 # Routes
 #
 
+WEBAPP_DIR = os.path.join(PROGRAM_DIR, 'webapp')
+
+def webapp_available():
+    return os.path.isfile(os.path.join(WEBAPP_DIR, 'index.html'))
+
 @APP.route('/')
 def render_index():
-    '''Route to home page.'''
+    '''Route to home page (the web app when it is installed).'''
     if RaceContext.serverconfig.config_file_status == 0:
-        return redirect("/first-run", code=302)
+        return redirect("/app/welcome" if webapp_available() else "/first-run", code=302)
+    if webapp_available() and preferred_interface() == 'app':
+        return redirect("/app/", code=302)
+    return render_template('home.html')
 
+INTERFACE_COOKIE = 'rh_interface'
+
+def preferred_interface():
+    '''Interface opened at '/': this browser's own choice, else the timer's default.'''
+    choice = request.cookies.get(INTERFACE_COOKIE)
+    if choice in ('app', 'classic'):
+        return choice
+    return 'classic' if RaceContext.serverconfig.get_item('UI', 'classicInterface') is True else 'app'
+
+@APP.route('/interface/<choice>')
+def set_interface(choice):
+    '''Switches this browser to the web app ('app') or the classic interface ('classic').'''
+    if choice not in ('app', 'classic') or (choice == 'app' and not webapp_available()):
+        abort(404)
+    response = redirect("/app/" if choice == 'app' else "/classic", code=302)
+    response.set_cookie(INTERFACE_COOKIE, choice, max_age=60*60*24*365*5, samesite='Lax')
+    return response
+
+@APP.route('/classic')
+def render_classic_index():
+    '''Route to the classic interface home page.'''
     return render_template('home.html')
 
 @APP.route('/first-run')
@@ -659,6 +688,80 @@ def render_updatenodes():
 def render_plugin_manager():
     '''Route to settings page.'''
     return render_template('plugins.html')
+
+#
+# Web app (Nuxt UI single-page interface, built from src/ui into 'webapp')
+#
+
+@APP.route('/app')
+def redirect_webapp():
+    return redirect("/app/", code=302)
+
+@APP.route('/app/')
+@APP.route('/app/<path:asset_path>')
+def render_webapp(asset_path=None):
+    '''Route to the web app; unknown paths fall back to the SPA entry page.'''
+    if not webapp_available():
+        abort(404)
+    if asset_path:
+        file_path = werkzeug.security.safe_join(WEBAPP_DIR, asset_path)
+        if file_path and os.path.isfile(file_path):
+            response = send_from_directory(WEBAPP_DIR, asset_path)
+            if asset_path.startswith('_rh/'):
+                response.cache_control.max_age = 31536000
+                response.cache_control.immutable = True
+            return response
+        if asset_path.startswith('_rh/'):
+            abort(404)
+    response = send_from_directory(WEBAPP_DIR, 'index.html')
+    response.cache_control.no_store = True
+    return response
+
+@APP.route('/app-info')
+def render_webapp_info():
+    '''Server facts the web app needs before its first socket data arrives.'''
+    admin = AdminAuth.check_auth(RaceContext, request.authorization)
+    response = make_response({
+        'server': RaceContext.serverstate.template_info_dict,
+        'admin': admin,
+        'auth_required': bool(RaceContext.serverconfig.get_item('SECRETS', 'ADMIN_USERNAME') or
+                              RaceContext.serverconfig.get_item('SECRETS', 'ADMIN_PASSWORD')),
+        'first_run': RaceContext.serverconfig.config_file_status == 0,
+        'debug': bool(RaceContext.serverconfig.get_item('GENERAL', 'DEBUG')),
+        'restart_required': bool(RaceContext.serverstate.restart_required),
+        'num_nodes': RaceContext.race.num_nodes,
+        'led_enabled': bool(RaceContext.led_manager.isEnabled() or
+                            (RaceContext.cluster and RaceContext.cluster.hasRecEventsSecondaries())),
+        'led_events_enabled': bool(RaceContext.led_manager.isEnabled()),
+        'vrx_enabled': bool(RaceContext.vrx_manager.isEnabled() if RaceContext.vrx_manager else False),
+        'cluster_has_secondaries': bool(RaceContext.cluster and RaceContext.cluster.hasSecondaries()),
+        'node_fw_updatable': admin and RaceContext.interface.get_fwupd_serial_name() is not None,
+        'is_raspberry_pi': RHUtils.is_sys_raspberry_pi(),
+        'plugin_pages': [p for p in RaceContext.rhui.plugin_pages() if admin or not p['admin_only']],
+        'event': {
+            'name': RaceContext.rhdata.get_option('eventName'),
+            'description': RaceContext.rhdata.get_option('eventDescription'),
+        },
+        'timer_name': RaceContext.serverconfig.get_item('UI', 'timerName'),
+        'timer_logo': RaceContext.serverconfig.get_item('UI', 'timerLogo'),
+    })
+    response.cache_control.no_store = True
+    return response
+
+@APP.route('/app-first-run-done', methods=['POST'])
+@requires_auth
+def webapp_first_run_done():
+    '''Marks first-run setup (done in the web app's welcome screen) as complete.'''
+    RaceContext.serverconfig.config_file_status = 1
+    return {'done': True}
+
+@APP.route('/app-auth')
+def render_webapp_auth():
+    '''Lets the web app verify admin credentials (sent as a Basic Authorization header).'''
+    if AdminAuth.check_auth(RaceContext, request.authorization):
+        return {'admin': True}
+    # no 'WWW-Authenticate' header, so the browser does not show its own prompt
+    return {'admin': False}, 401
 
 '''User's shared folder.'''
 APP.register_blueprint(Blueprint(
@@ -2698,6 +2801,9 @@ def on_set_option(data):
         'option': data['option'],
         'value': data['value'],
         })
+    # keep other displays (e.g. the event name and description) current
+    if data['option'] in ('eventName', 'eventDescription'):
+        RaceContext.rhui.emit_option_update(data['option'])
 
 @SOCKET_IO.on('set_config')
 @requires_socketio_auth
@@ -2722,6 +2828,10 @@ def on_set_config(data):
         'key': data['key'],
         'value': event_value,
         })
+    # keep other open displays current; the sender already has the value, and
+    #  secrets are never broadcast
+    if data['section'] != 'SECRETS':
+        RaceContext.rhui.emit_config_update({data['section']: [data['key']]}, skip_sid=request.sid)
 
 @SOCKET_IO.on('get_admin_password')
 @requires_socketio_credential_auth

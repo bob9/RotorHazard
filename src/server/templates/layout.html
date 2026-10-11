@@ -62,7 +62,17 @@
 		--contrast_1_high: {{ getConfig('UI', "contrast_1_high") }};
 	}
 
+	/* shown inside the web app (plugin pages): the app provides the navigation */
+	html.rh-embedded body > header,
+	html.rh-embedded body > footer { display: none; }
 	</style>
+	<script>
+		try {
+			if (window.self !== window.top && window.top.location.pathname.indexOf('/app/') === 0) {
+				document.documentElement.classList.add('rh-embedded');
+			}
+		} catch (e) { /* cross-origin parent: leave the page as it is */ }
+	</script>
 	<!-- Child template head content -->
 	{% block head %}{% endblock %}
 </head>
@@ -72,7 +82,7 @@
 		<div class="message"></div>
 	</div>
 	<header>
-		<a href="/" id="timer-name"><img src="../static/image/RotorHazard Icon.svg"> {{ getConfig('UI', 'timerName') }}</a>
+		<a href="/classic" id="timer-name"><img src="../static/image/RotorHazard Icon.svg"> {{ getConfig('UI', 'timerName') }}</a>
 		<nav id="nav-main">
 			<ul>
 				<li><a href="/event">{{ __("Event") }}</a></li>
@@ -85,6 +95,7 @@
 				<li class="extra">
 					<a href="#"><svg height="1em" xmlns="http://www.w3.org/2000/svg" viewBox="-8 0 19.7 16"><title>{{ __("Extended Menu") }}</title><circle fill="currentColor" cx="1.85" cy="1.85" r="1.85"/><circle fill="currentColor" cx="1.85" cy="8" r="1.85"/><circle fill="currentColor" cx="1.85" cy="14.15" r="1.85"/></svg></a>
 					<ul>
+						<li><a href="/interface/app">{{ __("New Interface") }}</a></li>
 						<li><a href="/docs?d=README.md">{{ __("Documentation") }}</a></li>
 
 						<li><a href="/streams">{{ __("Stream Displays") }}</a></li>
