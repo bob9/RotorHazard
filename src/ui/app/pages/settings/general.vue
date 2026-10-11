@@ -123,6 +123,8 @@ function setPassword(v: string) {
   passwordKey.value++
   // Enter and the following change event both commit the same value
   if (!value || (value === lastPassword.value && Date.now() - lastPassword.at < 2000)) return
+  // a browser filling in the saved password is not a change
+  if (value === readCredentials()?.password) return
   lastPassword = { value, at: Date.now() }
   cfg.set('SECRETS', 'ADMIN_PASSWORD', value)
   storeCredentials({ password: value })

@@ -126,6 +126,7 @@ const rangeDisplay = computed(() => {
       v-bind="numericAttrs"
       class="w-full sm:w-64"
       :ui="type === 'password' ? { trailing: 'pe-1' } : undefined"
+      :autocomplete="type === 'password' ? 'new-password' : undefined"
       @change="commit()"
       @keydown.enter="commit()"
     >
