@@ -3,7 +3,6 @@ import os
 import sys
 import tempfile
 import unittest
-from unittest import mock
 import gevent
 from datetime import datetime
 from flask.blueprints import Blueprint
@@ -163,17 +162,6 @@ class ServerTest(unittest.TestCase):
                 return
         self.fail('No matching format in response')
 
-    def test_alter_other_race_format_keeps_current(self):
-        self.client.emit('load_data', {'load_types': ['format_data']})
-        fmt_ids = [f['id'] for f in self.get_response('format_data')['formats']]
-        self.client.emit('set_race_format', {'race_format': fmt_ids[0]})
-        self.client.emit('alter_race_format', {'format_id': fmt_ids[1], 'race_time_sec': 77})
-        self.client.emit('load_data', {'load_types': ['race_status']})
-        self.assertEqual(self.get_response('race_status')['race_format_id'], fmt_ids[0])
-        self.client.emit('alter_race_format', {'format_id': fmt_ids[0], 'race_time_sec': 78})
-        self.client.emit('load_data', {'load_types': ['race_status']})
-        self.assertEqual(self.get_response('race_status')['race_format_id'], fmt_ids[0])
-
     def test_delete_race_format(self):
         self.client.emit('load_data', {'load_types': ['format_data']})
         resp = self.get_response('format_data')
@@ -323,136 +311,6 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(server.RHAPI.API_VERSION_MAJOR, 1)
         self.assertEqual(server.RHAPI.API_VERSION_MINOR, 9)
         self.assertEqual(server.RHAPI.__, server.RHAPI.language.__)
-
-    def test_classic_interface_link_opens_matching_page(self):
-        # call the view in a request context: a real request would end Flask's setup
-        # phase and stop later tests registering blueprints
-        def target(to):
-            with server.APP.test_request_context('/interface/classic', query_string={'to': to}):
-                resp = server.set_interface('classic')
-                self.assertEqual(resp.status_code, 302)
-                return resp.headers['Location']
-        self.assertTrue(target('/marshal').endswith('/marshal'))
-        self.assertTrue(target('/updatenodes').endswith('/updatenodes'))
-        # the doc being read carries over; other pages drop any query
-        self.assertTrue(target('/docs?d=User%20Guide.md').endswith('/docs?d=User%20Guide.md'))
-        self.assertTrue(target('/marshal?x=1').endswith('/marshal'))
-        # unknown or external targets fall back to the classic home page
-        for bad in ('https://example.com/', '//example.com', '/hardwarelog', '/docs/../hardwarelog'):
-            self.assertTrue(target(bad).endswith('/classic'), bad)
-
-    def test_new_interface_link_returns_to_app_page(self):
-        def target(to, cookie=None):
-            headers = {'Cookie': 'rh_app_return=' + cookie} if cookie else {}
-            with server.APP.test_request_context('/interface/app', query_string={'to': to}, headers=headers):
-                with mock.patch.object(server, 'webapp_available', return_value=True):
-                    resp = server.set_interface('app')
-                self.assertEqual(resp.status_code, 302)
-                return resp.headers['Location']
-        # the app's page for the classic page
-        self.assertTrue(target('/run').endswith('/app/'))
-        self.assertTrue(target('/current').endswith('/app/live'))
-        self.assertTrue(target('/format').endswith('/app/formats'))
-        self.assertTrue(target('/docs?d=User%20Guide.md').endswith('/app/docs?d=User%20Guide.md'))
-        # the app page that opened this classic page (still the one it was opened for)
-        self.assertTrue(target('/format', '%2Fformat%7C%2Fpilots').endswith('/app/pilots'))
-        self.assertTrue(target('/settings', '%2Fsettings%7C%2Ftimer%3Ftab%3Dtuning').endswith('/app/timer?tab=tuning'))
-        self.assertTrue(target('/run', '%2Fformat%7C%2Fpilots').endswith('/app/'))
-        # unknown, external or malformed targets: the app's home page
-        for bad in ('https://example.com/', '//example.com', '/hardwarelog', '/docs/../hardwarelog', ''):
-            self.assertTrue(target(bad).endswith('/app/'), bad)
-        for cookie in ('%2Fformat%7C%2F%2Fexample.com', '%2Fformat%7Chttps%3A%2F%2Fexample.com', '%2Fformat%7C%2Fwelcome',
-                       '%2Fformat%7C%2Fpilots%0D%0ALocation%3A%20x'):
-            self.assertTrue(target('/format', cookie).endswith('/app/formats'), cookie)
-
-    def test_interface_switch_keeps_plugin_page(self):
-        # a plugin page opens on its own in the classic interface, and framed in the app
-        pages = [{'url': '/progression'}, {'url': '/q_admin'}, {'url': 'https://example.com/x'}, {'url': '//example.com'},
-                 {'url': '/a/../hardwarelog'}, {'url': '/x\r\nLocation: y'}]
-        def target(choice, to, cookie=None):
-            headers = {'Cookie': 'rh_app_return=' + cookie} if cookie else {}
-            with server.APP.test_request_context('/interface/' + choice, query_string={'to': to}, headers=headers):
-                with mock.patch.object(server, 'webapp_available', return_value=True), \
-                        mock.patch.object(server.RaceContext.rhui, 'plugin_pages', return_value=pages):
-                    resp = server.set_interface(choice)
-                self.assertEqual(resp.status_code, 302)
-                return resp.headers['Location']
-        self.assertTrue(target('classic', '/progression').endswith('/progression'))
-        self.assertTrue(target('app', '/progression').endswith('/app/page?url=%2Fprogression'))
-        # back to the app page that opened it
-        self.assertTrue(target('app', '/progression', '%2Fprogression%7C%2Fpage%3Furl%3D%252Fprogression')
-                        .endswith('/app/page?url=%2Fprogression'))
-        # a cookie naming another (or no listed) plugin page, or anything else: the plugin page itself
-        for cookie in ('%2Fprogression%7C%2Fpage%3Furl%3D%252Fhardwarelog', '%2Fprogression%7C%2Fpage%3Furl%3Dhttps%253A%252F%252Fexample.com',
-                       '%2Fprogression%7C%2Fpage%3Furl%3D%252Fq_admin%26x%3D1', '%2Fprogression%7C%2Fpage%3Furl%3D%252F%252Fexample.com'):
-            self.assertTrue(target('app', '/progression', cookie).endswith('/app/page?url=%2Fprogression'), cookie)
-        # pages that aren't listed plain paths are never targets
-        for bad in ('/hardwarelog', 'https://example.com/x', '//example.com', '/a/../hardwarelog'):
-            self.assertTrue(target('app', bad).endswith('/app/'), bad)
-            self.assertTrue(target('classic', bad).endswith('/classic'), bad)
-        with mock.patch.object(server.RaceContext.rhui, 'plugin_pages', return_value=pages):
-            self.assertEqual(server.plugin_page_paths(), {'/progression', '/q_admin'})
-
-    def test_webapp_site_scripts(self):
-        # a loader script on three or more classic pages is a site-wide add-on (a status bar):
-        # /app-info lists it so the web app can make room for it before the panels arrive
-        rhui = server.RaceContext.rhui
-        saved = (list(rhui._ui_panels), list(rhui._markdowns))
-        try:
-            tag = '<script src="/bar/static/bar.js"></script>'
-            for page in ('run', 'marshal', 'results'):
-                rhui.register_ui_panel(f'bar_{page}', 'Bar', page)
-                rhui.register_markdown(f'bar_{page}', f'bar_md_{page}', tag)
-            rhui.register_ui_panel('one_run', 'One', 'run')
-            rhui.register_markdown('one_run', 'one_md', '<script src="/one/static/one.js"></script>')
-            self.assertEqual(server.webapp_site_scripts(), ['/bar/static/bar.js'])
-            with server.APP.test_request_context('/app-info'):
-                self.assertIn('/bar/static/bar.js', server.render_webapp_info().get_json()['site_scripts'])
-        finally:
-            rhui._ui_panels[:] = saved[0]
-            rhui._markdowns[:] = saved[1]
-
-    def test_webapp_admin_session_for_classic_pages(self):
-        # the web app signs a browser in to the classic pages with its Basic credentials;
-        # the session holds only a fingerprint of the current admin credentials
-        import base64
-        cfg = server.RaceContext.serverconfig
-        saved = (cfg.get_item('SECRETS', 'ADMIN_USERNAME'), cfg.get_item('SECRETS', 'ADMIN_PASSWORD'), cfg.config_file_status)
-        saved_key = server.APP.config.get('SECRET_KEY')
-        server.APP.config['SECRET_KEY'] = saved_key or 'test-secret-key'  # set by start() when serving
-        try:
-            cfg.set_item('SECRETS', 'ADMIN_USERNAME', 'director')
-            cfg.set_item('SECRETS', 'ADMIN_PASSWORD', 'secret-1')
-            cfg.config_file_status = 1
-            def basic(u, p):
-                return {'Authorization': 'Basic ' + base64.b64encode(f'{u}:{p}'.encode()).decode()}
-            # wrong password: no session
-            with server.APP.test_request_context('/app-classic-session', method='POST', headers=basic('director', 'nope')):
-                resp = server.webapp_classic_session()
-                self.assertEqual(resp[1], 401)
-                self.assertNotIn(server.AdminAuth.ADMIN_SESSION_KEY, server.session)
-            # right password: the session carries the fingerprint and passes the HTTP check
-            with server.APP.test_request_context('/app-classic-session', method='POST', headers=basic('director', 'secret-1')):
-                server.webapp_classic_session()
-                stored = server.session[server.AdminAuth.ADMIN_SESSION_KEY]
-                self.assertNotIn('secret-1', stored)
-            with server.APP.test_request_context('/run'):
-                self.assertFalse(server.AdminAuth.check_request_auth(server.RaceContext))
-                server.session[server.AdminAuth.ADMIN_SESSION_KEY] = stored
-                self.assertTrue(server.AdminAuth.check_request_auth(server.RaceContext))
-                # changing the admin password ends the session
-                cfg.set_item('SECRETS', 'ADMIN_PASSWORD', 'secret-2')
-                self.assertFalse(server.AdminAuth.check_request_auth(server.RaceContext))
-            # DELETE signs out
-            with server.APP.test_request_context('/app-classic-session', method='DELETE'):
-                server.session[server.AdminAuth.ADMIN_SESSION_KEY] = stored
-                server.webapp_classic_session()
-                self.assertNotIn(server.AdminAuth.ADMIN_SESSION_KEY, server.session)
-        finally:
-            cfg.set_item('SECRETS', 'ADMIN_USERNAME', saved[0])
-            cfg.set_item('SECRETS', 'ADMIN_PASSWORD', saved[1])
-            cfg.config_file_status = saved[2]
-            server.APP.config['SECRET_KEY'] = saved_key
 
     def test_interface_api_add_kept(self):
         # an interface a plugin adds while loading must survive the server's interface setup

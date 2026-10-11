@@ -54,7 +54,6 @@ import gevent.monkey
 gevent.monkey.patch_all()
 
 import io
-import re
 import os
 import sys
 import base64
@@ -65,9 +64,8 @@ import functools
 import signal
 import werkzeug
 import urllib3
-from urllib.parse import unquote, quote, parse_qs
 
-from flask import Flask, send_from_directory, request, session, make_response, Response, templating, redirect, abort, copy_current_request_context
+from flask import Flask, send_from_directory, request, make_response, Response, templating, redirect, abort, copy_current_request_context
 from flask.blueprints import Blueprint
 from flask_socketio import SocketIO, emit
 
@@ -162,10 +160,6 @@ sys.path.append(PROGRAM_DIR + '/util')
 
 APP = Flask(__name__, template_folder=PROGRAM_DIR+'/templates', static_folder=PROGRAM_DIR+'/static', static_url_path='/static')
 APP.app_context().push()
-# the session cookie can carry a web-app admin sign-in (AdminAuth.ADMIN_SESSION_KEY):
-#  keep it off cross-site requests and out of page scripts
-APP.config.setdefault('SESSION_COOKIE_SAMESITE', 'Lax')
-APP.config['SESSION_COOKIE_HTTPONLY'] = True
 
 import FlaskAppObj
 FlaskAppObj.set_flask_app(APP)
@@ -461,7 +455,7 @@ def authenticate():
 def requires_auth(f):
     @functools.wraps(f)
     def decorated_auth(*args, **kwargs):
-        if not AdminAuth.check_request_auth(RaceContext):
+        if not AdminAuth.check_auth(RaceContext, request.authorization):
             return authenticate()
         return f(*args, **kwargs)
     return decorated_auth
@@ -503,109 +497,12 @@ def shutdown_session(exception=None):
 # Routes
 #
 
-WEBAPP_DIR = os.path.join(PROGRAM_DIR, 'webapp')
-
-def webapp_available():
-    return os.path.isfile(os.path.join(WEBAPP_DIR, 'index.html'))
-
 @APP.route('/')
 def render_index():
-    '''Route to home page (the web app when it is installed).'''
+    '''Route to home page.'''
     if RaceContext.serverconfig.config_file_status == 0:
-        return redirect("/app/welcome" if webapp_available() else "/first-run", code=302)
-    if webapp_available() and preferred_interface() == 'app':
-        return redirect("/app/", code=302)
-    return render_template('home.html')
+        return redirect("/first-run", code=302)
 
-INTERFACE_COOKIE = 'rh_interface'
-CLASSIC_PAGES = ('/run', '/current', '/marshal', '/results', '/event', '/format', '/settings', '/streams', '/plugins',
-                 '/docs', '/database', '/scanner', '/vrxstatus', '/imdtabler', '/updatenodes')
-# classic pages whose query string is kept (the doc being read)
-CLASSIC_PAGES_WITH_QUERY = ('/docs',)
-
-def preferred_interface():
-    '''Interface opened at '/': this browser's own choice, else the timer's default.'''
-    choice = request.cookies.get(INTERFACE_COOKIE)
-    if choice in ('app', 'classic'):
-        return choice
-    return 'classic' if RaceContext.serverconfig.get_item('UI', 'classicInterface') is True else 'app'
-
-# classic page -> the web app's page for it ('New Interface' on a classic page)
-APP_FOR_CLASSIC = {'/run': '/', '/current': '/live', '/marshal': '/marshal', '/results': '/results', '/event': '/event',
-                   '/format': '/formats', '/settings': '/settings', '/streams': '/settings/plugins', '/plugins': '/plugins',
-                   '/docs': '/docs', '/database': '/database', '/scanner': '/scanner', '/vrxstatus': '/vrx-status',
-                   '/imdtabler': '/imdtabler', '/updatenodes': '/update-nodes'}
-# web app pages a browser may be sent back to (with their query, e.g. /timer?tab=tuning)
-APP_PAGES = set(APP_FOR_CLASSIC.values()) | {'/pilots', '/heats', '/timer', '/page'} | \
-    {'/settings/' + s for s in ('general', 'audio', 'leds', 'vrx', 'actions', 'data', 'cluster', 'system', 'plugins')}
-# set by the web app when it opens a classic page: '<classic path>|<app page>'
-APP_RETURN_COOKIE = 'rh_app_return'
-APP_PAGE_RE = re.compile(r'^(/[A-Za-z0-9/_-]*)(\?[A-Za-z0-9_.~%=&+-]*)?(#[A-Za-z0-9_.~%-]*)?$')
-
-# a plugin page's own path: plain same-origin paths only (no scheme, host, '..', query or CRLF)
-PLUGIN_PAGE_RE = re.compile(r'^/[A-Za-z0-9_-][A-Za-z0-9/_.-]*$')
-
-def plugin_page_paths():
-    '''Paths of the plugin pages the web app lists (its /page?url= viewer frames them).'''
-    try:
-        pages = RaceContext.rhui.plugin_pages()
-    except Exception:
-        return set()
-    return {p['url'] for p in pages if isinstance(p.get('url'), str) and PLUGIN_PAGE_RE.match(p['url'])
-            and '//' not in p['url'] and '..' not in p['url']}
-
-def app_plugin_page(query):
-    '''True for the query of the web app's plugin page viewer (?url=<a listed plugin page>).'''
-    params = parse_qs((query or '').lstrip('?'), keep_blank_values=True)
-    urls = params.get('url') or []
-    return set(params) == {'url'} and len(urls) == 1 and urls[0] in plugin_page_paths()
-
-def app_return_page(classic_path):
-    '''The web app page that opened this classic page (if it is still the one opened), else None.'''
-    value = unquote(request.cookies.get(APP_RETURN_COOKIE) or '')
-    opened_for, _, page = value.partition('|')
-    match = APP_PAGE_RE.match(page)
-    if opened_for == classic_path and match and match.group(1) in APP_PAGES:
-        if match.group(1) == '/page' and not app_plugin_page(match.group(2)):
-            return None
-        return page
-    return None
-
-@APP.route('/interface/<choice>')
-def set_interface(choice):
-    '''Switches this browser to the web app ('app') or the classic interface ('classic').'''
-    if choice not in ('app', 'classic') or (choice == 'app' and not webapp_available()):
-        abort(404)
-    target = "/app/" if choice == 'app' else "/classic"
-    # ?to= opens the matching page of the other interface; known pages only
-    to = request.args.get('to') or ''
-    if to.startswith('/') and not to.startswith('//'):
-        path, _, query = to.partition('?')
-        if choice == 'classic' and path in CLASSIC_PAGES:
-            target = path + ('?' + query if query and path in CLASSIC_PAGES_WITH_QUERY else '')
-        elif choice == 'app' and path in APP_FOR_CLASSIC:
-            # back to the app page that opened this classic page, else the app's page for it
-            page = app_return_page(path)
-            if not page:
-                page = APP_FOR_CLASSIC[path]
-                if query and path in CLASSIC_PAGES_WITH_QUERY and APP_PAGE_RE.match(page + '?' + query):
-                    page += '?' + query
-            target = '/app' + page
-        elif path in plugin_page_paths():
-            # a plugin page is the same page in both interfaces: on its own, or framed in the app
-            if choice == 'classic':
-                target = path
-            else:
-                target = '/app' + (app_return_page(path) or '/page?url=' + quote(path, safe=''))
-    response = redirect(target, code=302)
-    response.set_cookie(INTERFACE_COOKIE, choice, max_age=60*60*24*365*5, samesite='Lax')
-    if choice == 'app':
-        response.delete_cookie(APP_RETURN_COOKIE)
-    return response
-
-@APP.route('/classic')
-def render_classic_index():
-    '''Route to the classic interface home page.'''
     return render_template('home.html')
 
 @APP.route('/first-run')
@@ -762,161 +659,6 @@ def render_updatenodes():
 def render_plugin_manager():
     '''Route to settings page.'''
     return render_template('plugins.html')
-
-#
-# Web app (Nuxt UI single-page interface, built from src/ui into 'webapp')
-#
-
-@APP.route('/app')
-def redirect_webapp():
-    return redirect("/app/", code=302)
-
-@APP.route('/app/')
-@APP.route('/app/<path:asset_path>')
-def render_webapp(asset_path=None):
-    '''Route to the web app; unknown paths fall back to the SPA entry page.'''
-    if not webapp_available():
-        abort(404)
-    if asset_path:
-        file_path = werkzeug.security.safe_join(WEBAPP_DIR, asset_path)
-        if file_path and os.path.isfile(file_path):
-            response = send_from_directory(WEBAPP_DIR, asset_path)
-            if asset_path.startswith('_rh/'):
-                response.cache_control.max_age = 31536000
-                response.cache_control.immutable = True
-            return response
-        if asset_path.startswith('_rh/'):
-            abort(404)
-    response = send_from_directory(WEBAPP_DIR, 'index.html')
-    response.cache_control.no_store = True
-    return response
-
-# pages whose plugin panels the web app loads at start-up (classic-bridge.client.ts)
-WEBAPP_PLUGIN_HOST_PAGES = ('run', 'settings', 'format', 'marshal', 'results')
-
-def webapp_site_scripts():
-    '''Loader scripts that plugins put in panels on three or more of the classic pages, which
-    the web app runs on every page (a status bar at the top, for example). Listed in /app-info
-    so the app can make room for such a bar, and start its script, before the panels arrive.'''
-    pages = {}
-    for panel in RaceContext.rhui.ui_panels:
-        if panel.page not in WEBAPP_PLUGIN_HOST_PAGES:
-            continue
-        for md in RaceContext.rhui.get_panel_markdowns(panel.name):
-            for src in re.findall(r'<script[^>]*\ssrc=["\']([^"\']+)["\'][^>]*>\s*</script>', str(md.desc or ''), re.IGNORECASE):
-                pages.setdefault(src, set()).add(panel.page)
-    return [src for src, used_on in pages.items() if len(used_on) >= 3]
-
-@APP.route('/app-info')
-def render_webapp_info():
-    '''Server facts the web app needs before its first socket data arrives.'''
-    admin = AdminAuth.check_auth(RaceContext, request.authorization)
-    response = make_response({
-        'server': RaceContext.serverstate.template_info_dict,
-        'admin': admin,
-        'auth_required': bool(RaceContext.serverconfig.get_item('SECRETS', 'ADMIN_USERNAME') or
-                              RaceContext.serverconfig.get_item('SECRETS', 'ADMIN_PASSWORD')),
-        'first_run': RaceContext.serverconfig.config_file_status == 0,
-        'debug': bool(RaceContext.serverconfig.get_item('GENERAL', 'DEBUG')),
-        'restart_required': bool(RaceContext.serverstate.restart_required),
-        'num_nodes': RaceContext.race.num_nodes,
-        'imdtabler': bool(Use_imdtabler_jar_flag),
-        'led_enabled': bool(RaceContext.led_manager.isEnabled() or
-                            (RaceContext.cluster and RaceContext.cluster.hasRecEventsSecondaries())),
-        'led_events_enabled': bool(RaceContext.led_manager.isEnabled()),
-        'vrx_enabled': bool(RaceContext.vrx_manager.isEnabled() if RaceContext.vrx_manager else False),
-        'cluster_has_secondaries': bool(RaceContext.cluster and RaceContext.cluster.hasSecondaries()),
-        'node_fw_updatable': admin and RaceContext.interface.get_fwupd_serial_name() is not None,
-        'is_raspberry_pi': RHUtils.is_sys_raspberry_pi(),
-        'plugin_pages': [p for p in RaceContext.rhui.plugin_pages() if admin or not p['admin_only']],
-        'site_scripts': webapp_site_scripts(),
-        'event': {
-            'name': RaceContext.rhdata.get_option('eventName'),
-            'description': RaceContext.rhdata.get_option('eventDescription'),
-        },
-        'timer_name': RaceContext.serverconfig.get_item('UI', 'timerName'),
-        'timer_logo': RaceContext.serverconfig.get_item('UI', 'timerLogo'),
-    })
-    response.cache_control.no_store = True
-    return response
-
-@APP.route('/app-first-run-done', methods=['POST'])
-@requires_auth
-def webapp_first_run_done():
-    '''Marks first-run setup (done in the web app's welcome screen) as complete.'''
-    RaceContext.serverconfig.config_file_status = 1
-    return {'done': True}
-
-@APP.route('/app-docs')
-def render_webapp_docs():
-    '''Documentation for the web app: the list of docs, or one doc's Markdown (?d=),
-    preferring the interface language's translation as /docs does.'''
-    doc_base = Path(PROGRAM_DIR).parent.parent.joinpath('doc')
-    language = RaceContext.serverconfig.get_item('UI', 'currentLanguage')
-    docfile = request.args.get('d')
-    if not docfile:
-        docs = sorted(p.name for p in doc_base.glob('*.md'))
-        return {'docs': docs}
-    try:
-        doc_path = werkzeug.security.safe_join(str(doc_base), docfile)
-        if language:
-            translated_base = werkzeug.security.safe_join(str(doc_base), language)
-            translated_path = werkzeug.security.safe_join(translated_base, docfile) if translated_base else None
-            if translated_path and os.path.isfile(translated_path):
-                doc_path = translated_path
-        if doc_path and os.path.isfile(doc_path) and doc_path.endswith('.md'):
-            with io.open(doc_path, 'r', encoding="utf-8") as f:
-                return {'name': docfile, 'markdown': f.read()}
-    except Exception:
-        logger.exception("Exception reading documentation for the web app")
-    return {'error': 'not found'}, 404
-
-@APP.route('/app-node-firmware')
-@requires_auth
-def render_webapp_node_firmware():
-    '''Default node firmware source for the web app's Update Nodes page (as /updatenodes uses).'''
-    return {'src': getDefNodeFwUpdateUrl()}
-
-@APP.route('/app-database')
-@requires_auth
-def render_webapp_database():
-    '''Database tables for the web app's read-only viewer (same content as /database).'''
-    def rows(items, cols):
-        return [{c: getattr(i, c, None) for c in cols} for i in items]
-    rhdata = RaceContext.rhdata
-    return {
-        'pilots': rows(rhdata.get_pilots(), ['id', 'callsign', 'name', 'phonetic', 'team']),
-        'heats': rows(rhdata.get_heats(), ['id', 'name', 'class_id']),
-        'heat_nodes': rows(rhdata.get_heatNodes(), ['id', 'heat_id', 'node_index', 'pilot_id']),
-        'classes': rows(rhdata.get_raceClasses(), ['id', 'name', 'description', 'format_id']),
-        'races': rows(rhdata.get_savedRaceMetas(), ['id', 'round_id', 'heat_id', 'class_id', 'format_id', 'start_time_formatted']),
-        'laps': rows(rhdata.get_savedRaceLaps(), ['id', 'race_id', 'pilotrace_id', 'node_index', 'pilot_id', 'lap_time_stamp', 'lap_time', 'lap_time_formatted', 'deleted']),
-        'profiles': rows(rhdata.get_profiles(), ['id', 'name', 'description', 'frequencies', 'enter_ats', 'exit_ats']),
-        'formats': rows(rhdata.get_raceFormats(), ['id', 'name', 'unlimited_time', 'race_time_sec', 'start_delay_min_ms', 'start_delay_max_ms', 'number_laps_win', 'win_condition', 'team_racing_mode']),
-        'options': [{'option': o.option_name, 'value': o.option_value} for o in rhdata.get_options()
-                    if o.option_name not in ('secret_key',)],
-    }
-
-@APP.route('/app-classic-session', methods=['POST', 'DELETE'])
-def webapp_classic_session():
-    '''POST (with the admin's Basic Authorization header) signs this browser in to the
-    classic pages, so switching interfaces doesn't bring up the browser's login prompt;
-    DELETE signs it out again. Only a Basic header is accepted here, never the session.'''
-    if request.method == 'DELETE':
-        session.pop(AdminAuth.ADMIN_SESSION_KEY, None)
-        return {'admin': False}
-    if not AdminAuth.check_auth(RaceContext, request.authorization):
-        return {'admin': False}, 401
-    session[AdminAuth.ADMIN_SESSION_KEY] = AdminAuth.admin_fingerprint(RaceContext)
-    return {'admin': True}
-
-@APP.route('/app-auth')
-def render_webapp_auth():
-    '''Lets the web app verify admin credentials (sent as a Basic Authorization header).'''
-    if AdminAuth.check_auth(RaceContext, request.authorization):
-        return {'admin': True}
-    # no 'WWW-Authenticate' header, so the browser does not show its own prompt
-    return {'admin': False}, 401
 
 '''User's shared folder.'''
 APP.register_blueprint(Blueprint(
@@ -2540,12 +2282,9 @@ def on_alter_race_format(data):
     race_format, race_list = RaceContext.rhdata.alter_raceFormat(data)
 
     if race_format != False:
-        # editing a format other than the current one leaves the current race's format alone
-        current_format = RaceContext.race.format
-        if not current_format or getattr(current_format, 'id', None) == race_format.id:
-            RaceContext.race.format = race_format
-            # keep time fields in the current race in sync with the current race format
-            RaceContext.race.set_race_format_time_fields(RaceContext.race.format, RaceContext.race.current_heat)
+        RaceContext.race.format = race_format
+        # keep time fields in the current race in sync with the current race format
+        RaceContext.race.set_race_format_time_fields(RaceContext.race.format, RaceContext.race.current_heat)
         RaceContext.rhui.emit_format_data()
         RaceContext.rhui.emit_heat_data()
         RaceContext.rhui.emit_race_status()
@@ -2556,7 +2295,7 @@ def on_alter_race_format(data):
 
         if len(race_list):
             RaceContext.rhui.emit_result_data()
-            message = __('Alterations made to race format: {0}').format(race_format.name)
+            message = __('Alterations made to race format: {0}').format(RaceContext.race.format.name)
             RaceContext.rhui.emit_priority_message(message, False)
     else:
         RaceContext.rhui.emit_priority_message(__('Format alteration prevented by active race: Stop and save/discard laps'), False, nobroadcast=True)
@@ -2789,10 +2528,7 @@ def on_resave_laps(data):
         logger.warning('resave_laps: unable to resave pilotrace_id={0} (not found)'.format(pilotrace_id))
         return
 
-    # name the heat as the interfaces show it ("Open Class 2"), not by its database id
-    heat = RaceContext.rhdata.get_heat(heat_id)
-    heat_name = heat.display_name if heat else str(heat_id)
-    message = __('Race times adjusted for: {0} · Round {1} / {2}').format(heat_name, round_id, callsign)
+    message = __('Race times adjusted for: Heat {0} Round {1} / {2}').format(heat_id, round_id, callsign)
     RaceContext.rhui.emit_priority_message(message, False)
     logger.info(message)
 
@@ -2962,9 +2698,6 @@ def on_set_option(data):
         'option': data['option'],
         'value': data['value'],
         })
-    # keep other displays (e.g. the event name and description) current
-    if data['option'] in ('eventName', 'eventDescription'):
-        RaceContext.rhui.emit_option_update(data['option'])
 
 @SOCKET_IO.on('set_config')
 @requires_socketio_auth
@@ -2989,10 +2722,6 @@ def on_set_config(data):
         'key': data['key'],
         'value': event_value,
         })
-    # keep other open displays current; the sender already has the value, and
-    #  secrets are never broadcast
-    if data['section'] != 'SECRETS':
-        RaceContext.rhui.emit_config_update({data['section']: [data['key']]}, skip_sid=request.sid)
 
 @SOCKET_IO.on('get_admin_password')
 @requires_socketio_credential_auth
@@ -3176,10 +2905,6 @@ def get_pilotrace(data):
                 'marshal_type': pilotrace.marshal_type
             })
 
-def fw_fact(value):
-    '''A firmware fact, or None where check_bpillfw_file() fell back to "((unknown))".'''
-    return None if not value or value.startswith('((') else value
-
 @SOCKET_IO.on('check_bpillfw_file')
 @requires_socketio_auth
 @catchLogExceptionsWrapper
@@ -3222,17 +2947,8 @@ def check_bpillfw_file(data):
                   "{}: {} ({}{}: {})<br><br>". \
                       format(__("Firmware update version"), fwVerStr, fwTypStr, __("Build timestamp"), fwTimStr)
 
-        # the same facts as data, for the web app (the classic page shows the text below)
-        file_info = {
-            'size': fileSize,
-            'version': fw_fact(fwVerStr),
-            'proctype': fwRTypStr or None,
-            'build': fw_fact(fwTimStr),
-            'updatable': bool(rhInterfaceObj),
-        }
         if not rhInterfaceObj:
             infoStr = infoStr + "No updatable interfaces are available on this device";
-            SOCKET_IO.emit('upd_file_info', file_info)
             SOCKET_IO.emit('upd_set_info_text', infoStr)
         else:
             info_node = rhInterfaceObj.get_info_node_obj()
@@ -3247,16 +2963,10 @@ def check_bpillfw_file(data):
                 curRTypStr = None
                 curNodeStr = "({})".format(__("(unknown)"))
             infoStr += __("Current firmware version: ") + curNodeStr
-            file_info['current_version'] = info_node.firmware_version_str if info_node else None
-            file_info['current_build'] = info_node.firmware_timestamp_str if info_node else None
-            file_info['current_proctype'] = info_node.firmware_proctype_str if info_node else None
             if fwRTypStr and curRTypStr and fwRTypStr != curRTypStr:
                 infoStr += "<br><br><b>{}</b>: ".format(__("Warning")) + \
                             __("Firmware file processor type ({}) does not match current ({})").\
                             format(fwRTypStr, curRTypStr)
-                file_info['warning'] = __("Firmware file processor type ({}) does not match current ({})").\
-                            format(fwRTypStr, curRTypStr)
-            SOCKET_IO.emit('upd_file_info', file_info)
             SOCKET_IO.emit('upd_set_info_text', infoStr)
             SOCKET_IO.emit('upd_enable_update_button')
     except Exception as ex:
