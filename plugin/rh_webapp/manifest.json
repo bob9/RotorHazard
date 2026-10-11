@@ -1,0 +1,12 @@
+{
+    "domain": "rh_webapp",
+    "name": "RotorHazard Web App",
+    "description": "The new RotorHazard web interface (a mobile-friendly single-page app built with Nuxt UI) as a plugin: opens at the timer's address, shows every plugin's panels and pages, and keeps the classic interface one tap away.",
+    "author": "bob9 (Three Digital Llamas)",
+    "author_uri": "https://github.com/bob9",
+    "documentation_uri": "https://github.com/bob9/RotorHazard/tree/webapp-plugin/plugin",
+    "license": "RotorHazard",
+    "license_uri": "https://github.com/RotorHazard/RotorHazard/blob/main/LICENSE",
+    "version": "1.0.0",
+    "required_rhapi_version": "1.9"
+}
