@@ -3,6 +3,13 @@ const { refresh } = useAuth()
 const route = useRoute()
 onMounted(refresh)
 
+// tab titles: 'Page · Timer Name' (the timer's name alone where a page sets none)
+const { timerName } = useServerInfo()
+useHead(() => {
+  const name = timerName.value || 'RotorHazard'
+  return { titleTemplate: (title?: string) => (title && title !== 'RotorHazard' && title !== name ? `${title} · ${name}` : name) }
+})
+
 // Toasts never cover the navigation or the race controls: bottom right on wider screens
 // (above the notification bell); bottom centre on phones, above the Race page's sticky bar.
 const wide = ref(true)

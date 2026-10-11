@@ -2,6 +2,7 @@
 // Plugins manager: installed plugins, upload, community plugin directory and plugin settings.
 const rh = useRH()
 const { t } = useI18n()
+useHead({ title: computed(() => t('Plugins')) })
 const toast = useToast()
 const route = useRoute()
 const router = useRouter()
@@ -104,8 +105,25 @@ const tabs = computed(() => [
 // Server replies only with a priority message (and a plugin_repo broadcast after a successful install).
 const pending = ref<{ kind: 'install' | 'delete' | 'upload', domain: string } | null>(null)
 const changed = reactive<Record<string, 'installed' | 'deleted'>>({})
-// installed plugin descriptions are clamped to two lines until expanded
+// installed plugin descriptions are clamped to two lines until expanded; 'More' is offered
+// when a description is actually cut short (measured, so it follows the screen width)
 const expanded = reactive<Record<string, boolean>>({})
+const clamped = reactive<Record<string, boolean>>({})
+const descIds = new WeakMap<Element, string>()
+function measureDesc(el: Element) {
+  const id = descIds.get(el)
+  if (id && !expanded[id]) clamped[id] = el.scrollHeight > el.clientHeight + 1
+}
+const descRO = import.meta.client && typeof ResizeObserver !== 'undefined'
+  ? new ResizeObserver(entries => entries.forEach(e => measureDesc(e.target)))
+  : undefined
+function descRef(r: any, id: string) {
+  const el: Element | undefined = r?.$el ?? r
+  if (!(el instanceof Element) || descIds.get(el) === id) return
+  descIds.set(el, id)
+  descRO?.observe(el)
+}
+onBeforeUnmount(() => descRO?.disconnect())
 const uploadDone = ref(false)
 let pendingTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -431,8 +449,8 @@ function initials(name: string) {
                       <span v-else>{{ p.author }}</span>
                     </div>
                     <template v-if="p.description">
-                      <RhMarkdown :source="p.description" class="text-[13px] text-toned" :class="expanded[p.id] ? '' : 'line-clamp-2'" />
-                      <button v-if="p.description.length > 140" type="button" class="text-[13px] font-medium text-primary" @click="expanded[p.id] = !expanded[p.id]">
+                      <RhMarkdown :ref="(r: any) => descRef(r, p.id)" :source="p.description" class="text-[13px] text-toned" :class="expanded[p.id] ? '' : 'line-clamp-2'" />
+                      <button v-if="clamped[p.id] || expanded[p.id]" type="button" class="text-[13px] font-medium text-primary" @click="expanded[p.id] = !expanded[p.id]">
                         {{ expanded[p.id] ? t('Less') : t('More') }}
                       </button>
                     </template>

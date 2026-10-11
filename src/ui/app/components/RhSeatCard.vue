@@ -18,6 +18,8 @@ const props = withDefaults(defineProps<{
   stopped?: boolean
   /** show the signal (RSSI) meter; off on the spectator view */
   showSignal?: boolean
+  /** name, laps, last and fastest only (presentation mode): no lap list, same height all race */
+  compact?: boolean
 }>(), { showSignal: true })
 const emit = defineEmits<{ manualLap: [], deleteLap: [number], restoreLap: [number], tune: [] }>()
 const { t } = useI18n()
@@ -109,6 +111,7 @@ const pct = (v?: number) => `${Math.min(100, Math.max(0, ((v || 0) / scaleMax.va
 
     <!-- phone summary: last / fastest on one line, expands to the full detail -->
     <button
+      v-if="!compact"
       type="button"
       class="flex items-center gap-3 border-t border-default px-4 py-2.5 text-left text-[13px] sm:hidden"
       :aria-expanded="expanded"
@@ -121,7 +124,7 @@ const pct = (v?: number) => `${Math.min(100, Math.max(0, ((v || 0) / scaleMax.va
       <UIcon name="i-lucide-chevron-down" class="ms-auto size-4 text-dimmed transition-transform" :class="expanded ? 'rotate-180' : ''" />
     </button>
 
-    <div class="grid-cols-2 gap-px border-t border-default bg-(--ui-border)" :class="expanded ? 'grid' : 'hidden sm:grid'">
+    <div class="grid-cols-2 gap-px border-t border-default bg-(--ui-border)" :class="expanded || compact ? 'grid' : 'hidden sm:grid'">
       <div class="bg-default px-4 py-2">
         <div class="text-[11px] uppercase tracking-wider text-dimmed">
           {{ t('Last') }}
@@ -140,7 +143,7 @@ const pct = (v?: number) => `${Math.min(100, Math.max(0, ((v || 0) / scaleMax.va
       </div>
     </div>
 
-    <div class="max-h-48 min-h-12 flex-1 overflow-y-auto border-t border-default" :class="expanded ? '' : 'max-sm:hidden'">
+    <div v-if="!compact" class="max-h-48 min-h-12 flex-1 overflow-y-auto border-t border-default" :class="expanded ? '' : 'max-sm:hidden'">
       <TransitionGroup tag="ul" name="rh" class="divide-y divide-default/60">
         <li
           v-for="lap in visibleLaps"

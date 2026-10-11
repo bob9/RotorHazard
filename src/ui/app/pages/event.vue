@@ -3,6 +3,7 @@ import { WIN_CONDITIONS } from '~/utils/format'
 
 const rh = useRH()
 const { t } = useI18n()
+useHead({ title: computed(() => t('Event')) })
 const { admin } = useAuth()
 const { info } = useServerInfo()
 rh.load(['frequency_data', 'pilot_data', 'class_data', 'format_data', 'heat_data', 'result_data', 'raceclass_rank_method_list'])

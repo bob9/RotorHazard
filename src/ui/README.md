@@ -45,7 +45,7 @@ Run `npm run build` and commit `src/server/webapp/` together with source changes
 | Voice callouts and tones (same localStorage keys as the classic UI) | `app/composables/useAudio.ts` |
 | Notifications, alerts, restart banner | `app/composables/useMessages.ts` |
 | Plugin panels (`rhapi.ui.register_panel`) | `app/composables/usePluginUI.ts`, `RhPluginPanels`, `RhField` |
-| Presentation mode of Live (`/live?kiosk=1`: no app chrome, scaled up, full screen) | `app/pages/live.vue`, `app/composables/useKiosk.ts` |
+| Presentation mode of Live (`/live?kiosk=1`: no app chrome, scaled to fit the screen without scrolling, full screen) | `app/pages/live.vue`, `app/composables/useKiosk.ts` |
 
 Each server event's latest payload is stored on `useRH().state[eventName]`.
 A page calls `rh.load([...load types])` for what it needs; the request is

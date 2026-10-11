@@ -2,6 +2,7 @@
 import { currentStatusMessage } from '~/utils/winner'
 const rh = useRH()
 const { t } = useI18n()
+useHead({ title: computed(() => t('Race')) })
 const { admin, hasCredentials } = useAuth()
 const { info } = useServerInfo()
 const audio = useAudio()
@@ -23,10 +24,28 @@ watch(guest, (g) => {
 const S = rh.state
 const status = computed<number>(() => S.race_status?.race_status ?? 0)
 // until the timer has sent the race, heat and seats, show placeholders rather than a
-// made-up Practice race with a live Start button (the class and format complete the race
-// card: arriving later they would widen it and push the seats down)
-const loaded = computed(() => !!(S.race_status && S.current_heat && S.frequency_data && S.heat_data && S.class_data && S.format_data))
+// made-up Practice race with a live Start button (the class completes the race card: arriving
+// later it would widen it and push the seats down). The format list comes last of the race
+// data and is not waited for: its picker keeps its place with a placeholder meanwhile.
+const loaded = computed(() => !!(S.race_status && S.current_heat && S.frequency_data && S.heat_data && S.class_data))
 const isReady = computed(() => loaded.value && status.value === RACE_STATUS.READY)
+
+// The heat, its seats and its leaderboard arrive as separate messages (after Save Results the
+// next heat's lineup can come a moment before or after its leaderboard). Show them together:
+// the previous race stays up until both name the same heat, so the card never pairs one
+// heat's name with another heat's pilots. (A mismatch that doesn't resolve is shown after 1.5s.)
+const heatOf = (v: any) => Number(v || 0)
+const snapshot = () => ({ heat: S.current_heat, board: S.leaderboard, laps: S.current_laps })
+const view = shallowRef(snapshot())
+let viewTimer: ReturnType<typeof setTimeout> | undefined
+watch(() => [S.current_heat, S.leaderboard, S.current_laps], () => {
+  const lbHeat = S.leaderboard?.current
+  const agree = !S.current_heat || !lbHeat || heatOf(S.current_heat.current_heat) === heatOf(lbHeat.heat)
+  clearTimeout(viewTimer)
+  if (agree) view.value = snapshot()
+  else viewTimer = setTimeout(() => { view.value = snapshot() }, 1500)
+})
+onBeforeUnmount(() => clearTimeout(viewTimer))
 
 // phones: the sticky action bar repeats the clock only when the race card's clock is off screen
 const heroClock = ref<HTMLElement | null>(null)
@@ -44,20 +63,20 @@ const isRacing = computed(() => status.value === RACE_STATUS.RACING)
 const isDone = computed(() => status.value === RACE_STATUS.DONE)
 
 const numNodes = computed(() => info.value?.num_nodes ?? S.frequency_data?.fdata?.length ?? 0)
-const heatNodes = computed(() => S.current_heat?.heatNodes || {})
+const heatNodes = computed(() => view.value.heat?.heatNodes || {})
 // like the classic Run page, show only seats with a frequency (or a pilot in this heat)
 const seats = computed(() => Array.from({ length: numNodes.value }, (_, i) => i)
   .filter(i => S.frequency_data?.fdata?.[i]?.frequency || heatNodes.value[i]?.pilot_id))
 const seatColors = computed(() => Object.fromEntries(seats.value.map(i => [i, colorHex(heatNodes.value[i]?.activeColor)])))
-const lapsBySeat = computed<any[]>(() => S.current_laps?.current?.node_index || [])
-const board = computed(() => S.leaderboard?.current?.leaderboard)
-const teamBoard = computed(() => S.leaderboard?.current?.team_leaderboard)
+const lapsBySeat = computed<any[]>(() => view.value.laps?.current?.node_index || [])
+const board = computed(() => view.value.board?.current?.leaderboard)
+const teamBoard = computed(() => view.value.board?.current?.team_leaderboard)
 const rowsByNode = computed(() => {
   const m: Record<number, any> = {}
   for (const r of board.value?.by_race_time || []) m[r.node] = r
   return m
 })
-const statusMessage = computed(() => currentStatusMessage(S.leaderboard?.current))
+const statusMessage = computed(() => currentStatusMessage(view.value.board?.current))
 const minLapMs = computed(() => (S.min_lap?.min_lap || 0) * 1000)
 const anyLaps = computed(() => lapsBySeat.value.some(s => s?.laps?.length))
 
@@ -65,12 +84,12 @@ const anyLaps = computed(() => lapsBySeat.value.some(s => s?.laps?.length))
 const heats = computed<any[]>(() => S.heat_data?.heats || [])
 const classes = computed<any[]>(() => S.class_data?.classes || [])
 const formats = computed<any[]>(() => S.format_data?.formats || [])
-const currentHeatId = computed<number | null>(() => S.current_heat?.current_heat ?? null)
+const currentHeatId = computed<number | null>(() => view.value.heat?.current_heat ?? null)
 const currentHeat = computed(() => heats.value.find(h => h.id === currentHeatId.value))
 const currentClass = computed(() => classes.value.find(c => c.id === currentHeat.value?.class_id))
 const currentFormat = computed(() => formats.value.find(f => f.id === S.race_status?.race_format_id))
-const heatName = computed(() => S.leaderboard?.current?.displayname || currentHeat.value?.displayname || t('Practice'))
-const round = computed(() => S.current_heat?.next_round || S.race_status?.next_round)
+const heatName = computed(() => view.value.board?.current?.displayname || currentHeat.value?.displayname || t('Practice'))
+const round = computed(() => view.value.heat?.next_round || S.race_status?.next_round)
 
 const heatItems = computed(() => {
   const groups: any[] = [[{ label: t('Practice Mode'), value: 0, icon: 'i-lucide-dumbbell', description: t('Races are not saved') }]]
@@ -124,7 +143,7 @@ const selectedFormat = computed({
   get: () => S.race_status?.race_format_id ?? undefined,
   set: (v: number) => rh.emit('set_race_format', { race_format: v })
 })
-const formatLocked = computed(() => !!S.current_heat?.heat_format)
+const formatLocked = computed(() => !!view.value.heat?.heat_format)
 
 // heat navigation: previous/next heat in the list
 const flatHeats = computed(() => heatItems.value.flat().filter((i: any) => i.value !== undefined && i.type !== 'label'))
@@ -385,7 +404,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
                 <UBadge v-if="currentClass" :label="currentClass.displayname" color="neutral" variant="subtle" />
                 <UBadge v-if="currentHeatId && round" :label="`${t('Round')} ${round}`" color="neutral" variant="subtle" />
                 <UBadge v-if="!currentHeatId" :label="t('Practice: races are not saved')" color="warning" variant="subtle" icon="i-lucide-info" />
+                <USkeleton v-if="!S.format_data" class="h-7 w-44 rounded-md" />
                 <USelectMenu
+                  v-else
                   v-model="selectedFormat"
                   :items="formatItems"
                   value-key="value"

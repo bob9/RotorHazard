@@ -3,6 +3,7 @@ import { WIN_CONDITIONS } from '~/utils/format'
 
 const rh = useRH()
 const { t } = useI18n()
+useHead({ title: computed(() => t('Formats')) })
 const { admin } = useAuth()
 rh.load(['format_data', 'race_status', 'race_points_method_list', 'class_data'])
 

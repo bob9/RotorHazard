@@ -3,6 +3,7 @@ import type { MarshalCommit, MarshalPilotData } from '~/components/RhMarshalEdit
 
 const rh = useRH()
 const { t } = useI18n()
+useHead({ title: computed(() => t('Marshal')) })
 const { admin, loginOpen } = useAuth()
 rh.load(['race_list', 'heat_data', 'class_data', 'format_data', 'min_lap', { type: 'ui', value: 'marshal' }])
 

@@ -4,6 +4,8 @@ definePageMeta({ layout: false })
 
 const rh = useRH()
 const { t } = useI18n()
+// before the timer has a name: the greeting alone, without the usual '· timer name'
+useHead({ title: computed(() => t('Welcome to RotorHazard')), titleTemplate: null })
 const { refresh: refreshAuth } = useAuth()
 const { refresh: refreshInfo, info } = useServerInfo()
 rh.load(['language', 'all_languages'])

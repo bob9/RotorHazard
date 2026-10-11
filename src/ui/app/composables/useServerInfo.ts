@@ -25,19 +25,31 @@ export interface ServerInfo {
 const info = ref<ServerInfo | null>(null)
 let pending: Promise<void> | null = null
 
+// one /app-info request serves everyone asking at about the same time with the same sign-in
+// (the facts above, and the sign-in check of a device without saved credentials)
+let shared: { key: string, at: number, p: Promise<ServerInfo | null> } | null = null
+export function requestServerInfo(headers: Record<string, string> = {}): Promise<ServerInfo | null> {
+  const key = headers.Authorization || ''
+  if (shared && shared.key === key && Date.now() - shared.at < 2000) return shared.p
+  const p = fetch('/app-info', { headers, cache: 'no-store' })
+    .then(r => (r.ok ? r.json() : null))
+    .catch(() => null)
+  shared = { key, at: Date.now(), p }
+  return p
+}
+
 export function useServerInfo() {
   const rh = useRH()
   // taken here, in setup, not inside the fetch callback below
   const { restartRequired } = useMessages()
 
   function fetchInfo() {
-    pending = fetch('/app-info', { headers: rh.authHeader(), cache: 'no-store' })
-      .then(r => r.json())
+    pending = requestServerInfo(rh.authHeader())
       .then((d) => {
+        if (!d) return
         info.value = d
         if (d.restart_required) restartRequired.value = true
       })
-      .catch(() => {})
     return pending
   }
 
@@ -53,5 +65,13 @@ export function useServerInfo() {
     }, { global: true })
   }
 
-  return { info, refresh: fetchInfo }
+  // the name set in Settings (kept current as it is changed there or on another device),
+  // or the one the server gave at start-up
+  const cfg = useConfig()
+  const timerName = computed(() => {
+    const v = cfg.get<string>('UI', 'timerName', info.value?.timer_name || '')
+    return typeof v === 'string' ? v.trim() : ''
+  })
+
+  return { info, timerName, refresh: fetchInfo }
 }

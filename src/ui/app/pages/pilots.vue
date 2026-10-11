@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const rh = useRH()
 const { t } = useI18n()
+useHead({ title: computed(() => t('Pilots')) })
 const { admin } = useAuth()
 const audio = useAudio()
 const toast = useToast()

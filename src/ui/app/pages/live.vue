@@ -4,6 +4,7 @@ import { currentStatusMessage } from '~/utils/winner'
 
 const rh = useRH()
 const { t } = useI18n()
+useHead({ title: computed(() => t('Live')) })
 const audio = useAudio()
 const route = useRoute()
 const router = useRouter()
@@ -61,7 +62,81 @@ function wake() {
   clearTimeout(idleTimer)
   idleTimer = setTimeout(() => { idle.value = true }, 3000)
 }
-const fit = () => { zoom.value = Math.min(2.4, Math.max(1.1, window.innerWidth / 1350)) }
+// A projector can't scroll, so presentation mode always fits the screen: the type is scaled
+// with the width, then to the largest size at which everything fits the height. On a landscape screen the
+// race card and the leaderboard sit side by side, with compact seat cards below; when even
+// those don't fit at a readable size (many seats on a short screen) the seat cards give way,
+// since the leaderboard already shows each pilot's laps and times.
+const kioskBody = useTemplateRef<HTMLElement>('kioskBody')
+const landscape = ref(true)
+const seatsFit = ref(true)
+let fitting = false
+let fitAgain = false
+async function fit() {
+  if (!kiosk.value) {
+    zoom.value = 1
+    return
+  }
+  if (fitting) {
+    fitAgain = true
+    return
+  }
+  fitting = true
+  fitAgain = false
+  try {
+    const W = window.innerWidth
+    landscape.value = W >= window.innerHeight * 1.15
+    // type as large as the width allows (a 1920px screen gets ~1.4x), a little larger when the
+    // screen has room to spare
+    const preferred = Math.min(3.2, Math.max(0.6, W / (landscape.value ? 1350 : 760)))
+    const fits = async (z: number) => {
+      zoom.value = z
+      await nextTick()
+      // the panel body scrolls when the content is taller than the screen, and a table
+      // scrolls sideways when its columns are wider than their card
+      const box = kioskBody.value
+      const body = box?.parentElement
+      if (!box || !body) return true
+      return body.scrollHeight - body.clientHeight <= 1
+        && Array.from(box.querySelectorAll<HTMLElement>('.overflow-x-auto')).every(el => el.scrollWidth - el.clientWidth <= 1)
+    }
+    for (const withSeats of [true, false]) {
+      seatsFit.value = withSeats
+      let lo = 0.3
+      let hi = Math.min(3.6, preferred * 1.3)
+      if (!(await fits(hi))) {
+        // the largest size that fits, to within a few percent
+        while (hi - lo > 0.02) {
+          const mid = (lo + hi) / 2
+          if (await fits(mid)) lo = mid
+          else hi = mid
+        }
+        await fits(lo)
+        hi = lo
+      }
+      // seats stay while the type stays readable (at least three quarters of its preferred size)
+      if (!withSeats || !shownSeats.value.length || hi >= Math.max(0.55, preferred * 0.75)) break
+    }
+  } finally {
+    fitting = false
+    if (fitAgain) refit()
+  }
+}
+// what's on screen changes size during a race (status line, laps, the next heat): fit again
+let fitRO: ResizeObserver | undefined
+let fitFrame = 0
+const refit = () => {
+  cancelAnimationFrame(fitFrame)
+  fitFrame = requestAnimationFrame(() => fit())
+}
+watch(kioskBody, (el) => {
+  fitRO?.disconnect()
+  if (el && typeof ResizeObserver !== 'undefined') {
+    fitRO = new ResizeObserver(refit)
+    fitRO.observe(el)
+  }
+})
+watch([kiosk, () => shownSeats.value.length, status, showLast, loaded], refit)
 const onFullscreen = () => { fullscreen.value = !!document.fullscreenElement }
 function toggleFullscreen() {
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
@@ -85,19 +160,26 @@ function onKioskKey(e: KeyboardEvent) {
 onMounted(() => {
   canFullscreen.value = !!document.fullscreenEnabled
   onFullscreen()
-  fit()
+  refit()
   wake()
-  window.addEventListener('resize', fit)
+  window.addEventListener('resize', refit)
   window.addEventListener('pointermove', wake, { passive: true })
   window.addEventListener('keydown', onKioskKey)
   document.addEventListener('fullscreenchange', onFullscreen)
 })
 onBeforeUnmount(() => {
   clearTimeout(idleTimer)
-  window.removeEventListener('resize', fit)
+  fitRO?.disconnect()
+  cancelAnimationFrame(fitFrame)
+  window.removeEventListener('resize', refit)
   window.removeEventListener('pointermove', wake)
   window.removeEventListener('keydown', onKioskKey)
   document.removeEventListener('fullscreenchange', onFullscreen)
+})
+// up to six seats side by side; more take two rows, so each card keeps room for its times
+const kioskSeatCols = computed(() => {
+  const n = Math.max(1, shownSeats.value.length)
+  return n > 6 ? Math.ceil(n / 2) : n
 })
 const kioskZoom = computed(() => (kiosk.value ? { zoom: zoom.value } : undefined))
 </script>
@@ -149,45 +231,61 @@ const kioskZoom = computed(() => (kiosk.value ? { zoom: zoom.value } : undefined
         <USkeleton class="h-48 w-full rounded-3xl" />
         <USkeleton class="h-64 w-full rounded-2xl" />
       </div>
-      <div v-else class="mx-auto w-full max-w-6xl space-y-6" :style="kioskZoom">
-        <!-- between races: a compact header for the last race; during one: the big clock -->
-        <section
-          class="flex flex-col items-center gap-2 rounded-3xl bg-default px-6 text-center ring-1 ring-default"
-          :class="showLast ? 'py-5' : 'py-8 sm:py-10'"
+      <div
+        v-else
+        ref="kioskBody"
+        class="mx-auto grid w-full gap-6"
+        :class="kiosk && landscape ? 'grid-cols-[minmax(0,5fr)_minmax(0,7fr)] items-start' : 'max-w-6xl grid-cols-1'"
+        :style="kioskZoom"
+      >
+        <div class="min-w-0 space-y-6">
+          <!-- between races: a compact header for the last race; during one: the big clock -->
+          <section
+            class="flex flex-col items-center gap-2 rounded-3xl bg-default px-6 text-center ring-1 ring-default"
+            :class="showLast ? 'py-5' : 'py-8 sm:py-10'"
+          >
+            <div class="text-sm font-medium text-muted">
+              {{ heroLabel }}<template v-if="showLast && lb.round"> · {{ t('Round') }} {{ lb.round }}</template>
+            </div>
+            <h1 class="text-balance font-display font-semibold text-highlighted" :class="showLast ? 'text-2xl' : 'text-3xl sm:text-4xl'">
+              {{ lb.displayname || t('Practice') }}
+            </h1>
+            <div v-if="lb.round && !showLast" class="text-sm font-medium text-muted">
+              {{ t('Round') }} {{ lb.round }}
+            </div>
+            <!-- between races this card shows the last race's result, not the next race's clock -->
+            <RhRaceClock v-if="!showLast" class="mt-4" />
+            <div v-if="statusMessage" class="mt-3 rounded-full bg-elevated px-4 py-1.5 text-sm font-medium">
+              {{ statusMessage }}
+            </div>
+          </section>
+
+          <UAlert
+            v-if="showLast && nextHeat"
+            icon="i-lucide-arrow-right-circle"
+            color="neutral"
+            variant="subtle"
+            :title="`${t('Up next')}: ${nextHeat}${nextRound ? ` · ${t('Round')} ${nextRound}` : ''}`"
+            :description="Object.values(heatNodes).map((n: any) => n.callsign).filter(Boolean).join(' · ')"
+          />
+        </div>
+
+        <div class="min-w-0 space-y-6">
+          <UCard :ui="{ body: 'p-0 sm:p-0' }">
+            <RhLeaderboard :board="lb.leaderboard" kind="current" :seat-colors="seatColors" :min-lap-ms="minLapMs" top-speed />
+          </UCard>
+          <UCard v-if="lb.team_leaderboard" :ui="{ body: 'p-0 sm:p-0' }">
+            <RhTeamLeaderboard :board="lb.team_leaderboard" />
+          </UCard>
+        </div>
+
+        <!-- presentation mode: compact cards (no lap lists) in one row on a landscape screen -->
+        <div
+          v-if="!kiosk || seatsFit"
+          class="grid gap-4"
+          :class="kiosk ? (landscape ? 'col-span-2' : 'grid-cols-2') : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-4'"
+          :style="kiosk && landscape ? { gridTemplateColumns: `repeat(${kioskSeatCols}, minmax(0, 1fr))` } : undefined"
         >
-          <div class="text-sm font-medium text-muted">
-            {{ heroLabel }}<template v-if="showLast && lb.round"> · {{ t('Round') }} {{ lb.round }}</template>
-          </div>
-          <h1 class="text-balance font-display font-semibold text-highlighted" :class="showLast ? 'text-2xl' : 'text-3xl sm:text-4xl'">
-            {{ lb.displayname || t('Practice') }}
-          </h1>
-          <div v-if="lb.round && !showLast" class="text-sm font-medium text-muted">
-            {{ t('Round') }} {{ lb.round }}
-          </div>
-          <!-- between races this card shows the last race's result, not the next race's clock -->
-          <RhRaceClock v-if="!showLast" class="mt-4" />
-          <div v-if="statusMessage" class="mt-3 rounded-full bg-elevated px-4 py-1.5 text-sm font-medium">
-            {{ statusMessage }}
-          </div>
-        </section>
-
-        <UAlert
-          v-if="showLast && nextHeat"
-          icon="i-lucide-arrow-right-circle"
-          color="neutral"
-          variant="subtle"
-          :title="`${t('Up next')}: ${nextHeat}${nextRound ? ` · ${t('Round')} ${nextRound}` : ''}`"
-          :description="Object.values(heatNodes).map((n: any) => n.callsign).filter(Boolean).join(' · ')"
-        />
-
-        <UCard :ui="{ body: 'p-0 sm:p-0' }">
-          <RhLeaderboard :board="lb.leaderboard" kind="current" :seat-colors="seatColors" :min-lap-ms="minLapMs" top-speed />
-        </UCard>
-        <UCard v-if="lb.team_leaderboard" :ui="{ body: 'p-0 sm:p-0' }">
-          <RhTeamLeaderboard :board="lb.team_leaderboard" />
-        </UCard>
-
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <RhSeatCard
             v-for="s in shownSeats"
             :key="s.seat"
@@ -202,10 +300,11 @@ const kioskZoom = computed(() => (kiosk.value ? { zoom: zoom.value } : undefined
             :crossing="S.heartbeat?.crossing_flag?.[s.seat]"
             :min-lap-ms="minLapMs"
             :show-signal="false"
+            :compact="kiosk"
           />
         </div>
 
-        <p v-if="!audio.unlocked.value && audio.settings.enabled" class="text-center text-sm text-muted">
+        <p v-if="!audio.unlocked.value && audio.settings.enabled" class="text-center text-sm text-muted" :class="kiosk && landscape ? 'col-span-2' : ''">
           {{ t('Tap anywhere to hear race callouts on this device.') }}
         </p>
       </div>

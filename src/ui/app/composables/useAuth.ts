@@ -14,6 +14,10 @@ function basicHeader(creds = readCredentials()): Record<string, string> {
 }
 
 async function check(creds = readCredentials()) {
+  // without credentials there is nothing to verify: /app-info says whether this device has
+  // admin access anyway (a timer without an admin login), and a guest's console stays free
+  // of the 401 that /app-auth answers
+  if (!creds) return (await requestServerInfo())?.admin === true
   const headers = basicHeader(creds)
   try {
     const res = await fetch('/app-auth', { headers, cache: 'no-store' })

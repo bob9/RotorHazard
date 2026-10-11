@@ -40,7 +40,8 @@ function avgSpeed(r: any) {
   return r.speed_count ? (r.speed_total / r.speed_count).toFixed(1) : '—'
 }
 // numeric columns hug their content; the outer columns line up with the card's padding
-const cell = computed(() => ['whitespace-nowrap', props.dense ? 'px-2 py-2' : 'px-3 py-2.5'])
+// (a little tighter on phones, so a pilot column and four figures fit a 360px screen)
+const cell = computed(() => ['whitespace-nowrap', props.dense ? 'px-2 py-2' : 'px-2 py-2.5 sm:px-3'])
 // table inset so the outer cells line up with the card's padding (16px / 24px from sm)
 const inset = computed(() => props.dense ? 'px-2 sm:px-4' : 'px-1 sm:px-3')
 // on phones a combined board drops the less important columns (Avg. is already hidden)
@@ -57,7 +58,7 @@ const totalClass = consecClass
           <th :class="cell" class="w-10">
             #
           </th>
-          <th :class="cell" class="w-full min-w-28">
+          <th :class="cell" class="w-full min-w-24 sm:min-w-28">
             {{ t('Pilot') }}
           </th>
           <th v-if="team" :class="cell">
@@ -110,7 +111,7 @@ const totalClass = consecClass
             >{{ r.position }}</span>
             <span v-else class="text-dimmed">–</span>
           </td>
-          <td :class="cell" class="min-w-28 max-w-0 font-medium text-highlighted">
+          <td :class="cell" class="min-w-24 max-w-0 font-medium text-highlighted sm:min-w-28">
             <div class="flex min-w-0 items-center gap-2">
               <span v-if="seatColors && r.node !== undefined && seatColors[r.node]" class="size-2.5 shrink-0 rounded-full" :style="{ background: seatColors[r.node] }" />
               <!-- practice rows have no pilot: the server names them by channel, so show the seat -->

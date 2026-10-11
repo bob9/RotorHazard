@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const rh = useRH()
 const { t } = useI18n()
+useHead({ title: computed(() => t('Results')) })
 const { info } = useServerInfo()
 const { admin } = useAuth()
 rh.load(['result_data', 'pilot_data'])

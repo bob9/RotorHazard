@@ -107,7 +107,7 @@ function connect() {
   socket.on('connect', () => {
     status.connected = true
     status.everConnected = true
-    if (loaded.size) socket!.emit('load_data', { load_types: [...loaded.values()] })
+    if (loaded.size) emitLoads([...loaded.values()])
     syncClock(socket!)
   })
   socket.on('disconnect', () => {
@@ -116,7 +116,7 @@ function connect() {
   socket.on('load_all', (data: any) => {
     // server restarted with a new instance: reload everything we track
     if (status.serverToken !== null && data?.server_instance_token !== status.serverToken && loaded.size) {
-      socket!.emit('load_data', { load_types: [...loaded.values()] })
+      emitLoads([...loaded.values()])
     }
     status.serverToken = data?.server_instance_token ?? null
     dispatch('load_all', data)
@@ -128,6 +128,19 @@ function connect() {
     if (event !== 'load_all') dispatch(event, data)
   })
   return socket
+}
+
+/**
+ * Asks for a batch of data. The server answers a request's types one after another, and
+ * plugin panel lists ('ui') take it a while to build: they go in a request of their own,
+ * after the page's data, so a page doesn't wait for every plugin's panels to show its race.
+ */
+function emitLoads(types: LoadType[]) {
+  const isUi = (t: LoadType) => typeof t !== 'string' && t.type === 'ui'
+  const first = types.filter(t => !isUi(t))
+  const later = types.filter(isUi)
+  if (first.length) socket!.emit('load_data', { load_types: first })
+  if (later.length) socket!.emit('load_data', { load_types: later })
 }
 
 /** Reconnects with the stored credentials (after login/logout). */
@@ -163,7 +176,7 @@ function load(types: LoadType[]) {
   const fresh = types.filter(t => !loaded.has(loadKey(t)))
   types.forEach(t => loaded.set(loadKey(t), t))
   const s = connect()
-  if (s.connected) s.emit('load_data', { load_types: fresh.length ? fresh : types })
+  if (s.connected) emitLoads(fresh.length ? fresh : types)
 }
 
 /** Re-request data (even if already loaded). */

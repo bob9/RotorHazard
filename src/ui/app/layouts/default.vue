@@ -6,7 +6,8 @@ const { t } = useI18n()
 const { admin, loginOpen, logout, classicSession, hasCredentials } = useAuth()
 // while saved credentials are being checked, the footer already takes the signed-in shape
 const guestFooter = computed(() => admin.value === false || (admin.value === null && !hasCredentials()))
-const { info } = useServerInfo()
+const { info, timerName } = useServerInfo()
+const namedTimer = computed(() => !!timerName.value && timerName.value !== 'RotorHazard')
 const { restartRequired, restarting } = useMessages()
 const colorMode = useColorMode()
 const route = useRoute()
@@ -359,9 +360,14 @@ const version = computed(() => info.value?.server?.release_version)
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
       <template #header="{ collapsed }">
-        <NuxtLink to="/" class="flex items-center gap-2.5 min-w-0">
+        <NuxtLink to="/" class="flex items-center gap-2.5 min-w-0" :title="namedTimer ? `${timerName} · RotorHazard` : undefined">
           <img :src="logoUrl" alt="" class="size-7 shrink-0">
-          <span v-if="!collapsed" class="truncate font-display text-[17px] font-semibold text-highlighted">RotorHazard</span>
+          <!-- a named timer shows its name, with RotorHazard beneath -->
+          <span v-if="!collapsed && namedTimer" class="flex min-w-0 flex-col leading-tight">
+            <span class="truncate font-display text-[15px] font-semibold text-highlighted">{{ timerName }}</span>
+            <span class="truncate text-[11px] font-medium text-dimmed">RotorHazard</span>
+          </span>
+          <span v-else-if="!collapsed" class="truncate font-display text-[17px] font-semibold text-highlighted">RotorHazard</span>
         </NuxtLink>
       </template>
 

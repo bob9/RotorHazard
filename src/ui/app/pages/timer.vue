@@ -3,6 +3,7 @@ import { VTX_CHANNELS } from '~/utils/channels'
 
 const rh = useRH()
 const { t } = useI18n()
+useHead({ title: computed(() => t('Timer')) })
 const { admin } = useAuth()
 const { info } = useServerInfo()
 rh.load(['frequency_data', 'node_tuning', 'node_data', 'enter_and_exit_at_levels', 'seat_data', 'vrx_list', 'start_thresh_lower_amount', 'start_thresh_lower_duration', 'race_status', 'current_heat'])
