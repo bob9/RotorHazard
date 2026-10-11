@@ -49,6 +49,8 @@ const heatsAgree = () => {
 let viewTimer: ReturnType<typeof setTimeout> | undefined
 watch(() => [S.current_heat, S.leaderboard, S.current_laps], () => {
   clearTimeout(viewTimer)
+  // another device saved the finished race: its laps clear first, then the status and heat follow
+  if (!saveHold.value && liveStatus.value === RACE_STATUS.DONE && hasLaps(view.value.laps) && !hasLaps(S.current_laps)) startObserverHold()
   if (saveHold.value) return tryEndSaveHold()
   if (heatsAgree()) view.value = snapshot()
   else viewTimer = setTimeout(() => { view.value = snapshot() }, 1500)
@@ -67,11 +69,21 @@ function endSaveHold() {
 function tryEndSaveHold() {
   if (saveConfirmed && heatsAgree()) endSaveHold()
 }
-function startSaveHold() {
+function startSaveHold(limit = 4000) {
   saveConfirmed = false
   saveHold.value = true
   clearTimeout(holdTimer)
-  holdTimer = setTimeout(endSaveHold, 4000)
+  holdTimer = setTimeout(endSaveHold, limit)
+}
+// A save made on another device looks the same here: the finished race is cleared, then the
+// timer moves to the next heat. Hold the finished race just the same, unless this device
+// cleared it itself (Discard, Stop and Save, Clear Laps). A discard elsewhere can't be told
+// apart from a save until no heat change follows, so that hold is shorter.
+const hasLaps = (l: any) => (l?.current?.node_index || []).some((s: any) => s?.laps?.length)
+let localResetAt = 0
+function startObserverHold() {
+  if (saveHold.value || !currentHeatId.value || Date.now() - localResetAt < 5000) return
+  startSaveHold(3000)
 }
 rh.on('race_saved', () => {
   if (!saveHold.value) return
@@ -81,7 +93,10 @@ rh.on('race_saved', () => {
   tryEndSaveHold()
 })
 // someone started the next race meanwhile
-watch(liveStatus, (s) => { if (s === RACE_STATUS.STAGING || s === RACE_STATUS.RACING) endSaveHold() })
+watch(liveStatus, (s, old) => {
+  if (s === RACE_STATUS.STAGING || s === RACE_STATUS.RACING) endSaveHold()
+  else if (s === RACE_STATUS.READY && old === RACE_STATUS.DONE) startObserverHold()
+})
 onBeforeUnmount(() => { clearTimeout(viewTimer); clearTimeout(holdTimer) })
 
 // phones: the sticky action bar repeats the clock only when the race card's clock is off screen
@@ -210,11 +225,29 @@ watch(status, () => {
   busy.value = false
   clearTimeout(busyTimer)
 })
+// The action buttons swap as the race moves on (Stop for Start, Save for Stop...), which would
+// drop keyboard focus to the page. Move it to the new primary action, but only when focus was
+// on the race controls or nowhere: never take it from something else.
+const actionsEl = ref<HTMLElement | null>(null)
+const barEl = ref<HTMLElement | null>(null)
+const inControls = (el: Element | null) => !!el && (!!actionsEl.value?.contains(el) || !!barEl.value?.contains(el))
+watch(status, () => {
+  const before = document.activeElement
+  if (before && before !== document.body && !inControls(before)) return
+  nextTick(() => {
+    const now = document.activeElement
+    if (now && now !== document.body && now !== before && !inControls(now)) return
+    const primary = [...document.querySelectorAll<HTMLElement>('[data-rh-primary]')]
+      .find(b => b.offsetParent !== null && !b.matches(':disabled'))
+    if (primary && primary !== now) primary.focus({ preventScroll: true })
+  })
+})
 onBeforeUnmount(() => clearTimeout(busyTimer))
 function stop() {
   send('stop_race')
 }
 function save() {
+  localResetAt = Date.now()
   // Practice races aren't saved (the timer just clears them), and Stop and Save during a race
   // shows the race stopping: only a finished heat race is held on screen while it saves
   if (liveStatus.value === RACE_STATUS.DONE && currentHeatId.value) startSaveHold()
@@ -268,6 +301,7 @@ watch(heats, () => {
   })
 })
 function discard() {
+  localResetAt = Date.now()
   rh.emit('discard_laps')
   discardOpen.value = false
 }
@@ -360,10 +394,14 @@ watch(dock, (el) => {
   }, { immediate: true })
 })
 onBeforeUnmount(() => { dockRO?.disconnect(); stopDockWatch?.(); clearTimeout(dockQuiet); clearTimeout(dockCap); clearTimeout(dockShowTimer) })
+// a focused control keeps its own Space and Enter (Space on a seat's Lap button records a lap)
+const CONTROLS = 'button, a[href], input, textarea, select, summary, [role=button], [role=tab], [role=switch], [role=menuitem], '
+  + '[role=checkbox], [role=radio], [role=option], [role=slider], [role=combobox], [contenteditable]:not([contenteditable=false])'
 function onKey(e: KeyboardEvent) {
   const el = e.target as HTMLElement
-  if (!admin.value || el?.closest('input, textarea, [contenteditable], [role="dialog"], [role="listbox"]')) return
+  if (!admin.value || el?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable=false]), [role="dialog"], [role="listbox"], [role="menu"]')) return
   const k = e.key.toLowerCase()
+  if ((k === ' ' || k === 'enter') && el?.closest?.(CONTROLS)) return
   if (e.altKey && !e.ctrlKey && /^[1-8]$/.test(e.key)) {
     if (isRacing.value) manualLap(Number(e.key) - 1)
     e.preventDefault()
@@ -467,11 +505,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             </div>
 
             <!-- actions (below lg they live in the sticky bar at the bottom) -->
-            <div class="hidden flex-col items-stretch gap-2 lg:flex lg:items-end">
+            <div ref="actionsEl" class="hidden flex-col items-stretch gap-2 lg:flex lg:items-end">
               <!-- swapped instantly: a Stop button must always be visible during staging -->
               <UButton
                 v-if="isReady"
                 key="start"
+                data-rh-primary
                 size="xl"
                 icon="i-lucide-play"
                 :label="t('Start Race')"
@@ -482,6 +521,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               <UButton
                 v-else-if="isLive"
                 key="stop"
+                data-rh-primary
                 size="xl"
                 color="error"
                 icon="i-lucide-square"
@@ -493,6 +533,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               <UButton
                 v-else
                 key="save"
+                data-rh-primary
                 size="xl"
                 color="success"
                 icon="i-lucide-check"
@@ -612,6 +653,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       <!-- phone / tablet: race clock and primary action stay within reach -->
       <div
         v-if="admin !== false && loaded"
+        ref="barEl"
         class="sticky bottom-0 z-20 mt-auto border-t border-default bg-default/85 px-4 pt-3 backdrop-blur-xl lg:hidden"
         style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))"
       >
@@ -640,6 +682,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           />
           <UButton
             v-if="isReady"
+            data-rh-primary
             size="lg"
             icon="i-lucide-play"
             :label="t('Start Race')"
@@ -649,6 +692,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           />
           <UButton
             v-else-if="isLive"
+            data-rh-primary
             size="lg"
             color="error"
             icon="i-lucide-square"
@@ -667,6 +711,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               @click="start"
             />
             <UButton
+              data-rh-primary
               size="lg"
               color="success"
               icon="i-lucide-check"

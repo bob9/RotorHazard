@@ -155,11 +155,13 @@ html {
 /* Documentation (pages/docs.vue): long-form reading */
 .rh-doc { font-size: 15.5px; line-height: 1.7; color: var(--ui-text); max-width: 46rem; }
 .rh-doc > * + * { margin-top: 1em; }
-.rh-doc h1, .rh-doc h2, .rh-doc h3, .rh-doc h4 { font-family: var(--font-display); font-weight: 600; color: var(--ui-text-highlighted); line-height: 1.25; letter-spacing: -0.015em; scroll-margin-top: 1rem; }
+.rh-doc h1, .rh-doc h2, .rh-doc h3, .rh-doc h4, .rh-doc h5, .rh-doc h6 { font-family: var(--font-display); font-weight: 600; color: var(--ui-text-highlighted); line-height: 1.25; letter-spacing: -0.015em; scroll-margin-top: 1rem; }
 .rh-doc h1 { font-size: 2rem; margin-bottom: .5em; }
 .rh-doc h2 { font-size: 1.45rem; margin-top: 2.2em; padding-top: .2em; }
 .rh-doc h3 { font-size: 1.15rem; margin-top: 1.8em; }
-.rh-doc h4 { font-size: 1rem; margin-top: 1.5em; }
+.rh-doc h4 { font-size: 1.075rem; margin-top: 1.5em; }
+.rh-doc h5 { font-size: 1rem; margin-top: 1.4em; }
+.rh-doc h6 { font-size: .8rem; margin-top: 1.4em; text-transform: uppercase; letter-spacing: .06em; color: var(--ui-text-muted); }
 .rh-doc a { color: var(--ui-primary); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
 .rh-doc a:hover { text-decoration-thickness: 2px; }
 .rh-doc ul { list-style: disc; padding-left: 1.4em; } .rh-doc ol { list-style: decimal; padding-left: 1.4em; }
@@ -189,3 +191,14 @@ html {
 .rh-imd th { background: var(--ui-bg-elevated); color: var(--ui-text-highlighted); font-weight: 600; }
 .rh-imd td[title] { cursor: help; }
 
+/* a horizontal strip that scrolls: fade the edge where more is out of view (the classes are set
+   from its scroll position); keyboard focus scrolls tabs clear of the fade */
+.rh-scroll-fade { --fade-start: 0px; --fade-end: 0px; scroll-padding-inline: 2rem; }
+.rh-scroll-fade.rh-fade-start { --fade-start: 2rem; }
+.rh-scroll-fade.rh-fade-end { --fade-end: 2rem; }
+.rh-scroll-fade:is(.rh-fade-start, .rh-fade-end) {
+  mask-image: linear-gradient(to right, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+}
+[dir=rtl] .rh-scroll-fade:is(.rh-fade-start, .rh-fade-end) {
+  mask-image: linear-gradient(to left, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+}

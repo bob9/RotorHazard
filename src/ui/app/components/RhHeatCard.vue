@@ -30,7 +30,7 @@ const pilotItems = computed<any[]>(() => {
   const free = sorted.filter(p => !pilotHeats.value[p.pilot_id])
   const placed = sorted.filter(p => pilotHeats.value[p.pilot_id])
   const groups: any[] = [[{ label: t('None'), value: 0 }]]
-  if (free.length) groups.push([{ type: 'label', label: t('Not in a heat') }, ...free.map(p => ({ label: p.callsign, value: p.pilot_id, description: p.name }))])
+  if (free.length) groups.push([{ type: 'label', label: t('Not in a heat') }, ...free.map(p => ({ label: p.callsign, value: p.pilot_id, description: pilotName(p) || undefined }))])
   if (placed.length) groups.push([{ type: 'label', label: t('Already in a heat') }, ...placed.map(p => ({ label: p.callsign, value: p.pilot_id, description: pilotHeats.value[p.pilot_id]!.join(', ') }))])
   return groups
 })

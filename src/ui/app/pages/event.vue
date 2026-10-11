@@ -283,7 +283,7 @@ function setConsecutives(v: number) {
             <div v-for="p in pilotsInHeats" :key="p.pilot_id" class="flex items-center gap-2 rounded-full bg-elevated/60 py-1.5 pl-2 pr-3.5 text-sm">
               <span class="size-3 rounded-full" :style="{ background: p.color || 'var(--ui-bg-accented)' }" />
               <span class="font-medium text-highlighted">{{ p.callsign }}</span>
-              <span class="text-muted">{{ p.name }}</span>
+              <span v-if="pilotName(p)" class="text-muted">{{ pilotName(p) }}</span>
             </div>
           </div>
         </section>

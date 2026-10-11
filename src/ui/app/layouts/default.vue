@@ -168,7 +168,7 @@ const pluginIndex = computed(() => {
 const dataIndex = computed(() => {
   if (!searchData.value) return []
   const items: any[] = []
-  for (const p of rh.state.pilot_data?.pilots || []) items.push({ label: p.callsign, description: [t('Pilot'), p.name].filter(Boolean).join(' · '), icon: 'i-lucide-user', to: '/pilots', keywords: p.team || '' })
+  for (const p of rh.state.pilot_data?.pilots || []) items.push({ label: p.callsign, description: [t('Pilot'), pilotName(p)].filter(Boolean).join(' · '), icon: 'i-lucide-user', to: '/pilots', keywords: p.team || '' })
   const classes = rh.state.class_data?.classes || []
   for (const c of classes) items.push({ label: c.displayname, description: t('Class'), icon: 'i-lucide-trophy', to: `/heats?class=${c.id}` })
   for (const h of rh.state.heat_data?.heats || []) {
@@ -281,11 +281,9 @@ async function openClassic() {
 // the classic page that matches this one
 const classicTo = computed(() => {
   if (route.path === '/') return '/run'
-  // a plugin page is the same page in the classic interface, on its own
-  if (route.path === '/page') {
-    const u = typeof route.query.url === 'string' ? route.query.url : ''
-    if (info.value?.plugin_pages?.some(p => p.url === u)) return u
-  }
+  // a plugin page on its own has no classic menu and no way back: open the classic Race
+  // (Live for guests) page instead; its "New Interface" comes back to the plugin page
+  if (route.path === '/page') return admin.value ? '/run' : '/current'
   if (route.path === '/docs') {
     const d = typeof route.query.d === 'string' && route.query.d ? route.query.d : 'README.md'
     return `/docs?d=${encodeURIComponent(d)}`
@@ -302,7 +300,9 @@ const classicHref = computed(() => (classicTo.value ? `/interface/classic?to=${e
 function rememberAppPage() {
   const classicPath = (classicTo.value || '/classic').split('?')[0]
   // the plugin page viewer's address, written the way the server checks it (?url=%2Fpath)
-  const appPage = route.path === '/page' && classicTo.value ? `/page?url=${encodeURIComponent(classicTo.value)}` : route.fullPath
+  // (the server only returns to a plugin page it lists)
+  const pluginPage = route.path === '/page' && typeof route.query.url === 'string' ? route.query.url : ''
+  const appPage = pluginPage ? `/page?url=${encodeURIComponent(pluginPage)}` : route.fullPath
   document.cookie = `rh_app_return=${encodeURIComponent(`${classicPath}|${appPage}`)}; path=/; max-age=7200; samesite=lax`
 }
 
