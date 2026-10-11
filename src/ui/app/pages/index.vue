@@ -149,6 +149,45 @@ function save() {
 rh.on('race_saved', (d: any) => {
   const heat = heats.value.find(h => h.id === d?.heat_id)
   toast.add({ title: t('Race saved'), description: heat?.displayname, icon: 'i-lucide-check-circle', color: 'success' })
+  // the server doesn't resend heat data after a normal save: refresh it for rounds raced
+  // (grouped classes get it before this notice, so there's nothing to wait for)
+  const grouped = classes.value.find(c => c.id === heat?.class_id)?.round_type === 1
+  if (heat?.class_id) classToCheck.value = { cid: heat.class_id, heatId: heat.id, before: grouped ? -1 : racedRounds(heat) }
+  rh.refresh(['heat_data'])
+})
+
+// Say when a save completes a class with a set number of rounds, and point to what
+// usually comes next. Races-per-heat classes are complete once every heat has raced the
+// rounds; grouped classes deactivate each heat as it's raced and stop adding new ones.
+const racedRounds = (h: any) => Number(h?.next_round) || 0
+const classToCheck = ref<{ cid: number, heatId: number, before: number } | null>(null)
+const classesAnnounced = new Set<number>()
+watch(heats, () => {
+  if (!classToCheck.value) return
+  const { cid, heatId, before } = classToCheck.value
+  const saved = heats.value.find(h => h.id === heatId)
+  if (!saved || racedRounds(saved) <= before) return // still the data from before the save
+  classToCheck.value = null
+  const cls = classes.value.find(c => c.id === cid)
+  const rounds = Number(cls?.rounds) || 0
+  if (!rounds || classesAnnounced.has(cid)) return
+  const classHeats = heats.value.filter(h => h.class_id === cid)
+  const done = cls.round_type === 1
+    ? !classHeats.some(h => h.active !== false)
+    : racedRounds(saved) === rounds && classHeats.filter(h => h.active !== false).every(h => racedRounds(h) >= rounds)
+  if (!done) return
+  classesAnnounced.add(cid)
+  toast.add({
+    title: `${cls.displayname}: ${t('all rounds raced')}`,
+    description: t('Review the results, or generate heats for the next stage.'),
+    icon: 'i-lucide-flag',
+    color: 'primary',
+    duration: 15000,
+    actions: [
+      { label: t('Results'), color: 'neutral', variant: 'outline', onClick: () => { navigateTo('/results') } },
+      { label: t('Generate Heats'), color: 'neutral', variant: 'outline', onClick: () => { navigateTo({ path: '/heats', query: { class: String(cid) } }) } }
+    ]
+  })
 })
 function discard() {
   rh.emit('discard_laps')

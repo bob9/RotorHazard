@@ -990,7 +990,9 @@
 			"Sort": "Sortieren",
 			"to clear": "zum Leeren",
 			"Not in a heat": "Noch in keinem Heat",
-			"Already in a heat": "Bereits in einem Heat"
+			"Already in a heat": "Bereits in einem Heat",
+			"all rounds raced": "alle Runden gefahren",
+			"Review the results, or generate heats for the next stage.": "Sieh dir die Ergebnisse an oder erstelle Heats für die nächste Stufe."
 		}
 	},
 	"es": {
@@ -2104,7 +2106,9 @@
 			"Sort": "Ordenar",
 			"to clear": "para borrar",
 			"Not in a heat": "Sin manga",
-			"Already in a heat": "Ya en una manga"
+			"Already in a heat": "Ya en una manga",
+			"all rounds raced": "todas las rondas corridas",
+			"Review the results, or generate heats for the next stage.": "Revisa los resultados o genera mangas para la siguiente fase."
 		}
 	},
 	"fr-be": {
@@ -3012,7 +3016,9 @@
 			"Sort": "Trier",
 			"to clear": "pour effacer",
 			"Not in a heat": "Dans aucune série",
-			"Already in a heat": "Déjà dans une série"
+			"Already in a heat": "Déjà dans une série",
+			"all rounds raced": "toutes les séries courues",
+			"Review the results, or generate heats for the next stage.": "Consultez les résultats ou générez les séries de l’étape suivante."
 		}
 	},
 	"it": {
@@ -4394,7 +4400,9 @@
 			 "Sort": "Ordina",
 			 "to clear": "per cancellare",
 			 "Not in a heat": "Non in una batteria",
-			 "Already in a heat": "Già in una batteria"
+			 "Already in a heat": "Già in una batteria",
+			 "all rounds raced": "tutti i round corsi",
+			 "Review the results, or generate heats for the next stage.": "Controlla i risultati o genera le batterie per la fase successiva."
 		}
 	},
 	"nl-be": {
@@ -5292,7 +5300,9 @@
 			"Sort": "Sorteren",
 			"to clear": "om te wissen",
 			"Not in a heat": "Nog in geen heat",
-			"Already in a heat": "Al in een heat"
+			"Already in a heat": "Al in een heat",
+			"all rounds raced": "alle rondes gevlogen",
+			"Review the results, or generate heats for the next stage.": "Bekijk de resultaten of genereer heats voor de volgende fase."
 		}
 	},
 	"pl": {
@@ -6227,7 +6237,9 @@
 			"Sort": "Sortuj",
 			"to clear": "aby wyczyścić",
 			"Not in a heat": "Bez wyścigu",
-			"Already in a heat": "Już w wyścigu"
+			"Already in a heat": "Już w wyścigu",
+			"all rounds raced": "wszystkie rundy rozegrane",
+			"Review the results, or generate heats for the next stage.": "Sprawdź wyniki lub wygeneruj wyścigi na następny etap."
 		}
 	},
 	"ja-JP": {
@@ -7459,7 +7471,9 @@
 			"Sort": "並べ替え",
 			"to clear": "でクリア",
 			"Not in a heat": "ヒート未割り当て",
-			"Already in a heat": "割り当て済み"
+			"Already in a heat": "割り当て済み",
+			"all rounds raced": "全ラウンド完了",
+			"Review the results, or generate heats for the next stage.": "結果を確認するか、次のステージのヒートを生成してください。"
 		}
 	},
 	"zh-CN": {
@@ -8983,7 +8997,9 @@
 			"Sort": "排序",
 			"to clear": "清除",
 			"Not in a heat": "未分组",
-			"Already in a heat": "已在分组中"
+			"Already in a heat": "已在分组中",
+			"all rounds raced": "所有回合已完成",
+			"Review the results, or generate heats for the next stage.": "查看结果，或为下一阶段生成分组。"
 		}
 	},
 	"ru": {
@@ -10283,7 +10299,9 @@
             "Sort": "Сортировка",
             "to clear": "— очистить",
             "Not in a heat": "Не в заезде",
-            "Already in a heat": "Уже в заезде"
+            "Already in a heat": "Уже в заезде",
+            "all rounds raced": "все раунды проведены",
+            "Review the results, or generate heats for the next stage.": "Посмотрите результаты или создайте заезды для следующего этапа."
         }
 	}
 }
