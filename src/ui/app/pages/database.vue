@@ -18,7 +18,9 @@ async function load() {
     loading.value = false
   }
 }
-onMounted(load)
+// admin-only data: never asked for until sign-in is confirmed (see middleware/admin-pages)
+const { admin } = useAuth()
+watch(admin, ok => { if (ok && !data.value) load() }, { immediate: true })
 
 // table key → label and column labels (same wording as the classic page)
 const TABLES = computed(() => [
@@ -65,7 +67,7 @@ const columns = computed(() => Object.entries(current.value.cols).map(([key, hea
     </template>
 
     <template #body>
-      <div class="mx-auto w-full max-w-7xl space-y-5">
+      <div class="mx-auto w-full max-w-5xl space-y-5">
         <p class="text-sm text-muted">
           {{ t('A read-only view of the event database. Change data on the Pilots, Heats and Formats pages.') }}
         </p>

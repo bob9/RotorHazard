@@ -130,6 +130,14 @@ function remove() {
   deleteTarget.value = null
   editing.value = null
 }
+// a row's "…" menu: the details sheet, the spoken name and (admins) delete
+function rowMenu(p: any) {
+  return [
+    [{ label: admin.value ? t('Edit details') : t('Details'), icon: admin.value ? 'i-lucide-pencil' : 'i-lucide-info', onSelect: () => { editing.value = p } },
+      { label: t('Hear name'), icon: 'i-lucide-volume-2', onSelect: () => sayName(p) }],
+    ...(admin.value ? [[{ label: t('Delete'), icon: 'i-lucide-trash-2', color: 'error' as const, onSelect: () => { deleteTarget.value = p } }]] : [])
+  ]
+}
 function sayName(p: any) {
   audio.unlock()
   audio.speak(p.phonetic || p.callsign, true)
@@ -262,7 +270,9 @@ function setColorMode(v: string) {
                   <span class="line-clamp-1">{{ (heatsByPilot[p.pilot_id] || []).join(', ') || '—' }}</span>
                 </td>
                 <td class="py-1 pr-3 text-right">
-                  <UButton icon="i-lucide-ellipsis" color="neutral" variant="ghost" size="sm" :aria-label="t('Details')" @click="editing = p" />
+                  <UDropdownMenu :items="rowMenu(p)" :content="{ align: 'end' }">
+                    <UButton icon="i-lucide-ellipsis" color="neutral" variant="ghost" size="sm" :aria-label="`${t('Actions')}: ${p.callsign}`" />
+                  </UDropdownMenu>
                 </td>
               </tr>
             </TransitionGroup>

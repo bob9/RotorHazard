@@ -61,16 +61,62 @@ watch(html, () => nextTick(() => {
     const src = img.getAttribute('src') || ''
     if (/^(\.\/)?img\//.test(src)) img.setAttribute('src', '/' + src.replace(/^\.\//, ''))
   })
-  root.querySelectorAll('a').forEach((a) => {
-    const href = a.getAttribute('href') || ''
-    if (/^https?:/.test(href)) {
-      a.target = '_blank'
-      a.rel = 'noopener'
-    }
-  })
+  root.querySelectorAll('a').forEach(a => resolveLink(a))
   outline.value = items
+  trackHeadings()
   if (route.hash) scrollTo(route.hash.slice(1), false)
 }), { flush: 'post' })
+
+// Links in the docs are written relative to the repository's doc/ folder. Another doc
+// ("Cluster.md", "../doc/Cluster.md#x") opens here; anything else in the repository
+// ("../src/node/readme_Arduino.md") opens on GitHub; web links open in a new tab.
+const REPO = 'https://github.com/RotorHazard/RotorHazard/blob/main'
+function resolveLink(a: HTMLAnchorElement) {
+  const href = a.getAttribute('href') || ''
+  if (!href || href.startsWith('#')) return
+  if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('//')) {
+    a.target = '_blank'
+    a.rel = 'noopener'
+    return
+  }
+  const url = new URL(href, 'https://repo.invalid/doc/')
+  const path = decodeURIComponent(url.pathname)
+  const doc = path.match(/^\/doc\/([^/]+\.md)$/i)
+  if (doc) {
+    a.setAttribute('href', `/app/docs?d=${encodeURIComponent(doc[1]!)}${url.hash}`)
+    a.dataset.doc = doc[1]!
+    a.dataset.hash = url.hash
+  } else {
+    a.setAttribute('href', REPO + url.pathname + url.hash)
+    a.target = '_blank'
+    a.rel = 'noopener'
+  }
+}
+
+// "On this page" follows the reading position: the last heading above the top third
+const active = ref('')
+function updateActive() {
+  if (!el.value) return
+  let current = ''
+  for (const h of outline.value) {
+    const top = document.getElementById(h.id)?.getBoundingClientRect().top ?? Infinity
+    if (top < window.innerHeight / 3) current = h.id
+    else break
+  }
+  active.value = current
+}
+function trackHeadings() {
+  nextTick(updateActive)
+}
+if (import.meta.client) {
+  document.addEventListener('scroll', updateActive, { capture: true, passive: true })
+  onBeforeUnmount(() => document.removeEventListener('scroll', updateActive, { capture: true }))
+}
+
+// a link to another section of the open doc changes only the hash
+watch(() => route.hash, (h, prev) => {
+  if (h && h !== prev && !loading.value) scrollTo(h.slice(1))
+})
 
 function scrollTo(id: string, smooth = true) {
   document.getElementById(decodeURIComponent(id))?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' })
@@ -83,16 +129,22 @@ function onClick(e: MouseEvent) {
   const href = a.getAttribute('href') || ''
   if (href.startsWith('#')) {
     e.preventDefault()
-    router.replace({ query: route.query, hash: href })
+    // a history entry, so Back returns to where the reader was
+    router.push({ query: route.query, hash: href })
     scrollTo(href.slice(1))
     return
   }
-  const m = href.match(/^(?:\.\/)?([^/?#:]+\.md)(#.*)?$/i)
-  if (m) {
+  if (a.dataset.doc) {
     e.preventDefault()
-    router.push({ path: '/docs', query: { d: decodeURIComponent(m[1]!) }, hash: m[2] || '' })
+    router.push({ path: '/docs', query: { d: a.dataset.doc }, hash: a.dataset.hash || '' })
   }
 }
+
+// the User Guide still names the classic pages: say where they are in this interface
+const classicNames = computed(() => [
+  ['Run', t('Race')], ['Current', t('Live')], ['Format', t('Formats')], ['Event', `${t('Event')}, ${t('Pilots')}, ${t('Heats')}`],
+  ['Settings', `${t('Timer')}, ${t('Settings')}`], ['Marshal', t('Marshal')], ['Results', t('Results')]
+])
 </script>
 
 <template>
@@ -152,8 +204,23 @@ function onClick(e: MouseEvent) {
             :actions="[{ label: t('Documentation'), icon: 'i-lucide-book-open', to: '/docs', color: 'neutral', variant: 'subtle' }]"
             variant="naked"
           />
-          <!-- eslint-disable-next-line vue/no-v-html -->
-          <div v-else ref="el" class="rh-doc" @click="onClick" v-html="html" />
+          <template v-else>
+            <UAlert
+              v-if="docName === 'User Guide.md'"
+              class="mb-8 max-w-[46rem]"
+              icon="i-lucide-map"
+              color="neutral"
+              variant="subtle"
+              :title="t('This guide describes the classic interface')"
+            >
+              <template #description>
+                <span>{{ t('In this interface:') }}</span>
+                <span v-for="([classic, now], i) in classicNames" :key="classic">{{ i ? ' · ' : ' ' }}{{ classic }} → <b class="font-medium text-highlighted">{{ now }}</b></span>
+              </template>
+            </UAlert>
+            <!-- eslint-disable-next-line vue/no-v-html -->
+            <div ref="el" class="rh-doc" @click="onClick" v-html="html" />
+          </template>
         </article>
 
         <aside v-if="outline.length > 2" class="hidden xl:sticky xl:top-0 xl:block xl:self-start">
@@ -162,7 +229,13 @@ function onClick(e: MouseEvent) {
           </div>
           <ul class="max-h-[calc(100vh-10rem)] space-y-1 overflow-y-auto text-sm">
             <li v-for="h in outline" :key="h.id" :class="h.level === 3 ? 'ps-3' : ''">
-              <a :href="`#${h.id}`" class="block truncate text-muted hover:text-highlighted" @click.prevent="scrollTo(h.id)">{{ h.text }}</a>
+              <a
+                :href="`#${h.id}`"
+                class="block truncate border-s-2 ps-2 transition-colors"
+                :class="active === h.id ? 'border-primary font-medium text-highlighted' : 'border-transparent text-muted hover:text-highlighted'"
+                :aria-current="active === h.id ? 'location' : undefined"
+                @click.prevent="scrollTo(h.id)"
+              >{{ h.text }}</a>
             </li>
           </ul>
         </aside>

@@ -332,8 +332,12 @@ class ServerTest(unittest.TestCase):
                 self.assertEqual(resp.status_code, 302)
                 return resp.headers['Location']
         self.assertTrue(target('/marshal').endswith('/marshal'))
+        self.assertTrue(target('/updatenodes').endswith('/updatenodes'))
+        # the doc being read carries over; other pages drop any query
+        self.assertTrue(target('/docs?d=User%20Guide.md').endswith('/docs?d=User%20Guide.md'))
+        self.assertTrue(target('/marshal?x=1').endswith('/marshal'))
         # unknown or external targets fall back to the classic home page
-        for bad in ('https://example.com/', '//example.com', '/hardwarelog'):
+        for bad in ('https://example.com/', '//example.com', '/hardwarelog', '/docs/../hardwarelog'):
             self.assertTrue(target(bad).endswith('/classic'), bad)
 
     def test_interface_api_add_kept(self):

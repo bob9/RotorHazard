@@ -512,7 +512,10 @@ def render_index():
     return render_template('home.html')
 
 INTERFACE_COOKIE = 'rh_interface'
-CLASSIC_PAGES = ('/run', '/current', '/marshal', '/results', '/event', '/format', '/settings', '/streams', '/plugins')
+CLASSIC_PAGES = ('/run', '/current', '/marshal', '/results', '/event', '/format', '/settings', '/streams', '/plugins',
+                 '/docs', '/database', '/scanner', '/vrxstatus', '/imdtabler', '/updatenodes')
+# classic pages whose query string is kept (the doc being read)
+CLASSIC_PAGES_WITH_QUERY = ('/docs',)
 
 def preferred_interface():
     '''Interface opened at '/': this browser's own choice, else the timer's default.'''
@@ -528,8 +531,11 @@ def set_interface(choice):
         abort(404)
     target = "/app/" if choice == 'app' else "/classic"
     # ?to= opens the matching classic page (the app maps its own page); known pages only
-    if choice == 'classic' and request.args.get('to') in CLASSIC_PAGES:
-        target = request.args.get('to')
+    to = request.args.get('to') or ''
+    if choice == 'classic' and to.startswith('/') and not to.startswith('//'):
+        path, _, query = to.partition('?')
+        if path in CLASSIC_PAGES:
+            target = path + ('?' + query if query and path in CLASSIC_PAGES_WITH_QUERY else '')
     response = redirect(target, code=302)
     response.set_cookie(INTERFACE_COOKIE, choice, max_age=60*60*24*365*5, samesite='Lax')
     return response
@@ -3059,6 +3065,10 @@ def get_pilotrace(data):
                 'marshal_type': pilotrace.marshal_type
             })
 
+def fw_fact(value):
+    '''A firmware fact, or None where check_bpillfw_file() fell back to "((unknown))".'''
+    return None if not value or value.startswith('((') else value
+
 @SOCKET_IO.on('check_bpillfw_file')
 @requires_socketio_auth
 @catchLogExceptionsWrapper
@@ -3101,8 +3111,17 @@ def check_bpillfw_file(data):
                   "{}: {} ({}{}: {})<br><br>". \
                       format(__("Firmware update version"), fwVerStr, fwTypStr, __("Build timestamp"), fwTimStr)
 
+        # the same facts as data, for the web app (the classic page shows the text below)
+        file_info = {
+            'size': fileSize,
+            'version': fw_fact(fwVerStr),
+            'proctype': fwRTypStr or None,
+            'build': fw_fact(fwTimStr),
+            'updatable': bool(rhInterfaceObj),
+        }
         if not rhInterfaceObj:
             infoStr = infoStr + "No updatable interfaces are available on this device";
+            SOCKET_IO.emit('upd_file_info', file_info)
             SOCKET_IO.emit('upd_set_info_text', infoStr)
         else:
             info_node = rhInterfaceObj.get_info_node_obj()
@@ -3117,10 +3136,16 @@ def check_bpillfw_file(data):
                 curRTypStr = None
                 curNodeStr = "({})".format(__("(unknown)"))
             infoStr += __("Current firmware version: ") + curNodeStr
+            file_info['current_version'] = info_node.firmware_version_str if info_node else None
+            file_info['current_build'] = info_node.firmware_timestamp_str if info_node else None
+            file_info['current_proctype'] = info_node.firmware_proctype_str if info_node else None
             if fwRTypStr and curRTypStr and fwRTypStr != curRTypStr:
                 infoStr += "<br><br><b>{}</b>: ".format(__("Warning")) + \
                             __("Firmware file processor type ({}) does not match current ({})").\
                             format(fwRTypStr, curRTypStr)
+                file_info['warning'] = __("Firmware file processor type ({}) does not match current ({})").\
+                            format(fwRTypStr, curRTypStr)
+            SOCKET_IO.emit('upd_file_info', file_info)
             SOCKET_IO.emit('upd_set_info_text', infoStr)
             SOCKET_IO.emit('upd_enable_update_button')
     except Exception as ex:

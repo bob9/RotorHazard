@@ -339,12 +339,7 @@ async function copyLog() {
 }
 
 // ---------------------------------------------------------------- tools
-const tools = computed(() => [
-  { label: t('IMDTabler'), description: t('Rate frequency sets for intermodulation interference'), icon: 'i-lucide-radio', to: '/imdtabler', show: true },
-  { label: t('VRx Status'), description: t('Connected video receivers'), icon: 'i-lucide-monitor', to: '/vrx-status', show: !!info.value?.vrx_enabled },
-  { label: t('Band Scanner'), description: t('Scan RSSI across the band (debug mode)'), icon: 'i-lucide-scan-line', to: '/scanner', show: !!info.value?.debug },
-  { label: t('View Database'), description: t('Read-only tables of the current database (debug mode).'), icon: 'i-lucide-table-2', to: '/database', show: !!info.value?.debug }
-].filter(x => x.show))
+const tools = useTools().tools()
 </script>
 
 <template>
@@ -403,14 +398,6 @@ const tools = computed(() => [
       <RhRow v-if="info?.debug" icon="i-lucide-octagon-x" :label="t('Kill Server')" :description="t('Terminate RotorHazard server?')">
         <UButton :label="t('Kill Server')" color="error" variant="soft" @click="askKill" />
       </RhRow>
-      <RhRow
-        v-if="info?.node_fw_updatable"
-        icon="i-lucide-cpu"
-        :label="t('Update Nodes')"
-        :description="t('Flash new firmware to the timing node processor.')"
-      >
-        <UButton :label="t('Open')" trailing-icon="i-lucide-external-link" color="neutral" variant="ghost" to="/update-nodes" />
-      </RhRow>
     </RhGroup>
 
     <!-- Logs -->
@@ -424,20 +411,8 @@ const tools = computed(() => [
     </RhGroup>
 
     <!-- Tools -->
-    <RhGroup :title="t('Tools')">
-      <NuxtLink
-        v-for="tool in tools"
-        :key="tool.to"
-        :to="tool.to"
-        class="flex min-h-12 items-center gap-3 px-4 py-3 transition-colors hover:bg-elevated/60"
-      >
-        <UIcon :name="tool.icon" class="size-5 shrink-0 text-muted" />
-        <div class="min-w-0 flex-1">
-          <div class="text-[15px] font-medium text-highlighted">{{ tool.label }}</div>
-          <div class="mt-0.5 text-[13px] text-muted">{{ tool.description }}</div>
-        </div>
-        <UIcon name="i-lucide-chevron-right" class="size-4 shrink-0 text-dimmed" />
-      </NuxtLink>
+    <RhGroup v-if="tools.length" :title="t('Tools')">
+      <RhRow v-for="tool in tools" :key="tool.key" :to="tool.to" :icon="tool.icon" :label="tool.label" :description="tool.description" />
     </RhGroup>
 
     <!-- Advanced -->

@@ -7,7 +7,7 @@
 const { t } = useI18n()
 const rh = useRH()
 const { info } = useServerInfo()
-useHead({ title: computed(() => t('Scanner')) })
+useHead({ title: computed(() => t('Band Scanner')) })
 
 const MIN = 5645
 const MAX = 5945
@@ -64,6 +64,15 @@ onBeforeUnmount(() => window.removeEventListener('pagehide', stopAll))
 // SVG chart geometry: x over the band, y over the signal
 const W = 600
 const H = 180
+const MHZ_TICKS = [5650, 5700, 5750, 5800, 5850, 5900]
+// signal gridlines: four even steps up to the chart's current top
+function gridOf(i: number) {
+  const top = scanOf(i).top
+  const step = Math.max(10, Math.ceil(top / 4 / 10) * 10)
+  const out: { v: number, y: number }[] = []
+  for (let v = 0; v <= top; v += step) out.push({ v, y: 100 - (v / top) * 100 })
+  return out
+}
 const x = (f: number) => ((f - MIN) / (MAX - MIN)) * W
 function points(i: number, key: keyof Sample) {
   const s = scanOf(i)
@@ -80,7 +89,7 @@ function bars(i: number) {
 <template>
   <UDashboardPanel id="scanner">
     <template #header>
-      <UDashboardNavbar :title="t('Scanner')">
+      <UDashboardNavbar :title="t('Band Scanner')">
         <template #leading>
           <UButton icon="i-lucide-chevron-left" color="neutral" variant="ghost" to="/timer" :aria-label="t('Timer')" />
         </template>
@@ -88,7 +97,7 @@ function bars(i: number) {
     </template>
 
     <template #body>
-      <div class="mx-auto w-full max-w-6xl space-y-6">
+      <div class="mx-auto w-full max-w-5xl space-y-6">
         <UAlert
           icon="i-lucide-triangle-alert"
           color="neutral"
@@ -104,14 +113,26 @@ function bars(i: number) {
               </div>
               <USwitch :model-value="scanOf(i).on" :label="t('Scan')" @update:model-value="(v: boolean) => setScan(i, v)" />
             </div>
-            <svg :viewBox="`0 -4 ${W} ${H + 24}`" class="block h-48 w-full" preserveAspectRatio="none" role="img" :aria-label="`${t('Node')} ${i + 1}`">
-              <line v-for="c in CHANNELS" :key="c.name" :x1="x(c.freq)" :x2="x(c.freq)" y1="0" :y2="H" class="stroke-(--ui-border)" stroke-dasharray="3 4" />
-              <rect v-for="(b, k) in bars(i)" :key="k" :x="b.x - 1" :y="H - b.h" width="2" :height="b.h" class="fill-primary/70" />
-              <polyline :points="points(i, 'max')" fill="none" class="stroke-error" stroke-width="1.2" vector-effect="non-scaling-stroke" />
-              <polyline :points="points(i, 'min')" fill="none" class="stroke-(--ui-text-muted)" stroke-width="1" vector-effect="non-scaling-stroke" />
-              <line x1="0" :x2="W" :y1="H" :y2="H" class="stroke-(--ui-border-accented)" />
-              <text v-for="c in CHANNELS" :key="`t${c.name}`" :x="x(c.freq)" :y="H + 16" text-anchor="middle" class="fill-(--ui-text-muted) text-[11px]">{{ c.name }}</text>
-            </svg>
+            <!-- the plot stretches to the card; its labels are page text so they never distort -->
+            <div class="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-2">
+              <div class="relative h-44 text-right text-[11px] tabular text-muted" aria-hidden="true">
+                <span v-for="g in gridOf(i)" :key="g.v" class="absolute right-0 -translate-y-1/2" :style="{ top: `${g.y}%` }">{{ g.v }}</span>
+              </div>
+              <svg :viewBox="`0 0 ${W} ${H}`" class="block h-44 w-full overflow-visible" preserveAspectRatio="none" role="img" :aria-label="`${t('Node')} ${i + 1}: ${t('signal across')} ${MIN}–${MAX} MHz`">
+                <line v-for="g in gridOf(i)" :key="`g${g.v}`" x1="0" :x2="W" :y1="(g.y / 100) * H" :y2="(g.y / 100) * H" class="stroke-(--ui-border)" vector-effect="non-scaling-stroke" />
+                <line v-for="c in CHANNELS" :key="c.name" :x1="x(c.freq)" :x2="x(c.freq)" y1="0" :y2="H" class="stroke-(--ui-border-accented)" stroke-dasharray="2 4" vector-effect="non-scaling-stroke" />
+                <rect v-for="(b, k) in bars(i)" :key="k" :x="b.x - 1" :y="H - b.h" width="2" :height="b.h" class="fill-primary/70" />
+                <polyline :points="points(i, 'max')" fill="none" class="stroke-error" stroke-width="1.2" vector-effect="non-scaling-stroke" />
+                <polyline :points="points(i, 'min')" fill="none" class="stroke-(--ui-text-muted)" stroke-width="1" vector-effect="non-scaling-stroke" />
+                <line x1="0" :x2="W" :y1="H" :y2="H" class="stroke-(--ui-border-accented)" vector-effect="non-scaling-stroke" />
+              </svg>
+              <div />
+              <!-- MHz along the band, with the Raceband channels beneath -->
+              <div class="relative h-9 text-[11px] tabular" aria-hidden="true">
+                <span v-for="f in MHZ_TICKS" :key="f" class="absolute top-1 -translate-x-1/2 text-muted" :style="{ left: `${(x(f) / W) * 100}%` }">{{ f }}</span>
+                <span v-for="c in CHANNELS" :key="`c${c.name}`" class="absolute top-5 -translate-x-1/2 font-medium text-dimmed" :style="{ left: `${(x(c.freq) / W) * 100}%` }">{{ c.name }}</span>
+              </div>
+            </div>
             <p v-if="!scanOf(i).on" class="text-center text-xs text-dimmed">
               {{ t('Turn on Scan to sweep 5645–5945 MHz.') }}
             </p>

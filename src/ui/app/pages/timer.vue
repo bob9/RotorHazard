@@ -86,6 +86,9 @@ const vrxBySeat = computed(() => {
   return m
 })
 
+// the timer's frequency and firmware tools (the full list is under Settings › System)
+const timerTools = useTools().tools(['scanner', 'imdtabler', 'update-nodes'])
+
 const tab = ref('frequencies')
 const tabs = computed(() => [
   { label: t('Frequencies'), value: 'frequencies', icon: 'i-lucide-radio' },
@@ -210,16 +213,8 @@ const tabs = computed(() => [
               <UInputNumber :model-value="S.start_thresh_lower_duration?.start_thresh_lower_duration" :min="0" class="w-36" @update:model-value="(v: any) => rh.emit('set_start_thresh_lower_duration', { start_thresh_lower_duration: v })" />
             </RhRow>
           </RhGroup>
-          <RhGroup :title="t('Tools')">
-            <RhRow v-if="info?.debug" :label="t('Band Scanner')" :description="t('Scan the band for interference.')" icon="i-lucide-scan-line">
-              <UButton to="/scanner" color="neutral" variant="ghost" trailing-icon="i-lucide-chevron-right" :label="t('Open')" />
-            </RhRow>
-            <RhRow :label="t('IMDTabler')" :description="t('Compare frequency sets for intermodulation.')" icon="i-lucide-table">
-              <UButton to="/imdtabler" color="neutral" variant="ghost" trailing-icon="i-lucide-chevron-right" :label="t('Open')" />
-            </RhRow>
-            <RhRow v-if="info?.node_fw_updatable" :label="t('Update Nodes')" :description="t('Update the node processor firmware.')" icon="i-lucide-cpu">
-              <UButton to="/update-nodes" color="neutral" variant="ghost" trailing-icon="i-lucide-chevron-right" :label="t('Open')" />
-            </RhRow>
+          <RhGroup v-if="timerTools.length" :title="t('Tools')">
+            <RhRow v-for="tool in timerTools" :key="tool.key" :to="tool.to" :icon="tool.icon" :label="tool.label" :description="tool.description" />
           </RhGroup>
         </template>
       </div>

@@ -18,20 +18,29 @@ const aboutOpen = ref(false)
 
 const raceLive = computed(() => [1, 3].includes(rh.state.race_status?.race_status))
 
-// admin-only pages: guests who open one by address go to Live, with an offer to sign in
-const ADMIN_PAGES = ['/database', '/vrx-status', '/scanner', '/update-nodes', '/marshal', '/pilots', '/heats', '/formats', '/timer', '/plugins', '/settings/general', '/settings/actions',
-  '/settings/leds', '/settings/vrx', '/settings/plugins', '/settings/data', '/settings/cluster', '/settings/system']
+// admin-only pages (utils/adminPages.ts): the route middleware sends guests to Live before
+// the page renders; this says why, and also covers signing out while on such a page
+const { refusedPath } = useAuth()
 const toast = useToast()
-watch([admin, () => route.path], ([isAdmin, path]) => {
-  if (isAdmin !== false || !ADMIN_PAGES.includes(path)) return
-  navigateTo('/live', { replace: true })
+function offerSignIn() {
   toast.add({
+    id: 'sign-in-to-open',
     title: t('Sign in to open that page'),
     icon: 'i-lucide-lock-keyhole',
     color: 'neutral',
     actions: [{ label: t('Sign in'), color: 'neutral', variant: 'outline', onClick: () => { loginOpen.value = true } }]
   })
+}
+watch(refusedPath, (p) => {
+  if (!p) return
+  refusedPath.value = null
+  offerSignIn()
 }, { immediate: true })
+watch(admin, (isAdmin) => {
+  if (isAdmin !== false || !isAdminPage(route.path)) return
+  navigateTo('/live', { replace: true })
+  offerSignIn()
+})
 
 const raceItems = computed<NavigationMenuItem[]>(() => [
   ...(admin.value
@@ -73,6 +82,7 @@ function prettyPath(url: string) {
 
 // Search covers pages, settings (with everyday synonyms), and event data
 const searchData = ref(false)
+const tools = useTools().tools()
 // where each page's plugin panels are shown in this app; other pages go to Plugins & Streams
 const PANEL_ROUTES: Record<string, string> = { run: '/', format: '/event', results: '/results', marshal: '/marshal', settings: '/settings/plugins', streams: '/settings/plugins' }
 const { pages: pluginPages } = usePluginUI()
@@ -88,6 +98,8 @@ const settingsIndex = computed(() => admin.value
       { label: t('Frequencies'), description: t('Timer'), icon: 'i-lucide-radio', to: '/timer', keywords: 'frequency frequencies channel channels band raceband vtx video node nodes imd preset' },
       { label: t('Sensor Tuning'), description: t('Timer'), icon: 'i-lucide-activity', to: '/timer', keywords: 'tuning enterat exitat rssi calibration signal gate threshold' },
       { label: t('Race duration and scoring'), description: t('Formats'), icon: 'i-lucide-timer', to: '/formats', keywords: 'duration length time clock minutes staging tones win condition laps scoring holeshot hole shot grace period prestage first crossing staggered start laps to win team co-op points random staging' },
+      { label: t('Grace Period'), description: t('Formats'), icon: 'i-lucide-hourglass', to: '/formats#grace-period', keywords: 'grace period grace final lap after the clock overtime wait for a manual stop' },
+      ...tools.value.map(x => ({ label: x.label, description: x.description, icon: x.icon, to: x.to, keywords: x.keywords })),
       { label: t('Generate Heats'), description: t('Heats'), icon: 'i-lucide-wand-sparkles', to: '/heats?generate=1', keywords: 'heat generator generate heats bracket ladder seed seeding random qualifying finals' },
       { label: t('Appearance'), description: t('Settings'), icon: 'i-lucide-sun-moon', to: '/settings/general#appearance', keywords: 'dark mode light mode theme night colour color scheme appearance' },
       { label: t('Minimum Lap Time'), description: t('Race'), icon: 'i-lucide-gauge', to: '/#min-lap', keywords: 'min lap minimum short laps ignore crossings' },
@@ -128,7 +140,7 @@ const pluginIndex = computed(() => {
 const dataIndex = computed(() => {
   if (!searchData.value) return []
   const items: any[] = []
-  for (const p of rh.state.pilot_data?.pilots || []) items.push({ label: p.callsign, description: [t('Pilot'), p.name].filter(Boolean).join(' · '), icon: 'i-lucide-user', to: '/pilots', keywords: `${p.name || ''} ${p.team || ''}` })
+  for (const p of rh.state.pilot_data?.pilots || []) items.push({ label: p.callsign, description: [t('Pilot'), p.name].filter(Boolean).join(' · '), icon: 'i-lucide-user', to: '/pilots', keywords: p.team || '' })
   const classes = rh.state.class_data?.classes || []
   for (const c of classes) items.push({ label: c.displayname, description: t('Class'), icon: 'i-lucide-trophy', to: `/heats?class=${c.id}` })
   for (const h of rh.state.heat_data?.heats || []) {
@@ -143,6 +155,7 @@ const searchGroups = computed(() => [
     label: t('Go to'),
     items: [...raceItems.value, ...eventItems.value, ...systemItems.value, ...pluginItems.value]
       .map(i => ({ label: i.label, icon: i.icon, to: i.to as string }))
+      .concat([{ label: t('Documentation'), icon: 'i-lucide-book-open', to: '/docs', keywords: 'docs documentation help guide manual user guide how to' } as any])
   },
   ...(settingsIndex.value.length ? [{ id: 'settings', label: t('Settings'), items: settingsIndex.value }] : []),
   // plugin settings come after the timer's own, so they never crowd out a core match
@@ -154,7 +167,6 @@ const searchGroups = computed(() => [
     items: [
       { label: colorMode.value === 'dark' ? t('Light appearance') : t('Dark appearance'), icon: colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon', keywords: 'dark mode light mode theme night', onSelect: () => { colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark' } },
       { label: t('Classic interface'), icon: 'i-lucide-history', to: classicHref.value, external: true, target: '_self' },
-      { label: t('Documentation'), icon: 'i-lucide-book-open', to: '/docs' },
       ...(admin.value ? [{ label: t('Restart server'), icon: 'i-lucide-rotate-cw', onSelect: () => { restartOpen.value = true } }] : [])
     ]
   }
@@ -202,10 +214,16 @@ const { restartServer } = useMessages()
 const CLASSIC_FOR: [string, string][] = [
   ['/live', '/current'], ['/marshal', '/marshal'], ['/results', '/results'], ['/event', '/event'],
   ['/pilots', '/event'], ['/heats', '/event'], ['/formats', '/format'], ['/timer', '/settings'],
-  ['/settings/plugins', '/streams'], ['/settings', '/settings'], ['/plugins', '/plugins']
+  ['/settings/plugins', '/streams'], ['/settings', '/settings'], ['/plugins', '/plugins'],
+  ['/database', '/database'], ['/scanner', '/scanner'], ['/vrx-status', '/vrxstatus'],
+  ['/imdtabler', '/imdtabler'], ['/update-nodes', '/updatenodes']
 ]
 const classicHref = computed(() => {
   if (route.path === '/') return '/interface/classic?to=/run'
+  if (route.path === '/docs') {
+    const d = typeof route.query.d === 'string' && route.query.d ? route.query.d : 'README.md'
+    return `/interface/classic?to=${encodeURIComponent(`/docs?d=${encodeURIComponent(d)}`)}`
+  }
   const match = CLASSIC_FOR.find(([app]) => route.path === app || route.path.startsWith(app + '/'))
   return match ? `/interface/classic?to=${encodeURIComponent(match[1])}` : '/interface/classic'
 })

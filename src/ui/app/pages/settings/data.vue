@@ -6,6 +6,7 @@
  */
 const rh = useRH()
 const { t } = useI18n()
+const dataTools = useTools().tools(['database'])
 const { info } = useServerInfo()
 const toast = useToast()
 
@@ -305,14 +306,7 @@ function resetSettings() {
         >
           <UButton :label="t('Back Up Now')" icon="i-lucide-download" :loading="backingUp" @click="backupDatabase" />
         </RhRow>
-        <RhRow
-          v-if="info?.debug"
-          icon="i-lucide-table-2"
-          :label="t('View Database')"
-          :description="t('Read-only tables of the current database (debug mode).')"
-        >
-          <UButton :label="t('Open')" trailing-icon="i-lucide-chevron-right" color="neutral" variant="ghost" to="/database" />
-        </RhRow>
+        <RhRow v-for="tool in dataTools" :key="tool.key" :to="tool.to" :icon="tool.icon" :label="tool.label" :description="tool.description" />
       </RhGroup>
 
       <RhGroup :title="t('Archived Events')" :description="t('Earlier events and manual backups saved on the timer.')">
