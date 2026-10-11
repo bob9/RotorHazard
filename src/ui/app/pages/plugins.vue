@@ -89,8 +89,11 @@ const discoverSearch = useTemplateRef<any>('discoverSearch')
 defineShortcuts({
   '/': () => (tab.value === 'installed' ? installedSearch.value : discoverSearch.value)?.inputRef?.focus()
 })
-const removedIds = computed(() => new Set(installed.value.filter(p => p.removed).map(p => p.id)))
-const installedIds = computed(() => new Set(installed.value.filter(p => !p.removed).map(p => p.id)))
+// deleted since the server started: the server's plugin list says so, or (from the web app
+// plugin on a stock server) /app-info does
+const isRemoved = (p: InstalledPlugin) => !!p.removed || !!serverInfoState.value?.removed_plugins?.includes(p.id)
+const removedIds = computed(() => new Set(installed.value.filter(isRemoved).map(p => p.id)))
+const installedIds = computed(() => new Set(installed.value.filter(p => !isRemoved(p)).map(p => p.id)))
 const updatesAvailable = computed(() => installed.value.filter(p => hasUpdate(p.update_status)).length)
 
 const tabs = computed(() => [
@@ -444,7 +447,7 @@ function initials(name: string) {
                     <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <span class="text-[15px] font-semibold text-highlighted">{{ p.name || p.id }}</span>
                       <span v-if="p.version" class="tabular text-[13px] text-muted">{{ p.version }}</span>
-                      <UBadge v-if="changed[p.id] === 'deleted' || (p.removed && changed[p.id] !== 'installed')" color="warning" variant="subtle" size="sm" :label="t('Removed · restart to finish')" />
+                      <UBadge v-if="changed[p.id] === 'deleted' || (isRemoved(p) && changed[p.id] !== 'installed')" color="warning" variant="subtle" size="sm" :label="t('Removed · restart to finish')" />
                       <UBadge v-else-if="changed[p.id] === 'installed'" color="success" variant="subtle" size="sm" :label="t('Updated · restart to finish')" />
                       <UBadge v-else-if="isDeactivated(p)" color="neutral" variant="subtle" size="sm" :label="t('Disabled')" />
                       <UBadge v-else-if="!p.loaded" color="error" variant="subtle" size="sm" icon="i-lucide-circle-alert" :label="t('Not loaded')" />

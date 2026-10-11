@@ -46,6 +46,35 @@ async function checkPage() {
 }
 watch([url, nonce], () => { loading.value = true; checkPage() }, { immediate: true })
 
+// Classic-layout plugin pages carry the classic header and footer; inside the app, which has
+// its own navigation, hide them (same-origin frame). Applied as soon as the page's document
+// exists, and again on load, so the header doesn't flash.
+const EMBED_CSS = 'html.rh-embedded body > header, html.rh-embedded body > footer { display: none !important; }'
+function embed() {
+  try {
+    const doc = frame.value?.contentDocument
+    if (!doc || !doc.documentElement || doc.location.href === 'about:blank') return
+    doc.documentElement.classList.add('rh-embedded')
+    if (doc.getElementById('rh-app-embedded')) return
+    const style = doc.createElement('style')
+    style.id = 'rh-app-embedded'
+    style.textContent = EMBED_CSS
+    ;(doc.head || doc.documentElement).appendChild(style)
+  } catch {
+    // a cross-origin page (a plugin redirecting elsewhere): leave it as it is
+  }
+}
+let embedTimer: ReturnType<typeof setInterval> | undefined
+watch(loading, (on) => {
+  clearInterval(embedTimer)
+  if (on && import.meta.client) embedTimer = setInterval(embed, 50)
+}, { immediate: true })
+onBeforeUnmount(() => clearInterval(embedTimer))
+function onFrameLoad() {
+  embed()
+  loading.value = false
+}
+
 function reload() {
   loading.value = true
   checkPage()
@@ -112,7 +141,7 @@ function reload() {
           :title="title"
           class="absolute inset-2 h-[calc(100%-1rem)] w-[calc(100%-1rem)] rounded-xl border-0 bg-white shadow-sm ring-1 ring-default sm:inset-4 sm:h-[calc(100%-2rem)] sm:w-[calc(100%-2rem)] dark:ring-white/10"
           :style="{ colorScheme: colorMode.value === 'dark' ? 'dark' : 'light' }"
-          @load="loading = false"
+          @load="onFrameLoad"
         />
       </div>
       <div v-else class="flex flex-1 items-center justify-center p-6">

@@ -1,12 +1,15 @@
-// Copies the generated SPA into the server's 'webapp' folder so the
-// RotorHazard server can serve it without Node.js being installed.
+// Copies the generated SPA into the RotorHazard Web App plugin's 'webapp' folder
+// (plugin/rh_webapp/webapp), so the plugin serves it without Node.js being installed.
+// RH_WEBAPP_DEST overrides the destination.
 import { cpSync, rmSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
 const src = join(root, '.output', 'public')
-const dest = join(root, '..', 'server', 'webapp')
+const dest = process.env.RH_WEBAPP_DEST
+  ? resolve(process.env.RH_WEBAPP_DEST)
+  : join(root, '..', '..', 'plugin', 'rh_webapp', 'webapp')
 
 if (!existsSync(join(src, 'index.html'))) {
   console.error('No build output found at', src)

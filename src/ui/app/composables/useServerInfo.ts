@@ -20,9 +20,23 @@ export interface ServerInfo {
   event: { name: string, description: string }
   timer_name: string
   timer_logo: string
+  // set when the app is served by the RotorHazard Web App plugin on a stock server
+  // (absent from the core-integrated server, which has all of these built in)
+  /** what serves the app: { kind: 'plugin', domain, version } */
+  host?: { kind: string, domain?: string, version?: string }
+  /** false: no '/app-classic-session'; the classic pages use their own sign-in prompt */
+  classic_session?: boolean
+  /** URL of the app's own translations (strings the server's language table lacks) */
+  strings?: string
+  /** false: the documentation folder is not on this timer */
+  docs?: boolean
+  /** installed plugins deleted since the server started (a restart finishes removing them) */
+  removed_plugins?: string[]
 }
 
 const info = ref<ServerInfo | null>(null)
+/** the latest /app-info answer, for code that can't call useServerInfo() (useI18n) */
+export const serverInfoState = info
 let pending: Promise<void> | null = null
 
 // one /app-info request serves everyone asking at about the same time with the same sign-in

@@ -53,7 +53,9 @@ export function useAuth() {
   function logout() {
     writeCredentials(null)
     // also sign this browser out of the classic pages (see classicSession)
-    fetch('/app-classic-session', { method: 'DELETE', cache: 'no-store' }).catch(() => {})
+    if (serverInfoState.value?.classic_session !== false) {
+      fetch('/app-classic-session', { method: 'DELETE', cache: 'no-store' }).catch(() => {})
+    }
     rh.reconnect()
     refresh()
   }
@@ -61,8 +63,9 @@ export function useAuth() {
   // The classic pages use the browser's own Basic Auth prompt. Before an admin switches
   // to them, sign this browser in with the app's credentials (a signed session cookie),
   // so the classic pages open without asking again.
+  // (Not available from the web app plugin on a stock server: the classic pages then ask once.)
   async function classicSession() {
-    if (!readCredentials()) return false
+    if (!readCredentials() || serverInfoState.value?.classic_session === false) return false
     try {
       const res = await fetch('/app-classic-session', { method: 'POST', headers: basicHeader(), cache: 'no-store' })
       return res.ok

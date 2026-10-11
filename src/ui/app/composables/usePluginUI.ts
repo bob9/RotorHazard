@@ -5,6 +5,9 @@
  */
 const pages = reactive<Record<string, any[]>>({})
 let listening = false
+// the web app plugin's own settings panel (the default interface, which the app
+// shows in Settings › General) is for the classic Settings page only
+const OWN_PANELS = ['rh_webapp']
 
 export function usePluginUI() {
   const rh = useRH()
@@ -12,7 +15,7 @@ export function usePluginUI() {
     listening = true
     rh.on('ui', (data: any) => {
       if (!data?.page) return
-      const incoming: any[] = data.panels || []
+      const incoming: any[] = (data.panels || []).filter((p: any) => !OWN_PANELS.includes(p?.panel?.name))
       if (data.replace_panels === false && pages[data.page]) {
         const current = [...pages[data.page]!]
         for (const p of incoming) {

@@ -5,9 +5,17 @@ The RotorHazard web interface, built with [Nuxt](https://nuxt.com) and
 RotorHazard server over the same Socket.IO events as the classic interface,
 so it supports every timer feature and every plugin the classic pages do.
 
-The built app is committed to `src/server/webapp/` and served by the timer at
-`/app/`, so a timer never needs Node.js. The classic interface stays available
-at `/classic` and its existing URLs (`/run`, `/format`, `/settings`, ...).
+On this branch (`webapp-plugin`) the app is delivered as a RotorHazard plugin,
+**RotorHazard Web App** (`plugin/rh_webapp`, see [its README](../../plugin/README.md)),
+that runs on a stock RotorHazard server. The built app is committed to
+`plugin/rh_webapp/webapp/` and served by the plugin at `/app/`, so a timer never
+needs Node.js. The classic interface stays available at `/classic` and its
+existing URLs (`/run`, `/format`, `/settings`, ...).
+
+The same build also works when served by the core-integrated server of the
+`webapp-redesign` branch: the plugin answers the same HTTP endpoints, and adds a
+few facts to `/app-info` that the app uses to adapt (`host`, `classic_session`,
+`strings`, `docs`, `removed_plugins`; absent means "core-integrated").
 
 ### Choosing an interface
 
@@ -19,7 +27,9 @@ at `/classic` and its existing URLs (`/run`, `/format`, `/settings`, ...).
   app page that sent you there (a short-lived `rh_app_return` cookie).
 - Devices that have not chosen get the timer's default, set in
   Settings › General › Default Interface (config `UI.classicInterface`;
-  the new interface unless set to classic).
+  the new interface unless set to classic). The plugin also shows this setting
+  on the classic Settings page (panel "Web App"), and adds "New interface" to
+  the classic menu with a small script (`plugin/rh_webapp/static/classic.js`).
 
 ## Development
 
@@ -27,13 +37,17 @@ at `/classic` and its existing URLs (`/run`, `/format`, `/settings`, ...).
 cd src/ui
 npm install
 # start a timer with mock nodes in another terminal:
+#   cp -r ../../plugin/rh_webapp ~/rh-data/plugins/   (once; the app's HTTP endpoints)
 #   cd src/server && python server.py --mock-nodes 4
 npm run dev          # http://localhost:3000/app/ (proxies to the timer on :5000)
 RH_SERVER=http://192.168.1.50 npm run dev   # use a timer elsewhere on the network
-npm run build        # generate and copy into src/server/webapp/
+npm run build        # generate and copy into plugin/rh_webapp/webapp/
+npm run package-plugin   # build, then zip the plugin: plugin/dist/rh_webapp.zip
 ```
 
-Run `npm run build` and commit `src/server/webapp/` together with source changes.
+Run `npm run build` and commit `plugin/rh_webapp/webapp/` together with source changes.
+(`RH_WEBAPP_DEST=<dir> npm run build` copies the build somewhere else, e.g.
+`src/server/webapp` for the core-integrated branch.)
 
 ## How it fits together
 
@@ -42,7 +56,7 @@ Run `npm run build` and commit `src/server/webapp/` together with source changes
 | Socket connection, server state, `load_data` | `app/composables/useRH.ts` |
 | Admin sign-in (HTTP Basic credentials sent with the socket handshake) | `app/composables/useAuth.ts`, `/app-auth` route |
 | Server facts (version, LEDs/VRx enabled, plugin pages, event name) | `app/composables/useServerInfo.ts`, `/app-info` route |
-| Translations (server language tables, keyed by English text) | `app/composables/useI18n.ts` → `t('Text')` |
+| Translations (server language tables, keyed by English text, plus the app's own strings from the plugin's `/app-strings`) | `app/composables/useI18n.ts` → `t('Text')`, `plugin/rh_webapp/translations.json` |
 | Race clock synced to server monotonic time | `app/composables/useRaceClock.ts` |
 | Voice callouts and tones (same localStorage keys as the classic UI) | `app/composables/useAudio.ts` |
 | Notifications, alerts, restart banner | `app/composables/useMessages.ts` |
@@ -74,7 +88,11 @@ Several race-control events (`stage_race`, `stop_race`, `save_laps`,
   in the sidebar for admins, named after their plugin. Only GET routes without
   URL parameters whose view renders HTML are listed (JSON/API routes are left
   out). To name a page yourself, or to list it for everyone, call
-  `rhapi.ui.register_nav_link(name, label, url, admin_only=False, order=0)`.
+  `register_nav_link(name, label, url, admin_only=False, order=0)` from the
+  web app plugin (`from plugins.rh_webapp import register_nav_link`, in a
+  `try`), or `rhapi.ui.register_nav_link(...)` on the core-integrated server.
+- **Pages shown in the app** are framed same-origin; the app hides the classic
+  header and footer inside the frame (`app/pages/page.vue`).
 - **Panels shown to guests** include only their Markdown; settings, fields and
   quick buttons are shown to signed-in admins.
 - **Scripts in Markdown and field descriptions** run, as they did on the
@@ -104,6 +122,8 @@ Several race-control events (`stage_race`, `stop_race`, `save_laps`,
   visible effect show a short `useToast()` message.
 - Every user-visible string goes through `t()`. Use the classic UI's English
   wording where the meaning is the same, so existing translations apply.
+  Translations of new strings go in `plugin/rh_webapp/translations.json`
+  (same layout as RotorHazard's `language.json`, new strings only).
 - Use only `i-lucide-*` icons, written as literal strings (they are bundled at
   build time by scanning the source).
 - Use semantic colors (`text-muted`, `bg-elevated`, `text-highlighted`,
