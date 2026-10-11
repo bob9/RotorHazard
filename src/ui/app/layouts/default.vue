@@ -18,6 +18,21 @@ const aboutOpen = ref(false)
 
 const raceLive = computed(() => [1, 3].includes(rh.state.race_status?.race_status))
 
+// admin-only pages: guests who open one by address go to Live, with an offer to sign in
+const ADMIN_PAGES = ['/marshal', '/pilots', '/heats', '/formats', '/timer', '/plugins', '/settings/general', '/settings/actions',
+  '/settings/leds', '/settings/vrx', '/settings/plugins', '/settings/data', '/settings/cluster', '/settings/system']
+const toast = useToast()
+watch([admin, () => route.path], ([isAdmin, path]) => {
+  if (isAdmin !== false || !ADMIN_PAGES.includes(path)) return
+  navigateTo('/live', { replace: true })
+  toast.add({
+    title: t('Sign in to open that page'),
+    icon: 'i-lucide-lock-keyhole',
+    color: 'neutral',
+    actions: [{ label: t('Sign in'), color: 'neutral', variant: 'outline', onClick: () => { loginOpen.value = true } }]
+  })
+}, { immediate: true })
+
 const raceItems = computed<NavigationMenuItem[]>(() => [
   ...(admin.value
     ? [{ label: t('Race'), icon: 'i-lucide-flag', to: '/', badge: raceLive.value ? { label: t('Live'), color: 'error' as const, variant: 'solid' as const, size: 'sm' as const } : undefined },

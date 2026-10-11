@@ -70,8 +70,11 @@ watch(tab, (v) => {
 
 /* ----------------------------------------------------------- installed -- */
 
+// plugins switched off on purpose (folder name starting with '_') aren't errors
+const isDeactivated = (p: InstalledPlugin) => !p.loaded && /leading underscore|disabled/i.test(p.load_issue || '')
 const installed = computed<InstalledPlugin[]>(() => [...(rh.state.plugin_list?.plugins || [])]
-  .sort((a: InstalledPlugin, b: InstalledPlugin) => (a.name || a.id).localeCompare(b.name || b.id, undefined, { sensitivity: 'base' })))
+  .sort((a: InstalledPlugin, b: InstalledPlugin) => Number(isDeactivated(a)) - Number(isDeactivated(b))
+    || (a.name || a.id).localeCompare(b.name || b.id, undefined, { sensitivity: 'base' })))
 const removedIds = computed(() => new Set(installed.value.filter(p => p.removed).map(p => p.id)))
 const installedIds = computed(() => new Set(installed.value.filter(p => !p.removed).map(p => p.id)))
 const updatesAvailable = computed(() => installed.value.filter(p => hasUpdate(p.update_status)).length)
@@ -382,6 +385,7 @@ function initials(name: string) {
                     <span v-if="p.version" class="tabular text-[13px] text-muted">{{ p.version }}</span>
                     <UBadge v-if="changed[p.id] === 'deleted' || (p.removed && changed[p.id] !== 'installed')" color="warning" variant="subtle" size="sm" :label="t('Removed · restart to finish')" />
                     <UBadge v-else-if="changed[p.id] === 'installed'" color="success" variant="subtle" size="sm" :label="t('Updated · restart to finish')" />
+                    <UBadge v-else-if="isDeactivated(p)" color="neutral" variant="subtle" size="sm" :label="t('Disabled')" />
                     <UBadge v-else-if="!p.loaded" color="error" variant="subtle" size="sm" icon="i-lucide-circle-alert" :label="t('Not loaded')" />
                     <UBadge v-else-if="!p.enabled" color="neutral" variant="subtle" size="sm" :label="t('Disabled')" />
                     <UBadge v-if="hasUpdate(p.update_status) && !changed[p.id]" color="primary" variant="subtle" size="sm" :label="p.update_status === PRE_RELEASE_UPDATE ? t('Pre-release available') : t('Update available')" />
@@ -401,8 +405,11 @@ function initials(name: string) {
                   <p v-else class="text-[13px] italic text-dimmed">
                     ({{ t('not provided') }})
                   </p>
+                  <p v-if="isDeactivated(p)" class="mt-1 text-[13px] text-muted">
+                    {{ t('Deactivated: its folder name starts with "_". Remove the "_" and restart to turn it on.') }}
+                  </p>
                   <UAlert
-                    v-if="!p.loaded && p.load_issue"
+                    v-else-if="!p.loaded && p.load_issue"
                     color="error"
                     variant="soft"
                     icon="i-lucide-triangle-alert"

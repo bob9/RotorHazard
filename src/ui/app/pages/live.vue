@@ -1,9 +1,11 @@
 <script setup lang="ts">
 /** Spectator view of the current race (classic "Current" page). */
+import { currentStatusMessage } from '~/utils/winner'
+
 const rh = useRH()
 const { t } = useI18n()
 const audio = useAudio()
-rh.load(['race_status', 'current_heat', 'current_laps', 'leaderboard', 'frequency_data', 'pilot_data', 'min_lap', 'format_data'])
+rh.load(['race_status', 'current_heat', 'current_laps', 'leaderboard', 'frequency_data', 'pilot_data', 'min_lap', 'format_data', 'seat_data'])
 
 const S = rh.state
 const status = computed<number>(() => S.race_status?.race_status ?? 0)
@@ -20,6 +22,17 @@ const rowsByNode = computed(() => {
   for (const r of lb.value?.leaderboard?.by_race_time || []) m[r.node] = r
   return m
 })
+// seats shown: the current heat's lineup, or the last race's own pilots between races
+// (the current heat has usually advanced to the next heat by then)
+const seatColorByIndex = computed<Record<number, string>>(() => Object.fromEntries((S.seat_data?.seats || []).map((s: any) => [s.seat_id, s.color])))
+const shownSeats = computed(() => {
+  if (!showLast.value) return seats.value.map(i => ({ seat: i, node: heatNodes.value[i] }))
+  return laps.value
+    .map((l: any, i: number) => ({ l, i }))
+    .filter(({ l }) => l?.pilot || l?.laps?.length)
+    .map(({ l, i }) => ({ seat: i, node: { callsign: l.pilot?.callsign, pilot_id: l.pilot?.id, activeColor: seatColorByIndex.value[i] } }))
+})
+const statusMessage = computed(() => currentStatusMessage(lb.value))
 const minLapMs = computed(() => (S.min_lap?.min_lap || 0) * 1000)
 const nextHeat = computed(() => S.leaderboard?.current?.displayname)
 const nextRound = computed(() => S.current_heat?.next_round)
@@ -47,9 +60,10 @@ const nextRound = computed(() => S.current_heat?.next_round)
           <div v-if="lb.round" class="text-sm font-medium text-muted">
             {{ t('Round') }} {{ lb.round }}
           </div>
-          <RhRaceClock class="mt-4" />
-          <div v-if="lb.status_msg" class="mt-3 rounded-full bg-elevated px-4 py-1.5 text-sm font-medium">
-            {{ lb.status_msg }}
+          <!-- between races this card shows the last race's result, not the next race's clock -->
+          <RhRaceClock v-if="!showLast" class="mt-4" />
+          <div v-if="statusMessage" class="mt-3 rounded-full bg-elevated px-4 py-1.5 text-sm font-medium">
+            {{ statusMessage }}
           </div>
         </section>
 
@@ -71,17 +85,17 @@ const nextRound = computed(() => S.current_heat?.next_round)
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <RhSeatCard
-            v-for="i in seats"
-            :key="i"
-            :seat="i"
-            :node="heatNodes[i]"
-            :freq="S.frequency_data?.fdata?.[i]"
-            :laps="(laps[i]?.laps || []).filter((l: any) => !l.late_lap)"
-            :fastest-index="laps[i]?.fastest_lap_index"
-            :finished="laps[i]?.finished_flag"
-            :row="rowsByNode[i]"
-            :rssi="S.heartbeat?.current_rssi?.[i]"
-            :crossing="S.heartbeat?.crossing_flag?.[i]"
+            v-for="s in shownSeats"
+            :key="s.seat"
+            :seat="s.seat"
+            :node="s.node"
+            :freq="S.frequency_data?.fdata?.[s.seat]"
+            :laps="(laps[s.seat]?.laps || []).filter((l: any) => !l.late_lap)"
+            :fastest-index="laps[s.seat]?.fastest_lap_index"
+            :finished="laps[s.seat]?.finished_flag"
+            :row="rowsByNode[s.seat]"
+            :rssi="S.heartbeat?.current_rssi?.[s.seat]"
+            :crossing="S.heartbeat?.crossing_flag?.[s.seat]"
             :min-lap-ms="minLapMs"
             :show-signal="false"
           />

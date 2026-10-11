@@ -984,7 +984,11 @@
 			"Seconds after the clock ends that a final lap still counts.": "Sekunden nach Ablauf der Zeit, in denen eine letzte Runde noch zählt.",
 			"Wait for a manual stop": "Auf manuellen Stopp warten",
 			"round raced": "Runde gefahren",
-			"rounds raced": "Runden gefahren"
+			"rounds raced": "Runden gefahren",
+			"Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "Deaktiviert: Der Ordnername beginnt mit „_“. Entferne das „_“ und starte neu, um es zu aktivieren.",
+			"Sign in to open that page": "Melde dich an, um diese Seite zu öffnen",
+			"Sort": "Sortieren",
+			"to clear": "zum Leeren"
 		}
 	},
 	"es": {
@@ -2092,7 +2096,11 @@
 			"Seconds after the clock ends that a final lap still counts.": "Segundos tras el fin del tiempo en los que aún cuenta una última vuelta.",
 			"Wait for a manual stop": "Esperar a una parada manual",
 			"round raced": "ronda corrida",
-			"rounds raced": "rondas corridas"
+			"rounds raced": "rondas corridas",
+			"Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "Desactivado: el nombre de su carpeta empieza por \"_\". Quita el \"_\" y reinicia para activarlo.",
+			"Sign in to open that page": "Inicia sesión para abrir esa página",
+			"Sort": "Ordenar",
+			"to clear": "para borrar"
 		}
 	},
 	"fr-be": {
@@ -2994,7 +3002,11 @@
 			"Seconds after the clock ends that a final lap still counts.": "Secondes après la fin du chrono pendant lesquelles un dernier tour compte encore.",
 			"Wait for a manual stop": "Attendre un arrêt manuel",
 			"round raced": "série courue",
-			"rounds raced": "séries courues"
+			"rounds raced": "séries courues",
+			"Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "Désactivé : le nom de son dossier commence par « _ ». Retirez le « _ » et redémarrez pour l’activer.",
+			"Sign in to open that page": "Connectez-vous pour ouvrir cette page",
+			"Sort": "Trier",
+			"to clear": "pour effacer"
 		}
 	},
 	"it": {
@@ -4370,7 +4382,11 @@
 			 "Seconds after the clock ends that a final lap still counts.": "Secondi dopo la fine del tempo in cui un ultimo giro conta ancora.",
 			 "Wait for a manual stop": "Attendi lo stop manuale",
 			 "round raced": "round corso",
-			 "rounds raced": "round corsi"
+			 "rounds raced": "round corsi",
+			 "Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "Disattivato: il nome della cartella inizia con \"_\". Rimuovi il \"_\" e riavvia per attivarlo.",
+			 "Sign in to open that page": "Accedi per aprire quella pagina",
+			 "Sort": "Ordina",
+			 "to clear": "per cancellare"
 		}
 	},
 	"nl-be": {
@@ -5262,7 +5278,11 @@
 			"Seconds after the clock ends that a final lap still counts.": "Seconden na afloop van de tijd waarin een laatste lap nog telt.",
 			"Wait for a manual stop": "Wachten op handmatige stop",
 			"round raced": "ronde gevlogen",
-			"rounds raced": "rondes gevlogen"
+			"rounds raced": "rondes gevlogen",
+			"Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "Gedeactiveerd: de mapnaam begint met \"_\". Verwijder de \"_\" en herstart om het in te schakelen.",
+			"Sign in to open that page": "Meld je aan om die pagina te openen",
+			"Sort": "Sorteren",
+			"to clear": "om te wissen"
 		}
 	},
 	"pl": {
@@ -6191,7 +6211,11 @@
 			"Seconds after the clock ends that a final lap still counts.": "Sekundy po upływie czasu, w których ostatnie okrążenie jeszcze się liczy.",
 			"Wait for a manual stop": "Czekaj na ręczne zatrzymanie",
 			"round raced": "rozegrana runda",
-			"rounds raced": "rozegrane rundy"
+			"rounds raced": "rozegrane rundy",
+			"Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "Wyłączony: nazwa jego folderu zaczyna się od „_”. Usuń „_” i uruchom ponownie, aby go włączyć.",
+			"Sign in to open that page": "Zaloguj się, aby otworzyć tę stronę",
+			"Sort": "Sortuj",
+			"to clear": "aby wyczyścić"
 		}
 	},
 	"ja-JP": {
@@ -7417,7 +7441,11 @@
 			"Seconds after the clock ends that a final lap still counts.": "時間終了後、最後の周回がカウントされる秒数。",
 			"Wait for a manual stop": "手動停止を待つ",
 			"round raced": "ラウンド完了",
-			"rounds raced": "ラウンド完了"
+			"rounds raced": "ラウンド完了",
+			"Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "無効：フォルダー名が「_」で始まっています。「_」を削除して再起動すると有効になります。",
+			"Sign in to open that page": "このページを開くにはサインインしてください",
+			"Sort": "並べ替え",
+			"to clear": "でクリア"
 		}
 	},
 	"zh-CN": {
@@ -8935,7 +8963,11 @@
 			"Seconds after the clock ends that a final lap still counts.": "计时结束后最后一圈仍计入的秒数。",
 			"Wait for a manual stop": "等待手动停止",
 			"round raced": "个回合已完成",
-			"rounds raced": "个回合已完成"
+			"rounds raced": "个回合已完成",
+			"Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "已停用：其文件夹名以“_”开头。删除“_”并重启即可启用。",
+			"Sign in to open that page": "登录后才能打开该页面",
+			"Sort": "排序",
+			"to clear": "清除"
 		}
 	},
 	"ru": {
@@ -10229,7 +10261,11 @@
             "Seconds after the clock ends that a final lap still counts.": "Секунды после окончания времени, в течение которых последний круг ещё засчитывается.",
             "Wait for a manual stop": "Ждать ручной остановки",
             "round raced": "раунд проведён",
-            "rounds raced": "раундов проведено"
+            "rounds raced": "раундов проведено",
+            "Deactivated: its folder name starts with \"_\". Remove the \"_\" and restart to turn it on.": "Отключён: имя его папки начинается с «_». Удалите «_» и перезапустите, чтобы включить.",
+            "Sign in to open that page": "Войдите, чтобы открыть эту страницу",
+            "Sort": "Сортировка",
+            "to clear": "— очистить"
         }
 	}
 }

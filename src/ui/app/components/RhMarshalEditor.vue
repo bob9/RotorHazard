@@ -488,7 +488,7 @@ defineExpose({ dirty, recalc, reset: load, setEnter, setExit })
                 </td>
                 <td class="px-3 py-2 text-right">
                   <span v-if="r.lap.deleted" class="text-xs font-medium uppercase tracking-wide">{{ t('Deleted') }}</span>
-                  <span v-else class="inline-flex items-center gap-1" :class="r.short ? 'font-medium text-warning' : 'text-highlighted'">
+                  <span v-else class="inline-flex items-center gap-1" :class="r.short ? 'font-medium text-amber-700 dark:text-amber-400' : 'text-highlighted'">
                     <UTooltip v-if="r.short" :text="t('Shorter than the minimum lap time')">
                       <UIcon name="i-lucide-triangle-alert" class="size-3.5" />
                     </UTooltip>

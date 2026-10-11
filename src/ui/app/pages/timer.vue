@@ -125,7 +125,7 @@ const tabs = computed(() => [
 
         <template v-else-if="tab === 'frequencies'">
           <UAlert v-if="raceActive" color="warning" variant="subtle" icon="i-lucide-triangle-alert" :title="t('A race is running. Changing frequencies now affects the race.')" />
-          <UAlert v-if="Object.keys(vrxBySeat).length" color="warning" variant="subtle" icon="i-lucide-monitor" :title="t('WARNING: Video receivers connected. Changes may cause pilots to lose video.')" />
+          <UAlert v-if="Object.keys(vrxBySeat).length" color="neutral" variant="soft" icon="i-lucide-triangle-alert" :ui="{ icon: 'text-warning' }" :title="t('WARNING: Video receivers connected. Changes may cause pilots to lose video.')" />
 
           <RhGroup :title="t('Frequencies')">
             <template #actions>

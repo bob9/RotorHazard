@@ -45,7 +45,7 @@ watch(group, (g) => { openHeats.value = g?.heats?.length ? [String(g.heats[g.hea
 
     <template #body>
       <div class="mx-auto w-full max-w-6xl space-y-8">
-        <header class="relative -mx-4 -mt-4 flex h-72 flex-col justify-end overflow-hidden bg-neutral-900 sm:-mx-6 sm:-mt-6 sm:h-96 lg:mx-0 lg:mt-0 lg:rounded-3xl">
+        <header class="relative -mx-4 -mt-4 flex h-52 flex-col justify-end overflow-hidden bg-neutral-900 sm:-mx-6 sm:-mt-6 sm:h-96 lg:mx-0 lg:mt-0 lg:rounded-3xl">
           <RhArt name="results-hero" class="absolute inset-0 size-full object-cover object-[center_65%]" />
           <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/0" />
           <div class="relative space-y-2 p-5 sm:p-8 lg:p-10">

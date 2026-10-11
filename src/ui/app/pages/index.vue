@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { currentStatusMessage } from '~/utils/winner'
 const rh = useRH()
 const { t } = useI18n()
 const { admin, hasCredentials } = useAuth()
@@ -40,6 +41,7 @@ const rowsByNode = computed(() => {
   for (const r of board.value?.by_race_time || []) m[r.node] = r
   return m
 })
+const statusMessage = computed(() => currentStatusMessage(S.leaderboard?.current))
 const minLapMs = computed(() => (S.min_lap?.min_lap || 0) * 1000)
 const anyLaps = computed(() => lapsBySeat.value.some(s => s?.laps?.length))
 
@@ -191,15 +193,16 @@ function onKey(e: KeyboardEvent) {
     e.preventDefault()
     return
   }
-  if (e.ctrlKey || e.metaKey || e.altKey) return
+  if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return
+  // Space starts or stops but never saves, and saving with C only works once the race
+  // has finished, so a stray key can't end and save a race in one press
   if (k === ' ') {
     e.preventDefault()
     if (isReady.value) start()
     else if (isLive.value) stop()
-    else if (isDone.value) save()
   } else if (k === 'z' && isReady.value) start()
   else if (k === 'x' && isLive.value) stop()
-  else if (k === 'c' && (isDone.value || isRacing.value)) save()
+  else if (k === 'c' && isDone.value) save()
   else if (k === 'v' && isDone.value) discardOpen.value = true
 }
 onMounted(() => window.addEventListener('keydown', onKey))
@@ -222,10 +225,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       <div v-else-if="admin === false" class="p-6">
         <UEmpty icon="i-lucide-lock-keyhole" :title="t('Sign in to run races')" :description="t('Race control is available to the event admin.')" :actions="[{ label: t('Watch live'), to: '/live' }]" />
       </div>
-      <div v-else class="mx-auto w-full max-w-[1600px] space-y-6 p-4 sm:p-6">
+      <div v-else class="mx-auto w-full max-w-[1600px] space-y-6 p-4 pb-28 sm:p-6 sm:pb-28 lg:pb-6">
         <!-- Race control -->
         <section class="relative overflow-hidden rounded-3xl bg-default ring-1 ring-default shadow-sm">
-          <RhArt name="race-hero" class="pointer-events-none absolute inset-0 hidden size-full object-cover dark:block dark:opacity-40" />
+          <RhArt name="race-hero" class="pointer-events-none absolute inset-0 hidden size-full object-cover dark:block dark:opacity-15" />
           <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/[0.06] via-transparent to-transparent" />
           <div class="relative grid grid-cols-1 items-center gap-6 p-5 sm:p-8 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
             <!-- heat -->
@@ -276,38 +279,37 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
             <!-- actions (below lg they live in the sticky bar at the bottom) -->
             <div class="hidden flex-col items-stretch gap-2 lg:flex lg:items-end">
-              <Transition name="rh" mode="out-in">
-                <UButton
-                  v-if="isReady"
-                  key="start"
-                  size="xl"
-                  icon="i-lucide-play"
-                  :label="t('Start Race')"
-                  :loading="busy"
-                  class="justify-center rounded-full px-8 lg:min-w-52"
-                  @click="start"
-                />
-                <UButton
-                  v-else-if="isLive"
-                  key="stop"
-                  size="xl"
-                  color="error"
-                  icon="i-lucide-square"
-                  :label="t('Stop Race')"
-                  class="justify-center rounded-full px-8 lg:min-w-52"
-                  @click="stop"
-                />
-                <UButton
-                  v-else
-                  key="save"
-                  size="xl"
-                  color="success"
-                  icon="i-lucide-check"
-                  :label="currentHeatId ? t('Save Results') : t('Clear Laps')"
-                  class="justify-center rounded-full px-8 lg:min-w-52"
-                  @click="save"
-                />
-              </Transition>
+              <!-- swapped instantly: a Stop button must always be visible during staging -->
+              <UButton
+                v-if="isReady"
+                key="start"
+                size="xl"
+                icon="i-lucide-play"
+                :label="t('Start Race')"
+                :loading="busy"
+                class="justify-center rounded-full px-8 lg:min-w-52"
+                @click="start"
+              />
+              <UButton
+                v-else-if="isLive"
+                key="stop"
+                size="xl"
+                color="error"
+                icon="i-lucide-square"
+                :label="t('Stop Race')"
+                class="justify-center rounded-full px-8 lg:min-w-52"
+                @click="stop"
+              />
+              <UButton
+                v-else
+                key="save"
+                size="xl"
+                color="success"
+                icon="i-lucide-check"
+                :label="currentHeatId ? t('Save Results') : t('Clear Laps')"
+                class="justify-center rounded-full px-8 lg:min-w-52"
+                @click="save"
+              />
               <div class="flex justify-center gap-1 lg:justify-end">
                 <UButton
                   v-if="isDone"
@@ -338,12 +340,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
                 />
               </div>
               <div class="hidden text-center text-xs text-dimmed lg:block lg:text-right">
-                <UKbd value="space" size="sm" /> {{ isReady ? t('to start') : isLive ? t('to stop') : t('to save') }}
+                <template v-if="isDone">
+                  <UKbd value="C" size="sm" /> {{ currentHeatId ? t('to save') : t('to clear') }}
+                </template>
+                <template v-else>
+                  <UKbd value="space" size="sm" /> {{ isReady ? t('to start') : t('to stop') }}
+                </template>
               </div>
             </div>
           </div>
-          <div v-if="S.leaderboard?.current?.status_msg" class="relative border-t border-default bg-elevated/50 px-6 py-2.5 text-center text-sm font-medium text-highlighted">
-            {{ S.leaderboard.current.status_msg }}
+          <div v-if="statusMessage" class="relative border-t border-default bg-elevated/50 px-6 py-2.5 text-center text-sm font-medium text-highlighted">
+            {{ statusMessage }}
           </div>
         </section>
 
@@ -487,7 +494,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         :open="marshalSeat !== null"
         :title="marshalSeat !== null ? `${t('Marshal')} · ${heatNodes[marshalSeat]?.callsign || `${t('Seat')} ${marshalSeat + 1}`}` : ''"
         :description="t('Correct laps for the race that just finished, then commit before saving.')"
-        :ui="{ content: 'max-w-3xl' }"
+        :ui="{ content: 'max-w-5xl' }"
         @update:open="(o: boolean) => { if (!o) marshalSeat = null }"
       >
         <template #body>

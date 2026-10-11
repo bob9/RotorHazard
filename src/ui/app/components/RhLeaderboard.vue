@@ -135,7 +135,7 @@ const consecClass = computed(() => combined.value ? 'hidden sm:table-cell' : '')
             </td>
           </template>
           <td v-if="showFastest" :class="cell" class="text-right" :title="source(r.fastest_lap_source)">
-            <span :class="minLapMs && r.fastest_lap_raw && r.fastest_lap_raw < minLapMs ? 'text-warning' : ''">{{ timeOrDash(r.fastest_lap) }}</span>
+            <span :class="minLapMs && r.fastest_lap_raw && r.fastest_lap_raw < minLapMs ? 'text-amber-700 dark:text-amber-400' : ''">{{ timeOrDash(r.fastest_lap) }}</span>
           </td>
           <td v-if="showFastest && showSource" :class="cell" class="text-muted hidden md:table-cell">
             {{ source(r.fastest_lap_source) }}

@@ -145,7 +145,7 @@ const pct = (v?: number) => `${Math.min(100, Math.max(0, ((v || 0) / scaleMax.va
             :class="[
               lap.deleted ? 'line-through' : '',
               !lap.deleted && lap.lap_index === fastestIndex ? 'font-semibold text-success' : '',
-              !lap.deleted && minLapMs && lap.lap_number > 0 && lap.lap_time < minLapMs ? 'text-warning' : ''
+              !lap.deleted && minLapMs && lap.lap_number > 0 && lap.lap_time < minLapMs ? 'text-amber-700 dark:text-amber-400' : ''
             ]"
           >{{ lap.lap_time_formatted }}</span>
           <UIcon v-if="lap.source === 1" name="i-lucide-hand" class="size-3.5 text-dimmed" :title="t('Manual')" />
