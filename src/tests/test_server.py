@@ -365,6 +365,34 @@ class ServerTest(unittest.TestCase):
                        '%2Fformat%7C%2Fpilots%0D%0ALocation%3A%20x'):
             self.assertTrue(target('/format', cookie).endswith('/app/formats'), cookie)
 
+    def test_interface_switch_keeps_plugin_page(self):
+        # a plugin page opens on its own in the classic interface, and framed in the app
+        pages = [{'url': '/progression'}, {'url': '/q_admin'}, {'url': 'https://example.com/x'}, {'url': '//example.com'},
+                 {'url': '/a/../hardwarelog'}, {'url': '/x\r\nLocation: y'}]
+        def target(choice, to, cookie=None):
+            headers = {'Cookie': 'rh_app_return=' + cookie} if cookie else {}
+            with server.APP.test_request_context('/interface/' + choice, query_string={'to': to}, headers=headers):
+                with mock.patch.object(server, 'webapp_available', return_value=True), \
+                        mock.patch.object(server.RaceContext.rhui, 'plugin_pages', return_value=pages):
+                    resp = server.set_interface(choice)
+                self.assertEqual(resp.status_code, 302)
+                return resp.headers['Location']
+        self.assertTrue(target('classic', '/progression').endswith('/progression'))
+        self.assertTrue(target('app', '/progression').endswith('/app/page?url=%2Fprogression'))
+        # back to the app page that opened it
+        self.assertTrue(target('app', '/progression', '%2Fprogression%7C%2Fpage%3Furl%3D%252Fprogression')
+                        .endswith('/app/page?url=%2Fprogression'))
+        # a cookie naming another (or no listed) plugin page, or anything else: the plugin page itself
+        for cookie in ('%2Fprogression%7C%2Fpage%3Furl%3D%252Fhardwarelog', '%2Fprogression%7C%2Fpage%3Furl%3Dhttps%253A%252F%252Fexample.com',
+                       '%2Fprogression%7C%2Fpage%3Furl%3D%252Fq_admin%26x%3D1', '%2Fprogression%7C%2Fpage%3Furl%3D%252F%252Fexample.com'):
+            self.assertTrue(target('app', '/progression', cookie).endswith('/app/page?url=%2Fprogression'), cookie)
+        # pages that aren't listed plain paths are never targets
+        for bad in ('/hardwarelog', 'https://example.com/x', '//example.com', '/a/../hardwarelog'):
+            self.assertTrue(target('app', bad).endswith('/app/'), bad)
+            self.assertTrue(target('classic', bad).endswith('/classic'), bad)
+        with mock.patch.object(server.RaceContext.rhui, 'plugin_pages', return_value=pages):
+            self.assertEqual(server.plugin_page_paths(), {'/progression', '/q_admin'})
+
     def test_webapp_site_scripts(self):
         # a loader script on three or more classic pages is a site-wide add-on (a status bar):
         # /app-info lists it so the web app can make room for it before the panels arrive

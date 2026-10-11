@@ -123,13 +123,13 @@ const PAGE_KEYWORDS: Record<string, string> = {
 const settingsIndex = computed(() => admin.value
   ? [
       { label: t('Frequencies'), description: t('Timer'), icon: 'i-lucide-radio', to: '/timer', keywords: 'frequency channel band raceband vtx' },
-      { label: t('Sensor Tuning'), description: t('Timer'), icon: 'i-lucide-activity', to: '/timer?tab=tuning', keywords: 'tuning enterat exitat rssi calibration signal gate threshold' },
+      { label: t('Sensor Tuning'), description: t('Timer'), icon: 'i-lucide-activity', to: '/timer?tab=tuning', keywords: 'tuning enterat exitat rssi calibration signal gate threshold node' },
       { label: t('Start Threshold'), description: t('Timer'), icon: 'i-lucide-sliders-horizontal', to: '/timer?tab=advanced', keywords: 'start threshold lower amount lower duration first pass launch advanced' },
       { label: t('Race duration and scoring'), description: t('Formats'), icon: 'i-lucide-timer', to: '/formats', keywords: 'duration length time clock minutes staging tones win condition laps scoring holeshot hole shot grace period prestage first crossing staggered start laps to win team co-op points random staging' },
       { label: t('Grace Period'), description: t('Formats'), icon: 'i-lucide-hourglass', to: '/formats#grace-period', keywords: 'grace period grace final lap after the clock overtime wait for a manual stop' },
       ...tools.value.map(x => ({ label: x.label, description: x.description, icon: x.icon, to: x.to, keywords: x.keywords })),
       { label: t('Generate Heats'), description: t('Heats'), icon: 'i-lucide-wand-sparkles', to: '/heats?generate=1', keywords: 'heat generator generate heats bracket ladder seed seeding random qualifying finals' },
-      { label: t('Appearance'), description: t('Settings'), icon: 'i-lucide-sun-moon', to: '/settings/general#appearance', keywords: 'dark mode light mode theme night colour color scheme appearance' },
+      { label: t('Appearance'), description: t('Settings'), icon: 'i-lucide-sun-moon', to: '/settings/general#appearance', keywords: 'dark mode light mode theme night colour color scheme appearance', strict: true },
       { label: t('Minimum Lap Time'), description: t('Race'), icon: 'i-lucide-gauge', to: '/#min-lap', keywords: 'min lap minimum short laps ignore crossings' },
       { label: t('Pilots'), description: t('Callsign, name, team and color'), icon: 'i-lucide-users', to: '/pilots', keywords: 'pilot callsign name team color colour phonetic add pilot' },
       ...(info.value?.led_enabled || info.value?.led_events_enabled ? [{ label: t('LEDs'), description: t('Settings'), icon: 'i-lucide-lightbulb', to: '/settings/leds', keywords: 'led leds lights strip panel brightness color colour effects' }] : []),
@@ -177,6 +177,17 @@ const dataIndex = computed(() => {
   for (const f of rh.state.format_data?.formats || []) items.push({ label: t(f.name), description: t('Format'), icon: 'i-lucide-timer', to: '/formats' })
   return items
 })
+// Short fuzzy matches are noise for the appearance commands ("node" is one letter from "mode"):
+// those ('strict') match only when each word typed starts one of their words
+function strictFilter(term: string, items: any[]) {
+  const typed = term.toLowerCase().split(/\s+/).filter(Boolean)
+  return items.filter((i) => {
+    if (!i.strict) return true
+    const words = `${i.label} ${i.keywords || ''}`.toLowerCase().split(/[^\p{L}\p{N}]+/u)
+    // (or appears within the name, for languages written without spaces)
+    return typed.every(w => words.some(x => x.startsWith(w)) || String(i.label).toLowerCase().includes(w))
+  })
+}
 const searchGroups = computed(() => [
   {
     id: 'pages',
@@ -185,15 +196,16 @@ const searchGroups = computed(() => [
       .map(i => ({ label: i.label, icon: i.icon, to: i.to as string, target: i.target, external: i.external, keywords: PAGE_KEYWORDS[i.to === liveHref ? '/live' : i.to as string] }))
       .concat([{ label: t('Documentation'), icon: 'i-lucide-book-open', to: '/docs', keywords: 'docs documentation help guide manual user guide how to' } as any])
   },
-  ...(settingsIndex.value.length ? [{ id: 'settings', label: t('Settings'), items: settingsIndex.value }] : []),
+  ...(settingsIndex.value.length ? [{ id: 'settings', label: t('Settings'), items: settingsIndex.value, postFilter: strictFilter }] : []),
   // plugin settings come after the timer's own, so they never crowd out a core match
   ...(pluginIndex.value.length ? [{ id: 'plugin-settings', label: t('Plugin settings'), items: pluginIndex.value }] : []),
   ...(dataIndex.value.length ? [{ id: 'event', label: t('Event'), items: dataIndex.value, ignoreFilter: false }] : []),
   {
     id: 'actions',
     label: t('Actions'),
+    postFilter: strictFilter,
     items: [
-      { label: colorMode.value === 'dark' ? t('Light appearance') : t('Dark appearance'), icon: colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon', keywords: 'dark mode light mode theme night', onSelect: () => { colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark' } },
+      { label: colorMode.value === 'dark' ? t('Light appearance') : t('Dark appearance'), icon: colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon', keywords: 'dark mode light mode theme night appearance', strict: true, onSelect: () => { colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark' } },
       { label: t('Classic interface'), icon: 'i-lucide-history', onSelect: openClassic },
       ...(admin.value ? [{ label: t('Restart server'), icon: 'i-lucide-rotate-cw', onSelect: () => { restartOpen.value = true } }] : [])
     ]
@@ -269,6 +281,11 @@ async function openClassic() {
 // the classic page that matches this one
 const classicTo = computed(() => {
   if (route.path === '/') return '/run'
+  // a plugin page is the same page in the classic interface, on its own
+  if (route.path === '/page') {
+    const u = typeof route.query.url === 'string' ? route.query.url : ''
+    if (info.value?.plugin_pages?.some(p => p.url === u)) return u
+  }
   if (route.path === '/docs') {
     const d = typeof route.query.d === 'string' && route.query.d ? route.query.d : 'README.md'
     return `/docs?d=${encodeURIComponent(d)}`
@@ -284,7 +301,9 @@ const classicHref = computed(() => (classicTo.value ? `/interface/classic?to=${e
 // in /interface/app while the classic page is still the one it was opened for
 function rememberAppPage() {
   const classicPath = (classicTo.value || '/classic').split('?')[0]
-  document.cookie = `rh_app_return=${encodeURIComponent(`${classicPath}|${route.fullPath}`)}; path=/; max-age=7200; samesite=lax`
+  // the plugin page viewer's address, written the way the server checks it (?url=%2Fpath)
+  const appPage = route.path === '/page' && classicTo.value ? `/page?url=${encodeURIComponent(classicTo.value)}` : route.fullPath
+  document.cookie = `rh_app_return=${encodeURIComponent(`${classicPath}|${appPage}`)}; path=/; max-age=7200; samesite=lax`
 }
 
 

@@ -1,7 +1,11 @@
 <script setup lang="ts">
-/** `sm` is a single-line clock for compact bars (phone action bar). */
-defineProps<{ size?: 'xl' | 'lg' | 'md' | 'sm' }>()
-const { clock } = useRaceClock()
+/** `sm` is a single-line clock for compact bars (phone action bar). `hold` keeps showing the
+ * clock as it was when the hold began (the Race page while a finished race is being saved). */
+const props = defineProps<{ size?: 'xl' | 'lg' | 'md' | 'sm', hold?: boolean }>()
+const { clock: liveClock } = useRaceClock()
+const held = ref<{ phase: string, display: string } | null>(null)
+watch(() => props.hold, (h) => { held.value = h ? { phase: liveClock.phase, display: liveClock.display } : null }, { immediate: true })
+const clock = computed(() => held.value ?? liveClock)
 const { t } = useI18n()
 
 const label = computed(() => ({
@@ -12,7 +16,7 @@ const label = computed(() => ({
   racing: t('Racing'),
   overtime: t('Overtime'),
   finished: t('Finished')
-} as Record<string, string>)[clock.phase])
+} as Record<string, string>)[clock.value.phase])
 
 const tone = computed(() => ({
   idle: 'text-highlighted',
@@ -22,7 +26,7 @@ const tone = computed(() => ({
   racing: 'text-highlighted',
   overtime: 'text-error',
   finished: 'text-muted'
-} as Record<string, string>)[clock.phase])
+} as Record<string, string>)[clock.value.phase])
 </script>
 
 <template>

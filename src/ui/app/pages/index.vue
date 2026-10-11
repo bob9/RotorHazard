@@ -22,7 +22,12 @@ watch(guest, (g) => {
 }, { immediate: true })
 
 const S = rh.state
-const status = computed<number>(() => S.race_status?.race_status ?? 0)
+const liveStatus = computed<number>(() => S.race_status?.race_status ?? 0)
+// Save Results: the timer first resets the race (no laps, empty leaderboard, Ready) and only
+// then moves to the next heat, about a second later. The finished race stays on screen
+// (status, clock, laps, leaderboard) until the save is done, then everything switches together.
+const saveHold = ref(false)
+const status = computed<number>(() => saveHold.value ? RACE_STATUS.DONE : liveStatus.value)
 // until the timer has sent the race, heat and seats, show placeholders rather than a
 // made-up Practice race with a live Start button (the class completes the race card: arriving
 // later it would widen it and push the seats down). The format list comes last of the race
@@ -37,15 +42,47 @@ const isReady = computed(() => loaded.value && status.value === RACE_STATUS.READ
 const heatOf = (v: any) => Number(v || 0)
 const snapshot = () => ({ heat: S.current_heat, board: S.leaderboard, laps: S.current_laps })
 const view = shallowRef(snapshot())
+const heatsAgree = () => {
+  const lbHeat = S.leaderboard?.current
+  return !S.current_heat || !lbHeat || heatOf(S.current_heat.current_heat) === heatOf(lbHeat.heat)
+}
 let viewTimer: ReturnType<typeof setTimeout> | undefined
 watch(() => [S.current_heat, S.leaderboard, S.current_laps], () => {
-  const lbHeat = S.leaderboard?.current
-  const agree = !S.current_heat || !lbHeat || heatOf(S.current_heat.current_heat) === heatOf(lbHeat.heat)
   clearTimeout(viewTimer)
-  if (agree) view.value = snapshot()
+  if (saveHold.value) return tryEndSaveHold()
+  if (heatsAgree()) view.value = snapshot()
   else viewTimer = setTimeout(() => { view.value = snapshot() }, 1500)
 })
-onBeforeUnmount(() => clearTimeout(viewTimer))
+// the hold ends once the server confirms the save (race_saved comes after the move to the next
+// heat) and the heat and leaderboard agree; it never outlasts a few seconds (a refused save,
+// a save that stays on the same heat, a lost message)
+let saveConfirmed = false
+let holdTimer: ReturnType<typeof setTimeout> | undefined
+function endSaveHold() {
+  clearTimeout(holdTimer)
+  if (!saveHold.value) return
+  saveHold.value = false
+  view.value = snapshot()
+}
+function tryEndSaveHold() {
+  if (saveConfirmed && heatsAgree()) endSaveHold()
+}
+function startSaveHold() {
+  saveConfirmed = false
+  saveHold.value = true
+  clearTimeout(holdTimer)
+  holdTimer = setTimeout(endSaveHold, 4000)
+}
+rh.on('race_saved', () => {
+  if (!saveHold.value) return
+  saveConfirmed = true
+  clearTimeout(holdTimer)
+  holdTimer = setTimeout(endSaveHold, 1500)
+  tryEndSaveHold()
+})
+// someone started the next race meanwhile
+watch(liveStatus, (s) => { if (s === RACE_STATUS.STAGING || s === RACE_STATUS.RACING) endSaveHold() })
+onBeforeUnmount(() => { clearTimeout(viewTimer); clearTimeout(holdTimer) })
 
 // phones: the sticky action bar repeats the clock only when the race card's clock is off screen
 const heroClock = ref<HTMLElement | null>(null)
@@ -178,6 +215,9 @@ function stop() {
   send('stop_race')
 }
 function save() {
+  // Practice races aren't saved (the timer just clears them), and Stop and Save during a race
+  // shows the race stopping: only a finished heat race is held on screen while it saves
+  if (liveStatus.value === RACE_STATUS.DONE && currentHeatId.value) startSaveHold()
   send('save_laps')
 }
 // confirm from the server's own notice rather than on click
@@ -423,7 +463,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
             <!-- clock -->
             <div ref="heroClock">
-              <RhRaceClock />
+              <RhRaceClock :hold="saveHold" />
             </div>
 
             <!-- actions (below lg they live in the sticky bar at the bottom) -->
@@ -577,7 +617,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       >
         <div class="mx-auto flex max-w-3xl items-center gap-3">
           <!-- the bar's clock appears only once the big clock has scrolled away -->
-          <RhRaceClock size="sm" class="me-auto transition-opacity duration-200" :class="heroClockVisible ? 'invisible opacity-0' : 'opacity-100'" :aria-hidden="heroClockVisible" />
+          <RhRaceClock size="sm" :hold="saveHold" class="me-auto transition-opacity duration-200" :class="heroClockVisible ? 'invisible opacity-0' : 'opacity-100'" :aria-hidden="heroClockVisible" />
           <UButton
             v-if="isDone"
             color="neutral"

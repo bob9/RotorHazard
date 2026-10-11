@@ -109,7 +109,9 @@ Several race-control events (`stage_race`, `stop_race`, `save_laps`,
 - Use semantic colors (`text-muted`, `bg-elevated`, `text-highlighted`,
   `ring-default`, `primary`, `error`...) so light and dark modes both work.
   `text-dimmed` and `text-muted` meet 4.5:1 on every background up to `bg-elevated`
-  (`assets/css/main.css`); tinted badges and alerts use deeper text shades (`app.config.ts`).
+  (`assets/css/main.css`); tinted badges and alerts use deeper text shades, and solid buttons and
+  badges deeper backgrounds behind white text in light mode (`app.config.ts`). Light mode's
+  primary is a deeper RotorHazard orange (`#d43d08`), so orange text and white-on-orange pass 4.5:1.
 - A missing value in a table or card is `<RhValue :value="x" />`: the value, or one
   dimmed em dash.
 - Tabs that a link or search result can open keep their tab in the address

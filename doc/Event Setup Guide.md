@@ -25,7 +25,7 @@ From `Format`, open `Pilots` panel. Add an entry for each pilot participating. G
 - Phonetic can be used to change how the timer text-to-speech engine announces a pilot; it is never shown visually
 
 ## Create Race Formats (optional)
-From `Format`, open `Race Formats`. [Adjust the settings](User%20Guide.md#race-format) or create new formats to match your group's preferred settings.
+From `Format`, open `Race Formats`. [Adjust the settings](User%20Guide.md#race-formats) or create new formats to match your group's preferred settings.
 
 ## Add Heats and Classes
 **Classes** are groups of heats, such as phases of the event, (like qualifying and finals,) or differing skill groups. When a race is saved, the results for the class will be calculated separately and grouped together as their own section within the race results. It is recommended to create a class for your pre-race practice sessions.

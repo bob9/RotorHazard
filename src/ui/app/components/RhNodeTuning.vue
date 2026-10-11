@@ -37,7 +37,7 @@ const warnings = computed(() => {
   const passNadir = stat('pass_nadir_rssi')
   if (peak - nadir > 20 && enterAt.value > peak - 5) w.push(t('EnterAt is close to or above the highest signal seen; laps may be missed.'))
   if (nadir && exitAt.value <= nadir) w.push(t('ExitAt is at or below the lowest signal seen; passes may never end.'))
-  if (enterAt.value <= exitAt.value + 10) w.push(t('EnterAt should be at least 10 above ExitAt.'))
+  if (enterAt.value < exitAt.value + 10) w.push(t('EnterAt should be at least 10 above ExitAt.'))
   if (passNadir && exitAt.value > passNadir - 5) w.push(t('ExitAt is close to the lowest signal during a pass.'))
   return w
 })

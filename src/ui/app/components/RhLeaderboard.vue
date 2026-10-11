@@ -15,6 +15,8 @@ const props = withDefaults(defineProps<{
   seatColors?: Record<number, string>
   minLapMs?: number
   dense?: boolean
+  /** fill the height of its container, spreading the rows out (presentation mode) */
+  fill?: boolean
 }>(), { kind: 'current' })
 const { t } = useI18n()
 
@@ -53,8 +55,8 @@ const rowsKey = computed(() => rows.value.map((r, i) => r.pilot_id ?? `n${r.node
 </script>
 
 <template>
-  <div class="overflow-x-auto" :class="inset">
-    <table class="w-full text-sm">
+  <div class="overflow-x-auto" :class="[inset, fill ? 'h-full' : '']">
+    <table class="w-full text-sm" :class="fill ? 'h-full' : ''">
       <thead>
         <tr class="text-left text-[11px] font-semibold uppercase tracking-wider text-dimmed">
           <th :class="cell" class="w-10">

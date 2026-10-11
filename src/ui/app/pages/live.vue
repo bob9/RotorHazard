@@ -238,14 +238,15 @@ const kioskZoom = computed(() => (kiosk.value ? { zoom: zoom.value } : undefined
         v-else
         ref="kioskBody"
         class="mx-auto grid w-full gap-6"
-        :class="kiosk && landscape ? 'grid-cols-[minmax(0,4fr)_minmax(0,8fr)] items-start' : 'max-w-6xl grid-cols-1'"
+        :class="kiosk && landscape ? 'grid-cols-[minmax(0,4fr)_minmax(0,8fr)] items-stretch' : 'max-w-6xl grid-cols-1'"
         :style="kioskZoom"
       >
-        <div class="min-w-0 space-y-6">
+        <!-- side by side, the race card and the leaderboard share one height -->
+        <div class="min-w-0 space-y-6" :class="kiosk && landscape ? 'flex flex-col' : ''">
           <!-- between races: a compact header for the last race; during one: the big clock -->
           <section
-            class="flex flex-col items-center gap-2 rounded-2xl bg-default px-6 text-center ring ring-default"
-            :class="showLast ? 'py-5' : 'py-8 sm:py-10'"
+            class="flex flex-col items-center justify-center gap-2 rounded-2xl bg-default px-6 text-center ring ring-default"
+            :class="[showLast ? 'py-5' : 'py-8 sm:py-10', kiosk && landscape ? 'flex-1' : '']"
           >
             <div class="text-sm font-medium text-muted">
               {{ heroLabel }}<template v-if="showLast && lb.round"> · {{ t('Round') }} {{ lb.round }}</template>
@@ -277,9 +278,9 @@ const kioskZoom = computed(() => (kiosk.value ? { zoom: zoom.value } : undefined
           </section>
         </div>
 
-        <div class="min-w-0 space-y-6">
-          <UCard :ui="{ body: 'p-0 sm:p-0' }">
-            <RhLeaderboard :board="lb.leaderboard" kind="current" :seat-colors="seatColors" :min-lap-ms="minLapMs" top-speed />
+        <div class="min-w-0 space-y-6" :class="kiosk && landscape ? 'flex flex-col' : ''">
+          <UCard :class="kiosk && landscape ? 'flex flex-1 flex-col' : ''" :ui="{ body: kiosk && landscape ? 'flex-1 p-0 sm:p-0' : 'p-0 sm:p-0' }">
+            <RhLeaderboard :board="lb.leaderboard" kind="current" :seat-colors="seatColors" :min-lap-ms="minLapMs" top-speed :fill="kiosk && landscape" />
           </UCard>
           <UCard v-if="lb.team_leaderboard" :ui="{ body: 'p-0 sm:p-0' }">
             <RhTeamLeaderboard :board="lb.team_leaderboard" />

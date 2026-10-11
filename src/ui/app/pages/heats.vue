@@ -154,7 +154,8 @@ const navItems = computed(() => [
     </template>
 
     <template #body>
-      <div class="flex min-h-full flex-1 flex-col lg:flex-row">
+      <!-- sized by its content (not flex-1, whose zero basis caps it at the panel height), so the class list's divider runs the full height -->
+      <div class="flex min-h-full shrink-0 grow flex-col lg:flex-row">
         <!-- class list -->
         <aside class="border-b border-default lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">
           <div class="p-3 lg:sticky lg:top-0 lg:max-h-[calc(100dvh-4rem)] lg:overflow-y-auto">

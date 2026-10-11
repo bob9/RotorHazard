@@ -97,7 +97,8 @@ const suggestions = computed(() => {
     </template>
 
     <template #body>
-      <div class="flex min-h-full flex-1 flex-col lg:flex-row">
+      <!-- sized by its content (not flex-1, whose zero basis caps it at the panel height), so the format list's divider runs the full height -->
+      <div class="flex min-h-full shrink-0 grow flex-col lg:flex-row">
         <aside class="border-b border-default p-3 lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">
           <div class="mb-2 px-2 text-[11px] font-semibold uppercase tracking-wider text-dimmed">
             {{ t('Race Formats') }}

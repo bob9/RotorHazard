@@ -51,7 +51,7 @@ watch(html, () => nextTick(() => {
   if (!root) return
   const seen: Record<string, number> = {}
   const items: typeof outline.value = []
-  root.querySelectorAll('h1, h2, h3, h4').forEach((h) => {
+  root.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach((h) => {
     let id = slug(h.textContent || '')
     if (seen[id] !== undefined) id = `${id}-${(seen[id] = seen[id]! + 1)}`
     else seen[id] = 0

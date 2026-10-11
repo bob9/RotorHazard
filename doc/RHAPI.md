@@ -5,7 +5,7 @@
 - [User Interface Helpers](#user-interface-helpers)
 - [Data Fields](#data-fields)
 - [Database Access](#database-access)
-- [Data input/output](#data-input-output)
+- [Data input/output](#data-inputoutput)
 - [Heat Generation](#heat-generation)
 - [Class Ranking](#class-ranking)
 - [Race Points](#race-points)

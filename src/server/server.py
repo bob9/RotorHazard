@@ -65,7 +65,7 @@ import functools
 import signal
 import werkzeug
 import urllib3
-from urllib.parse import unquote
+from urllib.parse import unquote, quote, parse_qs
 
 from flask import Flask, send_from_directory, request, session, make_response, Response, templating, redirect, abort, copy_current_request_context
 from flask.blueprints import Blueprint
@@ -542,12 +542,32 @@ APP_PAGES = set(APP_FOR_CLASSIC.values()) | {'/pilots', '/heats', '/timer', '/pa
 APP_RETURN_COOKIE = 'rh_app_return'
 APP_PAGE_RE = re.compile(r'^(/[A-Za-z0-9/_-]*)(\?[A-Za-z0-9_.~%=&+-]*)?(#[A-Za-z0-9_.~%-]*)?$')
 
+# a plugin page's own path: plain same-origin paths only (no scheme, host, '..', query or CRLF)
+PLUGIN_PAGE_RE = re.compile(r'^/[A-Za-z0-9_-][A-Za-z0-9/_.-]*$')
+
+def plugin_page_paths():
+    '''Paths of the plugin pages the web app lists (its /page?url= viewer frames them).'''
+    try:
+        pages = RaceContext.rhui.plugin_pages()
+    except Exception:
+        return set()
+    return {p['url'] for p in pages if isinstance(p.get('url'), str) and PLUGIN_PAGE_RE.match(p['url'])
+            and '//' not in p['url'] and '..' not in p['url']}
+
+def app_plugin_page(query):
+    '''True for the query of the web app's plugin page viewer (?url=<a listed plugin page>).'''
+    params = parse_qs((query or '').lstrip('?'), keep_blank_values=True)
+    urls = params.get('url') or []
+    return set(params) == {'url'} and len(urls) == 1 and urls[0] in plugin_page_paths()
+
 def app_return_page(classic_path):
     '''The web app page that opened this classic page (if it is still the one opened), else None.'''
     value = unquote(request.cookies.get(APP_RETURN_COOKIE) or '')
     opened_for, _, page = value.partition('|')
     match = APP_PAGE_RE.match(page)
     if opened_for == classic_path and match and match.group(1) in APP_PAGES:
+        if match.group(1) == '/page' and not app_plugin_page(match.group(2)):
+            return None
         return page
     return None
 
@@ -571,6 +591,12 @@ def set_interface(choice):
                 if query and path in CLASSIC_PAGES_WITH_QUERY and APP_PAGE_RE.match(page + '?' + query):
                     page += '?' + query
             target = '/app' + page
+        elif path in plugin_page_paths():
+            # a plugin page is the same page in both interfaces: on its own, or framed in the app
+            if choice == 'classic':
+                target = path
+            else:
+                target = '/app' + (app_return_page(path) or '/page?url=' + quote(path, safe=''))
     response = redirect(target, code=302)
     response.set_cookie(INTERFACE_COOKIE, choice, max_age=60*60*24*365*5, samesite='Lax')
     if choice == 'app':
