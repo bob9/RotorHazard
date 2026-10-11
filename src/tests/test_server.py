@@ -340,6 +340,48 @@ class ServerTest(unittest.TestCase):
         for bad in ('https://example.com/', '//example.com', '/hardwarelog', '/docs/../hardwarelog'):
             self.assertTrue(target(bad).endswith('/classic'), bad)
 
+    def test_webapp_admin_session_for_classic_pages(self):
+        # the web app signs a browser in to the classic pages with its Basic credentials;
+        # the session holds only a fingerprint of the current admin credentials
+        import base64
+        cfg = server.RaceContext.serverconfig
+        saved = (cfg.get_item('SECRETS', 'ADMIN_USERNAME'), cfg.get_item('SECRETS', 'ADMIN_PASSWORD'), cfg.config_file_status)
+        saved_key = server.APP.config.get('SECRET_KEY')
+        server.APP.config['SECRET_KEY'] = saved_key or 'test-secret-key'  # set by start() when serving
+        try:
+            cfg.set_item('SECRETS', 'ADMIN_USERNAME', 'director')
+            cfg.set_item('SECRETS', 'ADMIN_PASSWORD', 'secret-1')
+            cfg.config_file_status = 1
+            def basic(u, p):
+                return {'Authorization': 'Basic ' + base64.b64encode(f'{u}:{p}'.encode()).decode()}
+            # wrong password: no session
+            with server.APP.test_request_context('/app-classic-session', method='POST', headers=basic('director', 'nope')):
+                resp = server.webapp_classic_session()
+                self.assertEqual(resp[1], 401)
+                self.assertNotIn(server.AdminAuth.ADMIN_SESSION_KEY, server.session)
+            # right password: the session carries the fingerprint and passes the HTTP check
+            with server.APP.test_request_context('/app-classic-session', method='POST', headers=basic('director', 'secret-1')):
+                server.webapp_classic_session()
+                stored = server.session[server.AdminAuth.ADMIN_SESSION_KEY]
+                self.assertNotIn('secret-1', stored)
+            with server.APP.test_request_context('/run'):
+                self.assertFalse(server.AdminAuth.check_request_auth(server.RaceContext))
+                server.session[server.AdminAuth.ADMIN_SESSION_KEY] = stored
+                self.assertTrue(server.AdminAuth.check_request_auth(server.RaceContext))
+                # changing the admin password ends the session
+                cfg.set_item('SECRETS', 'ADMIN_PASSWORD', 'secret-2')
+                self.assertFalse(server.AdminAuth.check_request_auth(server.RaceContext))
+            # DELETE signs out
+            with server.APP.test_request_context('/app-classic-session', method='DELETE'):
+                server.session[server.AdminAuth.ADMIN_SESSION_KEY] = stored
+                server.webapp_classic_session()
+                self.assertNotIn(server.AdminAuth.ADMIN_SESSION_KEY, server.session)
+        finally:
+            cfg.set_item('SECRETS', 'ADMIN_USERNAME', saved[0])
+            cfg.set_item('SECRETS', 'ADMIN_PASSWORD', saved[1])
+            cfg.config_file_status = saved[2]
+            server.APP.config['SECRET_KEY'] = saved_key
+
     def test_interface_api_add_kept(self):
         # an interface a plugin adds while loading must survive the server's interface setup
         import MockInterface

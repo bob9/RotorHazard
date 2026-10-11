@@ -7,6 +7,8 @@
 # server.py imports RHUI, so RHUI can't import back from server.py.
 #
 import functools
+import hashlib
+import hmac
 import logging
 from flask import request, session
 
@@ -44,11 +46,34 @@ def check_auth(racecontext, auth):
         return True
     return False
 
+# An admin signed in to the web app can open the classic pages without the browser's
+# own Basic Auth prompt: the app sends its credentials once to '/app-classic-session',
+# which stores this fingerprint in Flask's signed session cookie. The fingerprint is
+# of the current admin credentials, so changing them ends every such session.
+ADMIN_SESSION_KEY = 'admin_session'
+
+def admin_fingerprint(racecontext):
+    user = racecontext.serverconfig.get_item('SECRETS', 'ADMIN_USERNAME') or ''
+    password = racecontext.serverconfig.get_item('SECRETS', 'ADMIN_PASSWORD') or ''
+    return hashlib.sha256(('%s\0%s' % (user, password)).encode('utf-8')).hexdigest()
+
+def admin_session_ok(racecontext):
+    '''True if this request's session carries a sign-in for the current admin credentials.'''
+    try:
+        stored = session.get(ADMIN_SESSION_KEY)
+    except RuntimeError:
+        return False
+    return bool(stored) and hmac.compare_digest(str(stored), admin_fingerprint(racecontext))
+
+def check_request_auth(racecontext):
+    '''Admin check for an HTTP request: Basic Auth, or a web-app admin session.'''
+    return check_auth(racecontext, request.authorization) or admin_session_ok(racecontext)
+
 def socketio_auth_ok(racecontext):
     '''True if the current SocketIO connection passes the admin-auth check that guarded handlers apply.'''
     if not _admin_socket_auth_enabled or session.get('socketio_admin_auth'):
         return True
-    if not check_auth(racecontext, request.authorization):
+    if not check_auth(racecontext, request.authorization) and not admin_session_ok(racecontext):
         return False
     session['socketio_admin_auth'] = True
     return True
@@ -91,7 +116,7 @@ def make_socketio_auth_guard(racecontext):
                 return f(*args, **kwargs)
             if session.get('socketio_admin_auth'):
                 return f(*args, **kwargs)
-            if not check_auth(racecontext, auth):
+            if not check_auth(racecontext, auth) and not admin_session_ok(racecontext):
                 logger.warning("Rejected unauthenticated SocketIO event '%s' from %s",
                                 f.__name__, request.remote_addr)
                 racecontext.rhui.emit_priority_message(
@@ -120,7 +145,7 @@ def make_socketio_credential_guard(racecontext):
                                f.__name__)
                 return
             if not session.get('socketio_admin_auth'):
-                if not check_auth(racecontext, auth):
+                if not check_auth(racecontext, auth) and not admin_session_ok(racecontext):
                     logger.warning("Rejected unauthenticated credential SocketIO event '%s' from %s",
                                    f.__name__, remote_addr)
                     racecontext.rhui.emit_priority_message(

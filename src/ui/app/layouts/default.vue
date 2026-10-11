@@ -3,7 +3,7 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 
 const rh = useRH()
 const { t } = useI18n()
-const { admin, loginOpen, logout } = useAuth()
+const { admin, loginOpen, logout, classicSession } = useAuth()
 const { info } = useServerInfo()
 const { unread, restartRequired, restarting } = useMessages()
 const colorMode = useColorMode()
@@ -93,9 +93,23 @@ watch(searchOpen, (o) => {
     if (admin.value) rh.load(Object.keys(PANEL_ROUTES).map(value => ({ type: 'ui' as const, value })))
   }
 })
+// everyday words for the pages themselves ("start race" → Race)
+const PAGE_KEYWORDS: Record<string, string> = {
+  '/': 'start race stop race run race control clock',
+  '/live': 'live current race spectator watch',
+  '/marshal': 'marshal fix lap edit laps',
+  '/results': 'results standings leaderboard',
+  '/event': 'event overview',
+  '/pilots': 'pilots add pilot',
+  '/heats': 'heats classes schedule',
+  '/formats': 'formats race format',
+  '/timer': 'timer nodes',
+  '/settings': 'settings preferences',
+  '/plugins': 'plugins install plugin'
+}
 const settingsIndex = computed(() => admin.value
   ? [
-      { label: t('Frequencies'), description: t('Timer'), icon: 'i-lucide-radio', to: '/timer', keywords: 'frequency frequencies channel channels band raceband vtx video node nodes imd preset' },
+      { label: t('Frequencies'), description: t('Timer'), icon: 'i-lucide-radio', to: '/timer', keywords: 'frequency channel band raceband vtx' },
       { label: t('Sensor Tuning'), description: t('Timer'), icon: 'i-lucide-activity', to: '/timer', keywords: 'tuning enterat exitat rssi calibration signal gate threshold' },
       { label: t('Race duration and scoring'), description: t('Formats'), icon: 'i-lucide-timer', to: '/formats', keywords: 'duration length time clock minutes staging tones win condition laps scoring holeshot hole shot grace period prestage first crossing staggered start laps to win team co-op points random staging' },
       { label: t('Grace Period'), description: t('Formats'), icon: 'i-lucide-hourglass', to: '/formats#grace-period', keywords: 'grace period grace final lap after the clock overtime wait for a manual stop' },
@@ -154,7 +168,7 @@ const searchGroups = computed(() => [
     id: 'pages',
     label: t('Go to'),
     items: [...raceItems.value, ...eventItems.value, ...systemItems.value, ...pluginItems.value]
-      .map(i => ({ label: i.label, icon: i.icon, to: i.to as string }))
+      .map(i => ({ label: i.label, icon: i.icon, to: i.to as string, keywords: PAGE_KEYWORDS[i.to as string] }))
       .concat([{ label: t('Documentation'), icon: 'i-lucide-book-open', to: '/docs', keywords: 'docs documentation help guide manual user guide how to' } as any])
   },
   ...(settingsIndex.value.length ? [{ id: 'settings', label: t('Settings'), items: settingsIndex.value }] : []),
@@ -166,7 +180,7 @@ const searchGroups = computed(() => [
     label: t('Actions'),
     items: [
       { label: colorMode.value === 'dark' ? t('Light appearance') : t('Dark appearance'), icon: colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon', keywords: 'dark mode light mode theme night', onSelect: () => { colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark' } },
-      { label: t('Classic interface'), icon: 'i-lucide-history', to: classicHref.value, external: true, target: '_self' },
+      { label: t('Classic interface'), icon: 'i-lucide-history', onSelect: openClassic },
       ...(admin.value ? [{ label: t('Restart server'), icon: 'i-lucide-rotate-cw', onSelect: () => { restartOpen.value = true } }] : [])
     ]
   }
@@ -195,10 +209,15 @@ watch(() => route.fullPath, () => {
       return
     }
     el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    // the page may still be growing as its data arrives: settle on the target again
+    // the page may still be growing as its data arrives: settle on the target again,
+    // then highlight it once it has stopped moving, so the eye lands on it
     setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 600)
-    el.classList.add('rh-flash')
-    setTimeout(() => el.classList.remove('rh-flash'), 1800)
+    setTimeout(() => {
+      el.classList.remove('rh-flash')
+      void el.offsetWidth // restart the animation if the same target is opened again
+      el.classList.add('rh-flash')
+      setTimeout(() => el.classList.remove('rh-flash'), 2600)
+    }, 900)
   }
   nextTick(find)
 }, { immediate: true })
@@ -210,6 +229,12 @@ const { restartServer } = useMessages()
 
 // Ctrl/Cmd+K is bound by UDashboardSearch itself
 
+// while the floating notification bell shows, pages leave room below their content so
+// the last rows (a leaderboard's, say) can scroll clear of it
+watch(() => !!(unread.value || messagesOpen.value), (on) => {
+  if (import.meta.client) document.documentElement.classList.toggle('rh-bell', on)
+}, { immediate: true })
+
 // 'Classic interface' opens the classic page matching this one
 const CLASSIC_FOR: [string, string][] = [
   ['/live', '/current'], ['/marshal', '/marshal'], ['/results', '/results'], ['/event', '/event'],
@@ -218,6 +243,11 @@ const CLASSIC_FOR: [string, string][] = [
   ['/database', '/database'], ['/scanner', '/scanner'], ['/vrx-status', '/vrxstatus'],
   ['/imdtabler', '/imdtabler'], ['/update-nodes', '/updatenodes']
 ]
+// admins are signed in to the classic pages first, so they don't get the browser's login prompt
+async function openClassic() {
+  if (admin.value) await classicSession()
+  window.location.href = classicHref.value
+}
 const classicHref = computed(() => {
   if (route.path === '/') return '/interface/classic?to=/run'
   if (route.path === '/docs') {
@@ -344,7 +374,7 @@ const version = computed(() => info.value?.server?.release_version)
             v-else
             :items="[
               [{ label: t('About RotorHazard'), icon: 'i-lucide-info', onSelect: () => { aboutOpen = true } },
-               { label: t('Classic interface'), icon: 'i-lucide-history', to: classicHref, external: true, target: '_self' },
+               { label: t('Classic interface'), icon: 'i-lucide-history', onSelect: openClassic },
                { label: t('Documentation'), icon: 'i-lucide-book-open', to: '/docs' }],
               [{ label: colorMode.value === 'dark' ? t('Light appearance') : t('Dark appearance'), icon: colorMode.value === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon', onSelect: () => { colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark' } }],
               ...(info?.auth_required ? [[{ label: t('Sign out'), icon: 'i-lucide-log-out', onSelect: logout }]] : [])

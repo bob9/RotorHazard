@@ -26,6 +26,18 @@ const status = computed<number>(() => S.race_status?.race_status ?? 0)
 // made-up Practice race with a live Start button
 const loaded = computed(() => !!(S.race_status && S.current_heat && S.frequency_data && S.heat_data))
 const isReady = computed(() => loaded.value && status.value === RACE_STATUS.READY)
+
+// phones: the sticky action bar repeats the clock only when the race card's clock is off screen
+const heroClock = ref<HTMLElement | null>(null)
+const heroClockVisible = ref(true)
+let heroObserver: IntersectionObserver | undefined
+watch(heroClock, (el) => {
+  heroObserver?.disconnect()
+  if (!el) return
+  heroObserver = new IntersectionObserver(([e]) => { heroClockVisible.value = !!e?.isIntersecting }, { threshold: 0.4 })
+  heroObserver.observe(el)
+})
+onBeforeUnmount(() => heroObserver?.disconnect())
 const isLive = computed(() => status.value === RACE_STATUS.RACING || status.value === RACE_STATUS.STAGING)
 const isRacing = computed(() => status.value === RACE_STATUS.RACING)
 const isDone = computed(() => status.value === RACE_STATUS.DONE)
@@ -330,7 +342,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             </div>
 
             <!-- clock -->
-            <RhRaceClock />
+            <div ref="heroClock">
+              <RhRaceClock />
+            </div>
 
             <!-- actions (below lg they live in the sticky bar at the bottom) -->
             <div class="hidden flex-col items-stretch gap-2 lg:flex lg:items-end">
@@ -476,7 +490,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))"
       >
         <div class="mx-auto flex max-w-3xl items-center gap-3">
-          <RhRaceClock size="sm" class="me-auto" />
+          <!-- the bar's clock appears only once the big clock has scrolled away -->
+          <RhRaceClock size="sm" class="me-auto transition-opacity duration-200" :class="heroClockVisible ? 'invisible opacity-0' : 'opacity-100'" :aria-hidden="heroClockVisible" />
           <UButton
             v-if="isDone"
             color="neutral"

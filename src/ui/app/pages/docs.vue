@@ -118,6 +118,11 @@ watch(() => route.hash, (h, prev) => {
   if (h && h !== prev && !loading.value) scrollTo(h.slice(1))
 })
 
+// a section link (in the text or the outline) is a history entry with a shareable #hash
+function goSection(id: string) {
+  router.push({ query: route.query, hash: '#' + id })
+  scrollTo(id)
+}
 function scrollTo(id: string, smooth = true) {
   document.getElementById(decodeURIComponent(id))?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' })
 }
@@ -234,7 +239,7 @@ const classicNames = computed(() => [
                 class="block truncate border-s-2 ps-2 transition-colors"
                 :class="active === h.id ? 'border-primary font-medium text-highlighted' : 'border-transparent text-muted hover:text-highlighted'"
                 :aria-current="active === h.id ? 'location' : undefined"
-                @click.prevent="scrollTo(h.id)"
+                @click.prevent="goSection(h.id)"
               >{{ h.text }}</a>
             </li>
           </ul>

@@ -108,7 +108,8 @@ useHead(() => ({ title: current.value ? `${current.value.label} · ${t('Settings
     <!-- selected section -->
     <UDashboardPanel id="settings-content" :class="atIndex ? 'max-lg:hidden' : ''">
       <template #header>
-        <UDashboardNavbar title="" :toggle="false" :ui="{ left: 'gap-1' }">
+        <!-- the open section's name, so the bar above it is never empty -->
+        <UDashboardNavbar :title="current?.label || ''" :toggle="false" :ui="{ left: 'gap-1' }">
           <template #leading>
             <UButton
               to="/settings"
@@ -118,10 +119,6 @@ useHead(() => ({ title: current.value ? `${current.value.label} · ${t('Settings
               class="-ms-2.5 lg:hidden"
               :label="t('Settings')"
             />
-          </template>
-          <!-- the section's large heading below carries its name -->
-          <template #title>
-            <span />
           </template>
         </UDashboardNavbar>
       </template>

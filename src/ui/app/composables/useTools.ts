@@ -21,7 +21,7 @@ export function useTools() {
     const i = info.value
     const isAdmin = admin.value === true
     return [
-      { key: 'imdtabler', label: t('IMDTabler'), description: t('Rate frequency sets for intermodulation interference'), icon: 'i-lucide-table', to: '/imdtabler', keywords: 'imd imdtabler intermodulation interference frequency set rating', show: true },
+      { key: 'imdtabler', label: t('IMDTabler'), description: t('Rate frequency sets for intermodulation interference'), icon: 'i-lucide-table', to: '/imdtabler', keywords: 'imd imdtabler intermodulation interference rating', show: true },
       { key: 'scanner', label: t('Band Scanner'), description: t('Scan the band for interference.'), icon: 'i-lucide-scan-line', to: '/scanner', keywords: 'scanner scan band spectrum rssi interference sweep', show: isAdmin && !!i?.debug },
       { key: 'vrx-status', label: t('VRx Status'), description: t('Connected video receivers'), icon: 'i-lucide-monitor', to: '/vrx-status', keywords: 'vrx status receivers goggles video diagnostics', show: isAdmin && !!i?.vrx_enabled },
       { key: 'update-nodes', label: t('Update Nodes'), description: t('Flash new firmware to the timing node processor.'), icon: 'i-lucide-cpu', to: '/update-nodes', keywords: 'update nodes firmware flash bpill stm32 node processor', show: isAdmin && !!i?.node_fw_updatable },

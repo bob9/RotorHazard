@@ -9,9 +9,12 @@ const loginOpen = ref(false)
 const refusedPath = ref<string | null>(null)
 let inflight: Promise<boolean> | null = null
 
+function basicHeader(creds = readCredentials()): Record<string, string> {
+  return creds ? { Authorization: 'Basic ' + btoa(unescape(encodeURIComponent(`${creds.username}:${creds.password}`))) } : {}
+}
+
 async function check(creds = readCredentials()) {
-  const headers: Record<string, string> = {}
-  if (creds) headers.Authorization = 'Basic ' + btoa(unescape(encodeURIComponent(`${creds.username}:${creds.password}`)))
+  const headers = basicHeader(creds)
   try {
     const res = await fetch('/app-auth', { headers, cache: 'no-store' })
     return res.ok
@@ -45,9 +48,24 @@ export function useAuth() {
 
   function logout() {
     writeCredentials(null)
+    // also sign this browser out of the classic pages (see classicSession)
+    fetch('/app-classic-session', { method: 'DELETE', cache: 'no-store' }).catch(() => {})
     rh.reconnect()
     refresh()
   }
 
-  return { admin, loginOpen, refusedPath, refresh, login, logout, hasCredentials: () => !!readCredentials() }
+  // The classic pages use the browser's own Basic Auth prompt. Before an admin switches
+  // to them, sign this browser in with the app's credentials (a signed session cookie),
+  // so the classic pages open without asking again.
+  async function classicSession() {
+    if (!readCredentials()) return false
+    try {
+      const res = await fetch('/app-classic-session', { method: 'POST', headers: basicHeader(), cache: 'no-store' })
+      return res.ok
+    } catch {
+      return false
+    }
+  }
+
+  return { admin, loginOpen, refusedPath, refresh, login, logout, classicSession, hasCredentials: () => !!readCredentials() }
 }

@@ -111,7 +111,9 @@ const consecClass = computed(() => combined.value ? 'hidden sm:table-cell' : '')
           <td :class="cell" class="max-w-0 font-medium text-highlighted">
             <div class="flex min-w-0 items-center gap-2">
               <span v-if="seatColors && r.node !== undefined && seatColors[r.node]" class="size-2.5 shrink-0 rounded-full" :style="{ background: seatColors[r.node] }" />
-              <span class="truncate">{{ r.callsign }}</span>
+              <!-- practice rows have no pilot: the server names them by channel, so show the seat -->
+              <span v-if="!r.pilot_id && r.node !== undefined && r.node !== null" class="truncate">{{ t('Seat') }} {{ r.node + 1 }} <span class="font-normal text-muted">{{ r.callsign }}</span></span>
+              <span v-else class="truncate">{{ r.callsign }}</span>
             </div>
           </td>
           <td v-if="team" :class="cell" class="text-muted">

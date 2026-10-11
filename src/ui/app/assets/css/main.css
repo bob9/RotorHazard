@@ -76,13 +76,22 @@ html {
 
 /* a setting reached from search: brief highlight */
 .rh-flash {
-  animation: rh-flash 1.8s ease-out;
-  outline-offset: 6px;
+  /* drawn inside the element (a ring and a tint), so rounded cards that clip overflow can't hide it */
+  animation: rh-flash 2.6s ease-out;
   border-radius: 0.75rem;
+  /* a little room around small targets (a single field) without moving the layout */
+  padding: 8px;
+  margin: -8px;
 }
 @keyframes rh-flash {
-  0%, 45% { outline: 3px solid color-mix(in oklab, var(--ui-primary) 60%, transparent); }
-  100% { outline: 3px solid transparent; }
+  0%, 55% {
+    box-shadow: inset 0 0 0 2px var(--ui-primary);
+    background-color: color-mix(in oklab, var(--ui-primary) 10%, transparent);
+  }
+  100% {
+    box-shadow: inset 0 0 0 2px transparent;
+    background-color: transparent;
+  }
 }
 
 /* widgets plugins drop into a page's dock keep to the screen width (they bring their own styling) */
@@ -126,3 +135,6 @@ html {
 .rh-imd td, .rh-imd th { border: 1px solid var(--ui-border); padding: .35em .6em; text-align: center; }
 .rh-imd th { background: var(--ui-bg-elevated); color: var(--ui-text-highlighted); font-weight: 600; }
 .rh-imd td[title] { cursor: help; }
+
+/* room for the floating notification bell (layouts/default.vue) */
+.rh-bell [data-slot="body"] { padding-bottom: 5rem; }

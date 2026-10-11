@@ -150,6 +150,21 @@ const heatItems = computed(() => {
 })
 const heatModel = computed({ get: () => heatKey.value ?? undefined, set: (v?: string) => { if (v) pickHeat(v) } })
 const roundTabs = computed(() => roundKeys.value.map(k => ({ label: `${t('Round')} ${k}`, value: k })))
+// on narrow screens the round strip scrolls: keep the chosen round in view
+const roundStrip = ref<any>(null)
+function centreRound() {
+  nextTick(() => {
+    const root: HTMLElement | undefined = roundStrip.value?.$el
+    const tab = root?.querySelector<HTMLElement>('[role=tab][data-state=active]')
+    if (!root || !tab) return
+    let scroller: HTMLElement | null = tab.parentElement
+    while (scroller && scroller !== root.parentElement && scroller.scrollWidth <= scroller.clientWidth) scroller = scroller.parentElement
+    if (!scroller || scroller.scrollWidth <= scroller.clientWidth) return
+    const offset = tab.getBoundingClientRect().left - scroller.getBoundingClientRect().left + scroller.scrollLeft
+    scroller.scrollTo({ left: offset - (scroller.clientWidth - tab.offsetWidth) / 2 })
+  })
+}
+watch([() => roundKey.value, roundStrip], centreRound, { flush: 'post' })
 const roundModel = computed({ get: () => roundKey.value ?? undefined, set: (v: string | number) => pickRound(String(v)) })
 
 // ---- the selected pilot's race ----
@@ -274,6 +289,7 @@ function reassign() {
               />
               <UTabs
                 v-if="!singleRound && roundTabs.length"
+                ref="roundStrip"
                 v-model="roundModel"
                 :items="roundTabs"
                 :content="false"

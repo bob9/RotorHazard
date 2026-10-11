@@ -65,7 +65,7 @@ import signal
 import werkzeug
 import urllib3
 
-from flask import Flask, send_from_directory, request, make_response, Response, templating, redirect, abort, copy_current_request_context
+from flask import Flask, send_from_directory, request, session, make_response, Response, templating, redirect, abort, copy_current_request_context
 from flask.blueprints import Blueprint
 from flask_socketio import SocketIO, emit
 
@@ -160,6 +160,10 @@ sys.path.append(PROGRAM_DIR + '/util')
 
 APP = Flask(__name__, template_folder=PROGRAM_DIR+'/templates', static_folder=PROGRAM_DIR+'/static', static_url_path='/static')
 APP.app_context().push()
+# the session cookie can carry a web-app admin sign-in (AdminAuth.ADMIN_SESSION_KEY):
+#  keep it off cross-site requests and out of page scripts
+APP.config.setdefault('SESSION_COOKIE_SAMESITE', 'Lax')
+APP.config['SESSION_COOKIE_HTTPONLY'] = True
 
 import FlaskAppObj
 FlaskAppObj.set_flask_app(APP)
@@ -455,7 +459,7 @@ def authenticate():
 def requires_auth(f):
     @functools.wraps(f)
     def decorated_auth(*args, **kwargs):
-        if not AdminAuth.check_auth(RaceContext, request.authorization):
+        if not AdminAuth.check_request_auth(RaceContext):
             return authenticate()
         return f(*args, **kwargs)
     return decorated_auth
@@ -816,6 +820,19 @@ def render_webapp_database():
         'options': [{'option': o.option_name, 'value': o.option_value} for o in rhdata.get_options()
                     if o.option_name not in ('secret_key',)],
     }
+
+@APP.route('/app-classic-session', methods=['POST', 'DELETE'])
+def webapp_classic_session():
+    '''POST (with the admin's Basic Authorization header) signs this browser in to the
+    classic pages, so switching interfaces doesn't bring up the browser's login prompt;
+    DELETE signs it out again. Only a Basic header is accepted here, never the session.'''
+    if request.method == 'DELETE':
+        session.pop(AdminAuth.ADMIN_SESSION_KEY, None)
+        return {'admin': False}
+    if not AdminAuth.check_auth(RaceContext, request.authorization):
+        return {'admin': False}, 401
+    session[AdminAuth.ADMIN_SESSION_KEY] = AdminAuth.admin_fingerprint(RaceContext)
+    return {'admin': True}
 
 @APP.route('/app-auth')
 def render_webapp_auth():
