@@ -468,7 +468,7 @@ defineExpose({ dirty, recalc, reset: load, setEnter, setExit })
             :history="history"
             :enter-at="enterAt"
             :exit-at="exitAt"
-            :editable="!!data && canRecalc"
+            :editable="!!data"
             :color="color"
             :height="graphHeight"
             :markers="markers"
@@ -491,6 +491,9 @@ defineExpose({ dirty, recalc, reset: load, setEnter, setExit })
         <p class="text-xs text-muted">
           <template v-if="canRecalc">
             {{ t('Drag the lines to change EnterAt and ExitAt; laps are recalculated from the recorded signal. Click a lap to highlight it, or click anywhere else to pick a time for a manual lap.') }}
+          </template>
+          <template v-else-if="data">
+            {{ t('Drag the lines to change EnterAt and ExitAt. Click a lap to highlight it, or click anywhere else to pick a time for a manual lap.') }}
           </template>
           <template v-else>
             {{ t('Click a lap to highlight it, or click anywhere else to pick a time for a manual lap.') }}
